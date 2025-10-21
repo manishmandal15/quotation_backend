@@ -1,0 +1,182 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Quotation</title>
+</head>
+<body>
+  <h2>Create Quotation</h2>
+  <form id="quotationForm">
+    <label>Customer ID:</label><br>
+    <input type="number" name="customer_id" required><br><br>
+
+    <label>Currency ID:</label><br>
+    <input type="number" name="currency_id" required><br><br>
+
+    <label>Validity Date:</label><br>
+    <input type="date" name="validity_date"><br><br>
+
+    <label>Payment Terms:</label><br>
+    <input type="text" name="payment_terms"><br><br>
+
+    <label>Delivery Terms:</label><br>
+    <input type="text" name="delivery_terms"><br><br>
+
+    <label>Created By (User ID):</label><br>
+    <input type="number" name="created_by" required><br><br>
+
+    <label>Items (JSON):</label><br>
+    <textarea name="items" rows="5" cols="50">[{"product_id":1,"description":"Test Product","quantity":2,"unit_price":500,"discount":20,"tax_rate":18}]</textarea><br><br>
+
+    <button type="submit">Create Quotation</button>
+  </form>
+
+  <pre id="response"></pre>
+
+  <script>
+    const form = document.getElementById('quotationForm');
+    const responseEl = document.getElementById('response');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const data = {};
+      formData.forEach((v, k) => { data[k] = k === 'items' ? JSON.parse(v) : v; });
+
+      try {
+        const res = await fetch('/api/quotations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        responseEl.textContent = JSON.stringify(result, null, 2);
+      } catch (err) {
+        responseEl.textContent = err;
+      }
+    });
+  </script>
+</body>
+</html> -->
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quotation Form</title>
+  <style>
+    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    button { padding: 5px 10px; margin: 5px 0; }
+  </style>
+</head>
+<body>
+
+<h2>Quotation Form</h2>
+<form id="quotationForm">
+  <label>Quotation No: <input type="text" name="quotation_no" required></label><br>
+  <label>Customer ID: <input type="number" name="customer_id" required></label><br>
+  <label>Currency ID: <input type="number" name="currency_id" required></label><br>
+  <label>Validity Date: <input type="date" name="validity_date" required></label><br>
+  <label>Payment Terms: <input type="text" name="payment_terms"></label><br>
+  <label>Delivery Terms: <input type="text" name="delivery_terms"></label><br>
+  <!-- <label>Total Amount: <input type="number" name="total_amount" required></label><br>
+  <label>Discount Amount: <input type="number" name="discount_amount" value="0"></label><br>
+  <label>Tax Amount: <input type="number" name="tax_amount" value="0"></label><br>
+  <label>Net Amount: <input type="number" name="net_amount" required></label><br> -->
+  <input type="hidden" name="created_by" value="1">
+
+  <h3>Items</h3>
+  <table id="itemsTable">
+    <thead>
+      <tr>
+        <th>Product ID</th>
+        <th>Description</th>
+        <th>Quantity</th>
+        <th>Unit Price</th>
+        <th>Discount</th>
+        <th>Tax Rate</th>
+        <th>Line Total</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <button type="button" id="addItemBtn">Add Item</button><br><br>
+  <button type="submit">Submit Quotation</button>
+</form>
+
+<h3>Response:</h3>
+<pre id="response"></pre>
+
+<script>
+  const itemsTableBody = document.querySelector('#itemsTable tbody');
+  const addItemBtn = document.getElementById('addItemBtn');
+  const form = document.getElementById('quotationForm');
+  const responseEl = document.getElementById('response');
+
+  // Add new row function
+  function addItemRow(item = {}) {
+    const tr = document.createElement('tr');
+    tr.classList.add('item-row');
+    tr.innerHTML = `
+      <td><input type="number" class="product_id" value="${item.product_id || ''}" required></td>
+      <td><input type="text" class="description" value="${item.description || ''}"></td>
+      <td><input type="number" class="quantity" value="${item.quantity || 1}" required></td>
+      <td><input type="number" class="unit_price" value="${item.unit_price || 0}" required></td>
+      <td><input type="number" class="discount" value="${item.discount || 0}"></td>
+      <td><input type="number" class="tax_rate" value="${item.tax_rate || 0}"></td>
+      <td><input type="number" class="line_total" value="${item.line_total || 0}" required></td>
+      <td><button type="button" class="removeItemBtn">Remove</button></td>
+    `;
+    itemsTableBody.appendChild(tr);
+
+    tr.querySelector('.removeItemBtn').addEventListener('click', () => tr.remove());
+  }
+
+  addItemBtn.addEventListener('click', () => addItemRow());
+
+  // Form submit
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Collect main form data
+    const formData = new FormData(form);
+    const data = {};
+    formData.forEach((v, k) => { data[k] = v; });
+
+    // Collect items
+    data.items = [];
+    document.querySelectorAll('.item-row').forEach(row => {
+      data.items.push({
+        product_id: parseInt(row.querySelector('.product_id').value),
+        description: row.querySelector('.description').value,
+        quantity: parseFloat(row.querySelector('.quantity').value),
+        unit_price: parseFloat(row.querySelector('.unit_price').value),
+        discount: parseFloat(row.querySelector('.discount').value),
+        tax_rate: parseFloat(row.querySelector('.tax_rate').value),
+        line_total: parseFloat(row.querySelector('.line_total').value)
+      });
+    });
+
+    try {
+      const res = await fetch('/api/quotations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+      responseEl.textContent = JSON.stringify(result, null, 2);
+    } catch (err) {
+      responseEl.textContent = err;
+    }
+  });
+</script>
+
+</body>
+</html>
+
