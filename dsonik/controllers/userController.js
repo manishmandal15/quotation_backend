@@ -3,15 +3,7 @@ const db = require("../config/db");
 // ✅ Get all users
 exports.getAllUsers = (req, res) => {
   const query = `
-    SELECT 
-      u.id, 
-      u.role_id, 
-      u.name AS username, 
-      r.name AS rolename, 
-      u.phone, 
-      u.is_active 
-    FROM users AS u 
-    INNER JOIN roles AS r ON r.id = u.role_id
+ SELECT   u.id,   u.role_id,  u.name AS name,  r.name AS rolename,  u.phone,  u.is_active,  DATE_FORMAT(u.created_at, '%d-%b-%Y %H:%i') AS created_at,  DATE_FORMAT(u.updated_at, '%d-%b-%Y %H:%i') AS updated_at,  u.email,u.password FROM users AS u INNER JOIN roles AS r ON r.id = u.role_id 
   `;
 
   db.query(query, (err, results) => {

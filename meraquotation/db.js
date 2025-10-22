@@ -17,9 +17,9 @@
 const mysql = require("mysql2/promise");
 
 const pool = mysql.createPool({
-  host: "103.118.17.180",     // apna host
-  user: "nsdatawebx_dsonik_dev",          // apna mysql user
-  password: "Dsonik@123",          // apna password
+  host: "localhost",     // apna host
+  user: "root",          // apna mysql user
+  password: "root",          // apna password
   database: "nsdatawebx_dsonik", // apna database name
 });
 

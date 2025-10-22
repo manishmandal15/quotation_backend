@@ -83,7 +83,7 @@ const UserMaster: React.FC = () => {
       role_id: record.role_id,
       name: record.name,
       email: record.email,
-      password: "",
+      password: record.password,
       phone: record.phone,
       is_active: record.is_active,
     });
@@ -107,7 +107,7 @@ const UserMaster: React.FC = () => {
     { title: "Name", dataIndex: "name", key: "name" },
     { title: "Email", dataIndex: "email", key: "email" },
     { title: "Phone", dataIndex: "phone", key: "phone" },
-    { title: "Role", dataIndex: "role_id", key: "role_id" },
+    { title: "Role", dataIndex: "rolename", key: "rolename" },
     {
       title: "Status",
       dataIndex: "is_active",
