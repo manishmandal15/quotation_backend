@@ -35,7 +35,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ✅ register all routes
 app.use("/api/customers", customerRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/quotation-dispatches", dispatchRoutes);
 app.use("/api/quotation_feedback", quotationFeedbackRouter);
