@@ -31,16 +31,23 @@ const navItems: NavItem[] = [
     name: "Dashboard",
     subItems: [{ name: "E-commerce", path: "/", pro: false }],
   },
+  
+
   {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
+    name: "Quotation Module",
+    icon: <ListIcon />,
+    subItems: [
+      { name: "New Quatation", path: "/forms/company-master", pro: false },
+      { name: "All Quatation", path: "/forms/company-master", pro: false },
+      { name: "Quotation Approval", path: "/forms/role-master", pro: false },
+      { name: "Quotation Dispatch", path: "/forms/state-master", pro: false },
+      { name: "Quotation Status Tracking", path: "/forms/district-master", pro: false },
+      { name: "Quotation Follow-Up & Reminders", path: "/forms/currency", pro: false },
+   
+    ],
   },
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
-  },
+
+
   {
     name: "Masters",
     icon: <ListIcon />,
@@ -55,6 +62,18 @@ const navItems: NavItem[] = [
       { name: "Product Master", path: "/forms/products", pro: false },
     ],
   },
+{
+    icon: <CalenderIcon />,
+    name: "Calendar",
+    path: "/calendar",
+  },
+  {
+    icon: <UserCircleIcon />,
+    name: "User Profile",
+    path: "/profile",
+  },
+/*
+
   {
     icon: <CalenderIcon />,
     name: "Quotations",
@@ -123,29 +142,32 @@ const navItems: NavItem[] = [
       { name: "404 Error", path: "/error-404", pro: false },
     ],
   },
+
+
+  */
 ];
 
 const othersItems: NavItem[] = [
-  {
-    icon: <PieChartIcon />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
-    ],
-  },
-  {
-    icon: <BoxCubeIcon />,
-    name: "UI Elements",
-    subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Videos", path: "/videos", pro: false },
-    ],
-  },
+  // {
+  //   icon: <PieChartIcon />,
+  //   name: "Charts",
+  //   subItems: [
+  //     { name: "Line Chart", path: "/line-chart", pro: false },
+  //     { name: "Bar Chart", path: "/bar-chart", pro: false },
+  //   ],
+  // },
+  // {
+  //   icon: <BoxCubeIcon />,
+  //   name: "UI Elements",
+  //   subItems: [
+  //     { name: "Alerts", path: "/alerts", pro: false },
+  //     { name: "Avatar", path: "/avatars", pro: false },
+  //     { name: "Badge", path: "/badge", pro: false },
+  //     { name: "Buttons", path: "/buttons", pro: false },
+  //     { name: "Images", path: "/images", pro: false },
+  //     { name: "Videos", path: "/videos", pro: false },
+  //   ],
+  // },
   {
     icon: <PlugInIcon />,
     name: "Authentication",
