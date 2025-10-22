@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+// src/pages/Forms/CustomerMaster.tsx
+import React, { useState, useEffect } from "react";
 import {
   Table,
   Button,
@@ -8,18 +9,13 @@ import {
   message,
   Select,
   Popconfirm,
+  Upload,
 } from "antd";
-import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
+import { UploadOutlined, EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import axios from "axios";
 
-// ✅ Axios instance
-const API = axios.create({
-  baseURL: "http://localhost:3000/api",
-  headers: { "Content-Type": "application/json" },
-});
+const { Option } = Select;
 
-// ✅ Customer interface
 interface Customer {
   id?: number;
   name: string;
@@ -32,27 +28,28 @@ interface Customer {
   district_id?: number;
   state_id?: number;
   country?: string;
-  is_active?: "Active" | "Inactive" | number;
+  is_active?: 1 | 0;
 }
 
-const CustomerMaster = () => {
+// Axios instance
+const API = axios.create({
+  baseURL: "http://localhost:5000/api/customers",
+});
+
+const CustomerMaster: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [form] = Form.useForm<Customer>();
+  const [open, setOpen] = useState(false);
+  const [form] = Form.useForm();
+  const [editId, setEditId] = useState<number | null>(null);
 
   // Fetch all customers
   const fetchCustomers = async () => {
-    setLoading(true);
     try {
-      const res = await API.get("/customers");
+      const res = await API.get("/");
       setCustomers(res.data);
     } catch (err) {
       console.error(err);
-      message.error("Error fetching customers");
-    } finally {
-      setLoading(false);
+      message.error("Failed to fetch customers");
     }
   };
 
@@ -60,44 +57,51 @@ const CustomerMaster = () => {
     fetchCustomers();
   }, []);
 
-  // Save (Add / Update)
+  // Save / Update customer
   const handleSave = async (values: Customer) => {
     try {
-      const payload = {
-        ...values,
-        is_active: values.is_active === "Active" ? 1 : 0,
-      };
-      if (editingCustomer?.id) {
-        await API.put(`/customers/${editingCustomer.id}`, payload);
-        message.success("Customer updated successfully");
+      const payload = { ...values, is_active: values.is_active ?? 1 };
+      if (editId) {
+        await API.put(`/${editId}`, payload);
+        message.success("Customer updated successfully!");
       } else {
-        await API.post("/customers", payload);
-        message.success("Customer added successfully");
+        await API.post("/", payload);
+        message.success("Customer added successfully!");
       }
-      setIsModalOpen(false);
-      form.resetFields();
-      setEditingCustomer(null);
       fetchCustomers();
+      setOpen(false);
+      form.resetFields();
+      setEditId(null);
     } catch (err) {
       console.error(err);
-      message.error("Error saving customer");
+      message.error("Failed to save customer");
     }
   };
 
-  // Delete
-  const handleDelete = async (id: number) => {
+  // Edit customer
+  const handleEdit = (record: Customer) => {
+    setEditId(record.id || null);
+    form.setFieldsValue({
+      ...record,
+      is_active: record.is_active ?? 1,
+    });
+    setOpen(true);
+  };
+
+  // Delete customer
+  const handleDelete = async (id?: number) => {
+    if (!id) return;
     try {
-      await API.delete(`/customers/${id}`);
-      message.success("Customer deleted");
+      await API.delete(`/${id}`);
+      message.success("Customer deleted successfully!");
       fetchCustomers();
-    } catch (err) {
-      console.error(err);
-      message.error("Error deleting customer");
+    } catch {
+      message.error("Failed to delete customer");
     }
   };
 
   // Table columns
-  const columns: ColumnsType<Customer> = [
+  const columns = [
     { title: "ID", dataIndex: "id", key: "id", width: 60 },
     { title: "Name", dataIndex: "name", key: "name" },
     { title: "Email", dataIndex: "email", key: "email" },
@@ -113,43 +117,45 @@ const CustomerMaster = () => {
       title: "Status",
       dataIndex: "is_active",
       key: "is_active",
-      render: (val: number | string) =>
-        val === 1 || val === "Active" ? (
-          <span style={{ color: "green" }}>Active</span>
-        ) : (
-          <span style={{ color: "red" }}>Inactive</span>
-        ),
+      render: (val: number) =>
+        val === 1 ? <span style={{ color: "green" }}>Active</span> : <span style={{ color: "red" }}>Inactive</span>,
     },
     {
       title: "Actions",
       key: "actions",
       render: (_: any, record: Customer) => (
-        <>
+        <div style={{ display: "flex", gap: 8 }}>
           <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => {
-              setEditingCustomer(record);
-              form.setFieldsValue({
-                ...record,
-                is_active:
-                  record.is_active === 1 || record.is_active === "Active"
-                    ? "Active"
-                    : "Inactive",
-              });
-              setIsModalOpen(true);
+            type="default"
+            icon={<EditOutlined style={{ color: "#1677ff" }} />}
+            onClick={() => handleEdit(record)}
+            style={{
+              borderColor: "#1677ff",
+              borderRadius: 4,
+              padding: "4px 8px",
+              minWidth: 36,
+              height: 36,
             }}
-            style={{ marginRight: 8 }}
           />
           <Popconfirm
             title="Are you sure to delete this customer?"
-            onConfirm={() => record.id && handleDelete(record.id)}
+            onConfirm={() => handleDelete(record.id)}
             okText="Yes"
             cancelText="No"
           >
-            <Button type="text" danger icon={<DeleteOutlined />} />
+            <Button
+              type="default"
+              icon={<DeleteOutlined style={{ color: "red" }} />}
+              style={{
+                borderColor: "red",
+                borderRadius: 4,
+                padding: "4px 8px",
+                minWidth: 36,
+                height: 36,
+              }}
+            />
           </Popconfirm>
-        </>
+        </div>
       ),
     },
   ];
@@ -162,95 +168,68 @@ const CustomerMaster = () => {
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => {
-            setEditingCustomer(null);
             form.resetFields();
-            setIsModalOpen(true);
+            setEditId(null);
+            setOpen(true);
           }}
         >
           Add Customer
         </Button>
       </div>
 
-      <Table
-        dataSource={customers}
-        columns={columns}
-        rowKey="id"
-        bordered
-        loading={loading}
-        pagination={{ pageSize: 5 }}
-      />
+      <Table dataSource={customers} columns={columns} rowKey="id" bordered pagination={{ pageSize: 5 }} />
 
+      {/* Modal Form */}
       <Modal
-        title={editingCustomer ? "Edit Customer" : "Add Customer"}
-        open={isModalOpen}
-        onCancel={() => {
-          setIsModalOpen(false);
-          form.resetFields();
-          setEditingCustomer(null);
-        }}
+        title={editId ? "Edit Customer" : "Add New Customer"}
+        open={open}
+        destroyOnClose
+        onCancel={() => setOpen(false)}
         footer={null}
-        width={600}
+        width={700}
       >
-        <Form form={form} layout="vertical" onFinish={handleSave}>
-           <div className="grid grid-cols-2 gap-4">
-      <Form.Item name="name" label="Name" rules={[{ required: true }]}>
-        <Input placeholder="Enter customer name" />
-      </Form.Item>
-
-      <Form.Item name="email" label="Email">
-        <Input type="email" placeholder="Enter email" />
-      </Form.Item>
-
-      <Form.Item name="phone" label="Phone">
-        <Input placeholder="Enter phone number" />
-      </Form.Item>
-
-      <Form.Item name="gst_no" label="GST Number">
-        <Input placeholder="Enter GST number" />
-      </Form.Item>
-
-      <Form.Item name="pan_no" label="PAN Number">
-        <Input placeholder="Enter PAN number" />
-      </Form.Item>
-
-      <Form.Item name="address" label="Address">
-        <Input placeholder="Enter address" />
-      </Form.Item>
-
-      <Form.Item name="city" label="City">
-        <Input placeholder="Enter city" />
-      </Form.Item>
-
-      <Form.Item name="district_id" label="District ID">
-        <Input placeholder="Enter district ID" />
-      </Form.Item>
-
-      <Form.Item name="state_id" label="State ID">
-        <Input placeholder="Enter state ID" />
-      </Form.Item>
-
-      <Form.Item name="country" label="Country">
-        <Input placeholder="Enter country" />
-      </Form.Item>
-
-      <Form.Item name="is_active" label="Status">
-        <Select
-          options={[
-            { value: "Active", label: "Active" },
-            { value: "Inactive", label: "Inactive" },
-          ]}
-        />
+        <Form layout="vertical" form={form} onFinish={handleSave}>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="name" label="Name" rules={[{ required: true }]}>
+              <Input placeholder="Enter customer name" />
+            </Form.Item>
+            <Form.Item name="email" label="Email">
+              <Input placeholder="Enter email" />
+            </Form.Item>
+            <Form.Item name="phone" label="Phone">
+              <Input placeholder="Enter phone number" />
+            </Form.Item>
+            <Form.Item name="gst_no" label="GST Number">
+              <Input placeholder="Enter GST number" />
+            </Form.Item>
+            <Form.Item name="pan_no" label="PAN Number">
+              <Input placeholder="Enter PAN number" />
+            </Form.Item>
+            <Form.Item name="address" label="Address">
+              <Input placeholder="Enter address" />
+            </Form.Item>
+            <Form.Item name="city" label="City">
+              <Input placeholder="Enter city" />
+            </Form.Item>
+            <Form.Item name="district_id" label="District ID">
+              <Input placeholder="Enter district ID" />
+            </Form.Item>
+            <Form.Item name="state_id" label="State ID">
+              <Input placeholder="Enter state ID" />
+            </Form.Item>
+            <Form.Item name="country" label="Country">
+              <Input placeholder="Enter country" />
+            </Form.Item>
+            <Form.Item name="is_active" label="Status">
+              <Select>
+                <Option value={1}>Active</Option>
+                <Option value={0}>Inactive</Option>
+              </Select>
             </Form.Item>
           </div>
+
           <div className="flex justify-end mt-4">
-            <Button
-              onClick={() => {
-                setIsModalOpen(false);
-                form.resetFields();
-                setEditingCustomer(null);
-              }}
-              style={{ marginRight: 8 }}
-            >
+            <Button onClick={() => setOpen(false)} style={{ marginRight: 8 }}>
               Close
             </Button>
             <Button type="primary" htmlType="submit">

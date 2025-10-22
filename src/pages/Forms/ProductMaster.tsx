@@ -39,7 +39,7 @@ const ProductMaster: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [form] = Form.useForm<Product>();
 
-  // Fetch products
+  // ✅ Fetch products
   const fetchProducts = async () => {
     setLoading(true);
     try {
@@ -57,13 +57,14 @@ const ProductMaster: React.FC = () => {
     fetchProducts();
   }, []);
 
-  // Save product
+  // ✅ Save product (add/edit)
   const handleSave = async (values: Product) => {
     try {
       const payload = {
         ...values,
         is_active: values.is_active === "Active" ? 1 : 0,
       };
+
       if (editingProduct && editingProduct.id) {
         await API.put(`/products/${editingProduct.id}`, payload);
         message.success("Product updated successfully");
@@ -71,6 +72,7 @@ const ProductMaster: React.FC = () => {
         await API.post("/products", payload);
         message.success("Product added successfully");
       }
+
       setIsModalOpen(false);
       form.resetFields();
       setEditingProduct(null);
@@ -81,7 +83,7 @@ const ProductMaster: React.FC = () => {
     }
   };
 
-  // Delete product
+  // ✅ Delete product
   const handleDelete = async (id: number) => {
     try {
       await API.delete(`/products/${id}`);
@@ -93,7 +95,7 @@ const ProductMaster: React.FC = () => {
     }
   };
 
-  // Table columns
+  // ✅ Table columns
   const columns = [
     { title: "ID", dataIndex: "id", key: "id", width: 60 },
     { title: "Code", dataIndex: "product_code", key: "product_code" },
@@ -107,9 +109,9 @@ const ProductMaster: React.FC = () => {
       key: "is_active",
       render: (val: number | string) =>
         val === 1 || val === "Active" ? (
-          <span style={{ color: "green" }}>Active</span>
+          <span style={{ color: "green", fontWeight: 500 }}>Active</span>
         ) : (
-          <span style={{ color: "red" }}>Inactive</span>
+          <span style={{ color: "red", fontWeight: 500 }}>Inactive</span>
         ),
     },
     { title: "Created At", dataIndex: "created_at", key: "created_at" },
@@ -118,10 +120,11 @@ const ProductMaster: React.FC = () => {
       title: "Actions",
       key: "actions",
       render: (_: any, record: Product) => (
-        <>
+        <div style={{ display: "flex", gap: 8 }}>
+          {/* ✅ Edit Button with square border */}
           <Button
-            type="text"
-            icon={<EditOutlined />}
+            type="default"
+            icon={<EditOutlined style={{ color: "#1677ff" }} />}
             onClick={() => {
               setEditingProduct(record);
               form.setFieldsValue({
@@ -130,21 +133,60 @@ const ProductMaster: React.FC = () => {
               });
               setIsModalOpen(true);
             }}
-            style={{ marginRight: 8 }}
+            style={{
+              borderColor: "#1677ff",
+              borderRadius: 4, // square corners
+              padding: "4px 8px",
+              minWidth: 36,
+              height: 36,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              transition: "0.3s",
+            }}
+            onMouseEnter={(e) =>
+              ((e.currentTarget.style.backgroundColor = "#e6f4ff"))
+            }
+            onMouseLeave={(e) =>
+              ((e.currentTarget.style.backgroundColor = "white"))
+            }
           />
+
+          {/* ✅ Delete Button with square border + confirmation */}
           <Popconfirm
             title="Are you sure to delete this product?"
             onConfirm={() => record.id && handleDelete(record.id)}
             okText="Yes"
             cancelText="No"
           >
-            <Button type="text" danger icon={<DeleteOutlined />} />
+            <Button
+              type="default"
+              icon={<DeleteOutlined style={{ color: "red" }} />}
+              style={{
+                borderColor: "red",
+                borderRadius: 4, // square corners
+                padding: "4px 8px",
+                minWidth: 36,
+                height: 36,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                transition: "0.3s",
+              }}
+              onMouseEnter={(e) =>
+                ((e.currentTarget.style.backgroundColor = "#fff1f0"))
+              }
+              onMouseLeave={(e) =>
+                ((e.currentTarget.style.backgroundColor = "white"))
+              }
+            />
           </Popconfirm>
-        </>
+        </div>
       ),
     },
   ];
 
+  // ✅ Render component
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
@@ -171,6 +213,7 @@ const ProductMaster: React.FC = () => {
         pagination={{ pageSize: 5 }}
       />
 
+      {/* ✅ Modal Form */}
       <Modal
         title={editingProduct ? "Edit Product" : "Add Product"}
         open={isModalOpen}
@@ -187,15 +230,15 @@ const ProductMaster: React.FC = () => {
             <Form.Item
               name="product_code"
               label="Product Code"
-              rules={[{ required: true }]}
+              rules={[{ required: true, message: "Please enter product code" }]}
             >
               <Input placeholder="Enter product code" />
             </Form.Item>
 
             <Form.Item
               name="name"
-              label="Name"
-              rules={[{ required: true }]}
+              label="Product Name"
+              rules={[{ required: true, message: "Please enter product name" }]}
             >
               <Input placeholder="Enter product name" />
             </Form.Item>
@@ -211,7 +254,7 @@ const ProductMaster: React.FC = () => {
             <Form.Item
               name="price"
               label="Price"
-              rules={[{ required: true }]}
+              rules={[{ required: true, message: "Please enter price" }]}
             >
               <Input type="number" placeholder="Enter price" />
             </Form.Item>

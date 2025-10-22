@@ -1,3 +1,4 @@
+// src/pages/Forms/CompanyMaster.tsx
 import React, { useState, useEffect } from "react";
 import {
   Button,
@@ -7,6 +8,7 @@ import {
   Input,
   Upload,
   message,
+  Popconfirm,
 } from "antd";
 import {
   UploadOutlined,
@@ -16,8 +18,9 @@ import {
 } from "@ant-design/icons";
 import axios from "axios";
 
+// ✅ API setup
 const API = axios.create({
-  baseURL: "http://localhost:3000/api",
+  baseURL: "http://localhost:5000/api/company_settings",
 });
 
 interface Company {
@@ -39,12 +42,12 @@ const CompanyMaster: React.FC = () => {
   const [editId, setEditId] = useState<number | null>(null);
   const [fileList, setFileList] = useState<any[]>([]);
 
-  // Fetch all companies
+  // ✅ Fetch all companies
   const fetchCompanies = async () => {
     try {
-      const res = await API.get("/company_settings");
+      const res = await API.get("/");
       setCompanies(res.data);
-    } catch {
+    } catch (err) {
       message.error("Failed to fetch companies");
     }
   };
@@ -53,24 +56,25 @@ const CompanyMaster: React.FC = () => {
     fetchCompanies();
   }, []);
 
-  // Save company (add/edit)
+  // ✅ Save or Update company
   const handleSave = async (values: any) => {
     try {
       const formData = new FormData();
       Object.keys(values).forEach((key) => {
         formData.append(key, values[key]);
       });
+
       if (fileList.length > 0) {
         formData.append("logo", fileList[0].originFileObj);
       }
 
       if (editId) {
-        await API.put(`/company_settings/${editId}`, formData, {
+        await API.put(`/${editId}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         message.success("Company updated successfully!");
       } else {
-        await API.post("/company_settings", formData, {
+        await API.post("/", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         message.success("Company added successfully!");
@@ -79,37 +83,47 @@ const CompanyMaster: React.FC = () => {
       fetchCompanies();
       setOpen(false);
       form.resetFields();
-      setFileList([]);
       setEditId(null);
+      setFileList([]);
     } catch (err) {
       console.error(err);
       message.error("Error saving company");
     }
   };
 
-  // Edit company
+  // ✅ Edit company
   const handleEdit = (record: Company) => {
-    form.setFieldsValue(record);
     setEditId(record.id);
-    setOpen(true);
+    form.setFieldsValue({
+      company_name: record.company_name,
+      email: record.email,
+      phone: record.phone,
+      website: record.website,
+      address: record.address,
+      gst_no: record.gst_no,
+      pan_no: record.pan_no,
+    });
+
     if (record.logo_path) {
       setFileList([
         {
           uid: "-1",
           name: "logo.png",
           status: "done",
-          url: record.logo_path,
+          url: `http://localhost:5000${record.logo_path}`,
         },
       ]);
     } else {
       setFileList([]);
     }
+
+    setOpen(true);
   };
 
-  // Delete company
+  // ✅ Delete company
   const handleDelete = async (id: number) => {
     try {
-      await API.delete(`/company_settings/${id}`);
+      await API.delete(`/${id}`);
       message.success("Company deleted successfully!");
       fetchCompanies();
     } catch {
@@ -117,6 +131,7 @@ const CompanyMaster: React.FC = () => {
     }
   };
 
+  // ✅ Table columns
   const columns = [
     { title: "ID", dataIndex: "id", key: "id", width: 60 },
     { title: "Name", dataIndex: "company_name", key: "company_name" },
@@ -130,25 +145,60 @@ const CompanyMaster: React.FC = () => {
       dataIndex: "logo_path",
       key: "logo_path",
       render: (logo: string) =>
-        logo ? <img src={logo} alt="logo" style={{ width: 50 }} /> : "No Logo",
+        logo ? (
+          <img
+            src={`http://localhost:5000${logo}`}
+            alt="logo"
+            style={{
+              width: 50,
+              height: 50,
+              objectFit: "cover",
+              borderRadius: 4, // square border
+            }}
+          />
+        ) : (
+          "No Logo"
+        ),
     },
     {
       title: "Actions",
       key: "actions",
       render: (_: any, record: Company) => (
-        <>
+        <div style={{ display: "flex", gap: 8 }}>
+          {/* Edit Button */}
           <Button
-            type="primary"
-            icon={<EditOutlined />}
+            type="default"
+            icon={<EditOutlined style={{ color: "#1677ff" }} />}
             onClick={() => handleEdit(record)}
-            style={{ marginRight: 4 }}
+            style={{
+              borderColor: "#1677ff",
+              borderRadius: 4,
+              padding: "4px 8px",
+              minWidth: 36,
+              height: 36,
+            }}
           />
-          <Button
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id)}
-          />
-        </>
+
+          {/* Delete Button */}
+          <Popconfirm
+            title="Are you sure to delete this company?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button
+              type="default"
+              icon={<DeleteOutlined style={{ color: "red" }} />}
+              style={{
+                borderColor: "red",
+                borderRadius: 4,
+                padding: "4px 8px",
+                minWidth: 36,
+                height: 36,
+              }}
+            />
+          </Popconfirm>
+        </div>
       ),
     },
   ];
@@ -161,8 +211,8 @@ const CompanyMaster: React.FC = () => {
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => {
-            setEditId(null);
             form.resetFields();
+            setEditId(null);
             setFileList([]);
             setOpen(true);
           }}
@@ -179,6 +229,7 @@ const CompanyMaster: React.FC = () => {
         pagination={{ pageSize: 5 }}
       />
 
+      {/* Modal Form */}
       <Modal
         title={editId ? "Edit Company" : "Add New Company"}
         open={open}
@@ -187,12 +238,7 @@ const CompanyMaster: React.FC = () => {
         footer={null}
         width={700}
       >
-        <Form
-          layout="vertical"
-          form={form}
-          onFinish={handleSave}
-          initialValues={{ status: "Active" }}
-        >
+        <Form layout="vertical" form={form} onFinish={handleSave}>
           <div className="grid grid-cols-2 gap-4">
             <Form.Item
               name="company_name"
@@ -206,7 +252,7 @@ const CompanyMaster: React.FC = () => {
               <Input type="email" placeholder="Enter email" />
             </Form.Item>
 
-            <Form.Item name="phone" label="Phone Number">
+            <Form.Item name="phone" label="Phone">
               <Input placeholder="Enter phone number" />
             </Form.Item>
 
@@ -226,7 +272,7 @@ const CompanyMaster: React.FC = () => {
               <Input placeholder="Enter PAN number" />
             </Form.Item>
 
-            <Form.Item name="logo" label="Company Logo">
+            <Form.Item label="Company Logo">
               <Upload
                 fileList={fileList}
                 beforeUpload={() => false}
@@ -239,7 +285,10 @@ const CompanyMaster: React.FC = () => {
           </div>
 
           <div className="flex justify-end mt-4">
-            <Button onClick={() => setOpen(false)} style={{ marginRight: 8 }}>
+            <Button
+              onClick={() => setOpen(false)}
+              style={{ marginRight: 8 }}
+            >
               Close
             </Button>
             <Button type="primary" htmlType="submit">

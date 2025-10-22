@@ -1,43 +1,38 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Table,
   Button,
   Modal,
   Form,
-  Table,
   Input,
   Select,
   message,
   Popconfirm,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import axios from "axios";
 
-const API = axios.create({
-  baseURL: "http://localhost:3000/api",
-  headers: { "Content-Type": "application/json" },
-});
-
-interface Currency {
-  id: number;
-  code: string;
-  name: string;
-  symbol: string;
-  is_active: number;
-}
+const { Option } = Select;
 
 const CurrencyMaster: React.FC = () => {
-  const [currencies, setCurrencies] = useState<Currency[]>([]);
-  const [open, setOpen] = useState(false);
+  const [currencies, setCurrencies] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editingCurrency, setEditingCurrency] = useState<any>(null);
   const [form] = Form.useForm();
-  const [editId, setEditId] = useState<number | null>(null);
 
-  // ✅ Fetch all currencies
+  const API_BASE = "http://localhost:5000/api";
+
   const fetchCurrencies = async () => {
+    setLoading(true);
     try {
-      const res = await API.get("/currencies");
+      const res = await axios.get(`${API_BASE}/currencies`);
       setCurrencies(res.data);
-    } catch {
+    } catch (err) {
+      console.error(err);
       message.error("Failed to fetch currencies");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,51 +40,68 @@ const CurrencyMaster: React.FC = () => {
     fetchCurrencies();
   }, []);
 
-  // ✅ Save (Add / Edit)
-  const handleSave = async (values: any) => {
-    try {
-      if (editId) {
-        await API.put(`/currencies/${editId}`, values);
-        message.success("✅ Currency updated successfully!");
-      } else {
-        await API.post("/currencies", values);
-        message.success("✅ Currency added successfully!");
-      }
-
-      fetchCurrencies();
-      setOpen(false);
-      form.resetFields();
-      setEditId(null);
-    } catch (err: any) {
-      if (err.response?.status === 409) {
-        message.error("❌ Currency code already exists!");
-      } else {
-        message.error("❌ Error saving currency");
-      }
-    }
+  const handleAdd = () => {
+    setEditingCurrency(null);
+    form.resetFields();
+    setIsModalVisible(true);
   };
 
-  // ✅ Edit
-  const handleEdit = (record: Currency) => {
-    form.setFieldsValue(record);
-    setEditId(record.id);
-    setOpen(true);
+  const handleEdit = (record: any) => {
+    setEditingCurrency(record);
+    form.setFieldsValue({
+      code: record.code,
+      name: record.name,
+      symbol: record.symbol,
+      is_active: record.is_active ? "1" : "0",
+    });
+    setIsModalVisible(true);
   };
 
-  // ✅ Delete
   const handleDelete = async (id: number) => {
     try {
-      await API.delete(`/currencies/${id}`);
-      message.success("🗑️ Currency deleted successfully!");
+      await axios.delete(`${API_BASE}/currencies/${id}`);
+      message.success("Currency deleted successfully");
       fetchCurrencies();
-    } catch {
-      message.error("❌ Error deleting currency");
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to delete currency");
     }
   };
 
-  // ✅ Table Columns
+  const handleSave = async () => {
+    try {
+      const values = await form.validateFields();
+      const payload = {
+        code: values.code.trim(),
+        name: values.name.trim(),
+        symbol: values.symbol?.trim() || "",
+        is_active: Number(values.is_active),
+      };
+
+      if (editingCurrency) {
+        await axios.put(`${API_BASE}/currencies/${editingCurrency.id}`, payload);
+        message.success("Currency updated successfully");
+      } else {
+        await axios.post(`${API_BASE}/currencies`, payload);
+        message.success("Currency added successfully");
+      }
+
+      setIsModalVisible(false);
+      form.resetFields();
+      setEditingCurrency(null);
+      fetchCurrencies();
+    } catch (err: any) {
+      console.error(err);
+      if (err.response?.status === 400) {
+        message.error("Currency code already exists!");
+      } else {
+        message.error("Failed to save currency");
+      }
+    }
+  };
+
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id", width: 60 },
+    { title: "ID", dataIndex: "id", key: "id", width: "10%" },
     { title: "Code", dataIndex: "code", key: "code" },
     { title: "Name", dataIndex: "name", key: "name" },
     { title: "Symbol", dataIndex: "symbol", key: "symbol" },
@@ -97,50 +109,64 @@ const CurrencyMaster: React.FC = () => {
       title: "Status",
       dataIndex: "is_active",
       key: "is_active",
-      render: (val: number) =>
-        val === 1 ? (
-          <span style={{ color: "green" }}>Active</span>
-        ) : (
-          <span style={{ color: "red" }}>Inactive</span>
-        ),
+      render: (val: number) => (val === 1 ? "Active" : "Inactive"),
     },
     {
       title: "Actions",
       key: "actions",
-      render: (_: any, record: Currency) => (
-        <>
+      width: "15%",
+      render: (_: any, record: any) => (
+        <div style={{ display: "flex", gap: 8 }}>
           <Button
-            type="primary"
-            icon={<EditOutlined />}
+            type="default"
+            icon={<EditOutlined style={{ color: "#1677ff" }} />}
             onClick={() => handleEdit(record)}
-            style={{ marginRight: 4 }}
+            style={{
+              borderColor: "#1677ff",
+              borderRadius: 4,
+              padding: "4px 8px",
+              minWidth: 36,
+              height: 36,
+            }}
           />
           <Popconfirm
             title="Are you sure to delete this currency?"
             onConfirm={() => handleDelete(record.id)}
-            okText="Yes"
-            cancelText="No"
           >
-            <Button danger icon={<DeleteOutlined />} />
+            <Button
+              type="default"
+              icon={<DeleteOutlined style={{ color: "red" }} />}
+              style={{
+                borderColor: "red",
+                borderRadius: 4,
+                padding: "4px 8px",
+                minWidth: 36,
+                height: 36,
+              }}
+            />
           </Popconfirm>
-        </>
+        </div>
       ),
     },
   ];
 
   return (
-    <div className="p-6">
+    <div style={{ padding: 20 }}>
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold">Currency Master</h2>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16,
+        }}
+      >
+        <h2 style={{ margin: 0 }}>Currency Master</h2>
         <Button
           type="primary"
           icon={<PlusOutlined />}
-          onClick={() => {
-            setEditId(null);
-            form.resetFields();
-            setOpen(true);
-          }}
+          onClick={handleAdd}
+          style={{ borderRadius: 4 }}
         >
           Add Currency
         </Button>
@@ -151,25 +177,28 @@ const CurrencyMaster: React.FC = () => {
         dataSource={currencies}
         columns={columns}
         rowKey="id"
+        loading={loading}
         bordered
         pagination={{ pageSize: 5 }}
       />
 
-      {/* Modal Form */}
+      {/* Modal */}
       <Modal
-        title={editId ? "Edit Currency" : "Add New Currency"}
-        open={open}
-        onCancel={() => setOpen(false)}
-        footer={null}
+        title={editingCurrency ? "Edit Currency" : "Add Currency"}
+        open={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        onOk={handleSave}
+        destroyOnClose
+        okText="Save"
         width={600}
       >
-        <Form layout="vertical" form={form} onFinish={handleSave}>
+        <Form form={form} layout="vertical">
           <Form.Item
             name="code"
             label="Currency Code"
             rules={[{ required: true, message: "Please enter currency code" }]}
           >
-            <Input placeholder="e.g. USD, INR, EUR" />
+            <Input placeholder="USD, INR, EUR..." />
           </Form.Item>
 
           <Form.Item
@@ -177,35 +206,23 @@ const CurrencyMaster: React.FC = () => {
             label="Currency Name"
             rules={[{ required: true, message: "Please enter currency name" }]}
           >
-            <Input placeholder="e.g. US Dollar, Indian Rupee" />
+            <Input placeholder="US Dollar, Indian Rupee..." />
           </Form.Item>
 
           <Form.Item name="symbol" label="Symbol">
-            <Input placeholder="e.g. $, ₹, €" />
+            <Input placeholder="$, ₹, €..." />
           </Form.Item>
 
           <Form.Item
             name="is_active"
             label="Status"
-            initialValue={1}
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: "Please select status" }]}
           >
-            <Select
-              options={[
-                { value: 1, label: "Active" },
-                { value: 0, label: "Inactive" },
-              ]}
-            />
+            <Select>
+              <Option value="1">Active</Option>
+              <Option value="0">Inactive</Option>
+            </Select>
           </Form.Item>
-
-          <div className="flex justify-end mt-4">
-            <Button onClick={() => setOpen(false)} style={{ marginRight: 8 }}>
-              Close
-            </Button>
-            <Button type="primary" htmlType="submit">
-              Save
-            </Button>
-          </div>
         </Form>
       </Modal>
     </div>

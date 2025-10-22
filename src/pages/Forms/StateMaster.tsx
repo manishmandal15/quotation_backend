@@ -12,8 +12,9 @@ import {
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
 
+// ✅ Axios API instance
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "http://localhost:5000/api/states",
   headers: { "Content-Type": "application/json" },
 });
 
@@ -32,7 +33,7 @@ const StateMaster: React.FC = () => {
   // ✅ Fetch all states
   const fetchStates = async () => {
     try {
-      const res = await API.get("/states");
+      const res = await API.get("/");
       setStates(res.data);
     } catch {
       message.error("❌ Failed to fetch states");
@@ -43,14 +44,14 @@ const StateMaster: React.FC = () => {
     fetchStates();
   }, []);
 
-  // ✅ Add / Edit State
+  // ✅ Add / Edit state
   const handleSave = async (values: any) => {
     try {
       if (editId) {
-        await API.put(`/states/${editId}`, values);
+        await API.put(`/${editId}`, values);
         message.success("✅ State updated successfully!");
       } else {
-        await API.post("/states", values);
+        await API.post("/", values);
         message.success("✅ State added successfully!");
       }
 
@@ -59,11 +60,7 @@ const StateMaster: React.FC = () => {
       form.resetFields();
       setEditId(null);
     } catch (err: any) {
-      if (err.response?.status === 409) {
-        message.error("❌ State name already exists!");
-      } else {
-        message.error("❌ Error saving state");
-      }
+      message.error("❌ Error saving state");
     }
   };
 
@@ -77,7 +74,7 @@ const StateMaster: React.FC = () => {
   // ✅ Delete
   const handleDelete = async (id: number) => {
     try {
-      await API.delete(`/states/${id}`);
+      await API.delete(`/${id}`);
       message.success("🗑️ State deleted successfully!");
       fetchStates();
     } catch {
@@ -85,7 +82,7 @@ const StateMaster: React.FC = () => {
     }
   };
 
-  // ✅ Table Columns
+  // ✅ Table columns
   const columns = [
     { title: "ID", dataIndex: "id", key: "id", width: 60 },
     { title: "State Name", dataIndex: "name", key: "name" },
@@ -95,31 +92,56 @@ const StateMaster: React.FC = () => {
       key: "is_active",
       render: (val: number) =>
         val === 1 ? (
-          <span style={{ color: "green" }}>Active</span>
+          <span style={{ color: "green", fontWeight: 500 }}>Active</span>
         ) : (
-          <span style={{ color: "red" }}>Inactive</span>
+          <span style={{ color: "red", fontWeight: 500 }}>Inactive</span>
         ),
     },
     {
       title: "Actions",
       key: "actions",
       render: (_: any, record: StateItem) => (
-        <>
+        <div style={{ display: "flex", gap: 8 }}>
+          {/* Edit Button */}
           <Button
-            type="primary"
-            icon={<EditOutlined />}
+            type="default"
+            icon={<EditOutlined style={{ color: "#1677ff" }} />}
             onClick={() => handleEdit(record)}
-            style={{ marginRight: 4 }}
+            style={{
+              borderColor: "#1677ff",
+              borderRadius: 4,
+              padding: "4px 8px",
+              minWidth: 36,
+              height: 36,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
           />
+
+          {/* Delete Button */}
           <Popconfirm
             title="Are you sure to delete this state?"
             onConfirm={() => handleDelete(record.id)}
             okText="Yes"
             cancelText="No"
           >
-            <Button danger icon={<DeleteOutlined />} />
+            <Button
+              type="default"
+              icon={<DeleteOutlined style={{ color: "red" }} />}
+              style={{
+                borderColor: "red",
+                borderRadius: 4,
+                padding: "4px 8px",
+                minWidth: 36,
+                height: 36,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            />
           </Popconfirm>
-        </>
+        </div>
       ),
     },
   ];
@@ -133,8 +155,8 @@ const StateMaster: React.FC = () => {
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => {
-            setEditId(null);
             form.resetFields();
+            setEditId(null);
             setOpen(true);
           }}
         >
@@ -155,6 +177,7 @@ const StateMaster: React.FC = () => {
       <Modal
         title={editId ? "Edit State" : "Add New State"}
         open={open}
+        destroyOnClose
         onCancel={() => setOpen(false)}
         footer={null}
         width={600}

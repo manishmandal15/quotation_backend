@@ -1,54 +1,48 @@
-import { useEffect, useState } from "react";
+// src/pages/Forms/UserMaster.tsx
+import React, { useState, useEffect } from "react";
 import {
   Table,
   Button,
+  Modal,
   Form,
   Input,
-  Modal,
-  message,
   Select,
+  message,
   Popconfirm,
 } from "antd";
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
 import axios from "axios";
 
-// Axios instance
-const API = axios.create({
-  baseURL: "http://localhost:5000/api",
-  headers: { "Content-Type": "application/json" },
-});
+const { Option } = Select;
 
-// User interface
 interface User {
-  id?: number;
-  role_id?: number;
+  id: number;
+  role_id: number;
   name: string;
   email: string;
   password?: string;
   phone?: string;
-  is_active?: "Active" | "Inactive" | number;
-  updated_at?: string;
+  is_active: number; // 1 = Active, 0 = Inactive
 }
 
-const UserMaster = () => {
+const API = axios.create({
+  baseURL: "http://localhost:5000/api/users",
+});
+
+const UserMaster: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [form] = Form.useForm<User>();
+  const [open, setOpen] = useState(false);
+  const [form] = Form.useForm();
+  const [editId, setEditId] = useState<number | null>(null);
 
   // Fetch all users
   const fetchUsers = async () => {
-    setLoading(true);
     try {
-      const res = await API.get("/users");
+      const res = await API.get("/");
       setUsers(res.data);
     } catch (err) {
+      message.error("Failed to fetch users");
       console.error(err);
-      message.error("Error fetching users");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -56,84 +50,92 @@ const UserMaster = () => {
     fetchUsers();
   }, []);
 
-  // Save (Add / Update)
-  const handleSave = async (values: User) => {
+  // Save or Update user
+  const handleSave = async (values: any) => {
     try {
       const payload = {
         ...values,
-        is_active: values.is_active === "Active" ? 1 : 0,
+        is_active: Number(values.is_active),
       };
-      if (editingUser?.id) {
-        await API.put(`/users/${editingUser.id}`, payload);
-        message.success("User updated successfully");
+
+      if (editId) {
+        await API.put(`/${editId}`, payload);
+        message.success("User updated successfully!");
       } else {
-        await API.post("/users", payload);
-        message.success("User added successfully");
+        await API.post("/", payload);
+        message.success("User added successfully!");
       }
-      setIsModalOpen(false);
-      form.resetFields();
-      setEditingUser(null);
+
       fetchUsers();
-    } catch (err) {
+      setOpen(false);
+      form.resetFields();
+      setEditId(null);
+    } catch (err: any) {
       console.error(err);
-      message.error("Error saving user");
+      message.error(err.response?.data?.error || "Error saving user");
     }
   };
 
-  // Delete
+  // Edit user
+  const handleEdit = (record: User) => {
+    setEditId(record.id);
+    form.setFieldsValue({
+      role_id: record.role_id,
+      name: record.name,
+      email: record.email,
+      password: "",
+      phone: record.phone,
+      is_active: record.is_active,
+    });
+    setOpen(true);
+  };
+
+  // Delete user
   const handleDelete = async (id: number) => {
     try {
-      await API.delete(`/users/${id}`);
-      message.success("User deleted successfully");
+      await API.delete(`/${id}`);
+      message.success("User deleted successfully!");
       fetchUsers();
     } catch (err) {
-      console.error(err);
       message.error("Error deleting user");
     }
   };
 
   // Table columns
-  const columns: ColumnsType<User> = [
+  const columns = [
     { title: "ID", dataIndex: "id", key: "id", width: 60 },
-    { title: "Role ID", dataIndex: "role_id", key: "role_id" },
     { title: "Name", dataIndex: "name", key: "name" },
     { title: "Email", dataIndex: "email", key: "email" },
     { title: "Phone", dataIndex: "phone", key: "phone" },
-    { title: "Status", dataIndex: "is_active", key: "is_active", render: (val: number | string) =>
-        val === 1 || val === "Active" ? (
-          <span style={{ color: "green" }}>Active</span>
-        ) : (
-          <span style={{ color: "red" }}>Inactive</span>
-        ),
+    { title: "Role", dataIndex: "role_id", key: "role_id" },
+    {
+      title: "Status",
+      dataIndex: "is_active",
+      key: "is_active",
+      render: (val: number) => (val === 1 ? "Active" : "Inactive"),
     },
-    { title: "Updated At", dataIndex: "updated_at", key: "updated_at" },
     {
       title: "Actions",
       key: "actions",
       render: (_: any, record: User) => (
-        <>
+        <div style={{ display: "flex", gap: 8 }}>
           <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => {
-              setEditingUser(record);
-              form.setFieldsValue({
-                ...record,
-                is_active: record.is_active === 1 || record.is_active === "Active" ? "Active" : "Inactive",
-              });
-              setIsModalOpen(true);
-            }}
-            style={{ marginRight: 8 }}
+            type="default"
+            icon={<EditOutlined style={{ color: "#1677ff" }} />}
+            onClick={() => handleEdit(record)}
+            style={{ borderColor: "#1677ff", borderRadius: 4, minWidth: 36 }}
           />
           <Popconfirm
             title="Are you sure to delete this user?"
-            onConfirm={() => record.id && handleDelete(record.id)}
-            okText="Yes"
-            cancelText="No"
+            onConfirm={() => handleDelete(record.id)}
           >
-            <Button type="text" danger icon={<DeleteOutlined />} />
+            <Button
+              type="default"
+              icon={<DeleteOutlined style={{ color: "red" }} />}
+              style={{ borderColor: "red", borderRadius: 4, minWidth: 36 }}
+            />
           </Popconfirm>
-        </>
+        </div>
       ),
     },
   ];
@@ -146,9 +148,9 @@ const UserMaster = () => {
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => {
-            setEditingUser(null);
             form.resetFields();
-            setIsModalOpen(true);
+            setEditId(null);
+            setOpen(true);
           }}
         >
           Add User
@@ -160,56 +162,73 @@ const UserMaster = () => {
         columns={columns}
         rowKey="id"
         bordered
-        loading={loading}
         pagination={{ pageSize: 5 }}
       />
 
+      {/* Modal Form */}
       <Modal
-        title={editingUser ? "Edit User" : "Add User"}
-        open={isModalOpen}
-        onCancel={() => {
-          setIsModalOpen(false);
-          form.resetFields();
-          setEditingUser(null);
-        }}
+        title={editId ? "Edit User" : "Add New User"}
+        open={open}
+        destroyOnClose
+        onCancel={() => setOpen(false)}
         footer={null}
         width={600}
       >
-        <Form form={form} layout="vertical" onFinish={handleSave}>
+        <Form layout="vertical" form={form} onFinish={handleSave}>
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="role_id" label="Role ID">
-              <Input placeholder="Enter role ID" />
+            <Form.Item
+              name="role_id"
+              label="Role"
+              rules={[{ required: true, message: "Please select role" }]}
+            >
+              <Select placeholder="Select role">
+                <Option value={1}>Admin</Option>
+                <Option value={2}>User</Option>
+              </Select>
             </Form.Item>
-            <Form.Item name="name" label="Name" rules={[{ required: true }]}>
-              <Input placeholder="Enter user name" />
+
+            <Form.Item
+              name="name"
+              label="Name"
+              rules={[{ required: true, message: "Please enter name" }]}
+            >
+              <Input placeholder="Enter name" />
             </Form.Item>
-            <Form.Item name="email" label="Email" rules={[{ required: true, type: "email" }]}>
-              <Input placeholder="Enter email" />
+
+            <Form.Item
+              name="email"
+              label="Email"
+              rules={[{ required: true, message: "Please enter email" }]}
+            >
+              <Input type="email" placeholder="Enter email" />
             </Form.Item>
-            <Form.Item name="password" label="Password">
-              <Input.Password placeholder="Enter password" />
+
+            <Form.Item
+              name="password"
+              label="Password"
+              rules={[{ required: !editId, message: "Please enter password" }]}
+            >
+              <Input type="password" placeholder="Enter password" />
             </Form.Item>
+
             <Form.Item name="phone" label="Phone">
-              <Input placeholder="Enter phone number" />
+              <Input placeholder="Enter phone" />
             </Form.Item>
-            <Form.Item name="is_active" label="Status">
-              <Select
-                options={[
-                  { value: "Active", label: "Active" },
-                  { value: "Inactive", label: "Inactive" },
-                ]}
-              />
+
+            <Form.Item
+              name="is_active"
+              label="Status"
+              rules={[{ required: true, message: "Please select status" }]}
+            >
+              <Select>
+                <Option value={1}>Active</Option>
+                <Option value={0}>Inactive</Option>
+              </Select>
             </Form.Item>
           </div>
+
           <div className="flex justify-end mt-4">
-            <Button
-              onClick={() => {
-                setIsModalOpen(false);
-                form.resetFields();
-                setEditingUser(null);
-              }}
-              style={{ marginRight: 8 }}
-            >
+            <Button onClick={() => setOpen(false)} style={{ marginRight: 8 }}>
               Close
             </Button>
             <Button type="primary" htmlType="submit">

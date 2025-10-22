@@ -1,96 +1,76 @@
 const db = require("../config/db");
 
 class CurrencyController {
-  // Get all currencies
-  async getAll(req, res) {
-    try {
-      const [rows] = await pool.query("SELECT * FROM currencies ORDER BY id DESC");
-      res.json(rows);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
+  // ✅ Get all currencies
+  getAll(req, res) {
+    db.query("SELECT * FROM currencies ORDER BY id DESC", (err, results) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(results);
+    });
   }
 
-  // Get currency by ID
-  async getById(req, res) {
-    try {
-      const [rows] = await pool.query("SELECT * FROM currencies WHERE id = ?", [
-        req.params.id,
-      ]);
-      if (rows.length === 0) return res.status(404).json({ message: "Not found" });
-      res.json(rows[0]);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
+  // ✅ Get currency by ID
+  getById(req, res) {
+    db.query("SELECT * FROM currencies WHERE id = ?", [req.params.id], (err, results) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (results.length === 0) return res.status(404).json({ message: "Currency not found" });
+      res.json(results[0]);
+    });
   }
 
-  // Create new currency
-  async create(req, res) {
+  // ✅ Create new currency
+  create(req, res) {
     const { code, name, symbol, is_active } = req.body;
 
     if (!code || !name) {
-      return res.status(400).json({ error: "code and name are required" });
+      return res.status(400).json({ error: "Code and name are required" });
     }
 
-    try {
-      const [result] = await pool.query(
-        `INSERT INTO currencies (code, name, symbol, is_active) VALUES (?, ?, ?, ?)`,
-        [code, name, symbol, is_active ?? 1]
-      );
-      res.status(201).json({
-        id: result.insertId,
-        code,
-        name,
-        symbol,
-        is_active: is_active ?? 1,
-      });
-    } catch (err) {
-      if (err.code === "ER_DUP_ENTRY") {
-        res.status(400).json({ error: "Currency code already exists" });
-      } else {
-        res.status(500).json({ error: err.message });
+    db.query(
+      "INSERT INTO currencies (code, name, symbol, is_active) VALUES (?, ?, ?, ?)",
+      [code, name, symbol || null, is_active ?? 1],
+      (err, result) => {
+        if (err) {
+          if (err.code === "ER_DUP_ENTRY") {
+            return res.status(400).json({ error: "Currency code already exists" });
+          }
+          return res.status(500).json({ error: err.message });
+        }
+        res.status(201).json({ id: result.insertId, code, name, symbol, is_active: is_active ?? 1 });
       }
-    }
+    );
   }
 
-  // Update currency
-  async update(req, res) {
+  // ✅ Update currency
+  update(req, res) {
     const { code, name, symbol, is_active } = req.body;
 
-    try {
-      const [result] = await pool.query(
-        `UPDATE currencies 
-         SET code=?, name=?, symbol=?, is_active=? 
-         WHERE id=?`,
-        [code, name, symbol, is_active, req.params.id]
-      );
-
-      if (result.affectedRows === 0)
-        return res.status(404).json({ message: "Not found" });
-
-      res.json({ message: "Updated successfully" });
-    } catch (err) {
-      if (err.code === "ER_DUP_ENTRY") {
-        res.status(400).json({ error: "Currency code already exists" });
-      } else {
-        res.status(500).json({ error: err.message });
+    db.query(
+      "UPDATE currencies SET code=?, name=?, symbol=?, is_active=? WHERE id=?",
+      [code, name, symbol || null, is_active, req.params.id],
+      (err, result) => {
+        if (err) {
+          if (err.code === "ER_DUP_ENTRY") {
+            return res.status(400).json({ error: "Currency code already exists" });
+          }
+          return res.status(500).json({ error: err.message });
+        }
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ message: "Currency not found" });
+        }
+        res.json({ message: "Currency updated successfully" });
       }
-    }
+    );
   }
 
-  // Delete currency
-  async delete(req, res) {
-    try {
-      const [result] = await pool.query("DELETE FROM currencies WHERE id = ?", [
-        req.params.id,
-      ]);
-      if (result.affectedRows === 0)
-        return res.status(404).json({ message: "Not found" });
-      res.json({ message: "Deleted successfully" });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
+  // ✅ Delete currency
+  delete(req, res) {
+    db.query("DELETE FROM currencies WHERE id=?", [req.params.id], (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (result.affectedRows === 0) return res.status(404).json({ message: "Currency not found" });
+      res.json({ message: "Currency deleted successfully" });
+    });
   }
 }
 
-module.exports = CurrencyController;
+module.exports = new CurrencyController();

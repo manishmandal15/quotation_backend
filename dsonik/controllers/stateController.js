@@ -1,78 +1,62 @@
+// controllers/stateController.js
 const db = require("../config/db");
 
-class StateController {
-  // Get all states
-  async getAll(req, res) {
-    try {
-      const [rows] = await pool.query("SELECT * FROM states");
-      res.json(rows);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
+// Get all states
+exports.getAll = (req, res) => {
+  db.query("SELECT * FROM states", (err, results) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json(results);
+  });
+};
 
-  // Get state by ID
-  async getById(req, res) {
-    try {
-      const [rows] = await pool.query("SELECT * FROM states WHERE id = ?", [
-        req.params.id,
-      ]);
-      if (rows.length === 0)
-        return res.status(404).json({ message: "State not found" });
-      res.json(rows[0]);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
+// Get state by ID
+exports.getById = (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  db.query("SELECT * FROM states WHERE id = ?", [id], (err, results) => {
+    if (err) return res.status(500).json({ error: err });
+    if (!results.length) return res.status(404).json({ message: "State not found" });
+    res.json(results[0]);
+  });
+};
 
-  // Create a new state
-  async create(req, res) {
-    const { name, is_active } = req.body;
-    if (!name) {
-      return res.status(400).json({ error: "Name is required" });
-    }
-    try {
-      const [result] = await pool.query(
-        "INSERT INTO states (name, is_active) VALUES (?, ?)",
-        [name, is_active ?? 1]
-      );
-      res
-        .status(201)
-        .json({ id: result.insertId, name, is_active: is_active ?? 1 });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
+// Create new state
+exports.create = (req, res) => {
+  const { name, is_active } = req.body;
+  if (!name) return res.status(400).json({ error: "Name is required" });
 
-  // Update state
-  async update(req, res) {
-    const { name, is_active } = req.body;
-    try {
-      const [result] = await pool.query(
-        "UPDATE states SET name = ?, is_active = ? WHERE id = ?",
-        [name, is_active, req.params.id]
-      );
-      if (result.affectedRows === 0)
-        return res.status(404).json({ message: "State not found" });
+  db.query(
+    "INSERT INTO states (name, is_active) VALUES (?, ?)",
+    [name, is_active ?? 1],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err });
+      res.status(201).json({ id: result.insertId, name, is_active: is_active ?? 1 });
+    }
+  );
+};
+
+// Update state
+exports.update = (req, res) => {
+  const { id } = req.params;
+  const { name, is_active } = req.body;
+
+  db.query(
+    "UPDATE states SET name = ?, is_active = ? WHERE id = ?",
+    [name, is_active, id],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err });
+      if (result.affectedRows === 0) return res.status(404).json({ message: "State not found" });
       res.json({ message: "State updated successfully" });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
     }
-  }
+  );
+};
 
-  // Delete state
-  async delete(req, res) {
-    try {
-      const [result] = await pool.query("DELETE FROM states WHERE id = ?", [
-        req.params.id,
-      ]);
-      if (result.affectedRows === 0)
-        return res.status(404).json({ message: "State not found" });
-      res.json({ message: "State deleted successfully" });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-}
+// Delete state
+exports.delete = (req, res) => {
+  const { id } = req.params;
 
-module.exports = StateController;
+  db.query("DELETE FROM states WHERE id = ?", [id], (err, result) => {
+    if (err) return res.status(500).json({ error: err });
+    if (result.affectedRows === 0) return res.status(404).json({ message: "State not found" });
+    res.json({ message: "State deleted successfully" });
+  });
+};
