@@ -2,9 +2,10 @@
 const db = require("../config/db");
 
 // ✅ Get all customers
+// Get all customers
 exports.getCustomers = (req, res) => {
-  db.query("SELECT * FROM customers", (err, results) => {
-    if (err) return res.status(500).json({ error: "Database error" });
+  db.query("SELECT * FROM customers WHERE is_active=1", (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
 };

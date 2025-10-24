@@ -1,0 +1,48 @@
+.quotation-card {
+  margin: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 12px;
+}
+
+.quotation-header {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.inner-card {
+  margin-bottom: 16px;
+  border-radius: 10px;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.total-section {
+  text-align: right;
+  margin-top: 10px;
+}
+
+.form-submit {
+  text-align: right;
+  margin-top: 20px;
+}
+
+/* ✅ Responsive for mobile */
+@media (max-width: 768px) {
+  .quotation-card {
+    padding: 8px;
+  }
+  .quotation-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .total-section h3,
+  .total-section h4 {
+    font-size: 14px;
+  }
+}

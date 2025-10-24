@@ -1,203 +1,115 @@
 const db = require("../config/db");
 
-class QuotationController {
-  // Get all quotations
-  async getAll(req, res) {
-    try {
-      const [rows] = await pool.query(
-        `SELECT q.*, 
-                c.name AS customer_name, 
-                cur.name AS currency_name,
-                u1.name AS created_by_name,
-                u2.name AS approved_by_name
-         FROM quotations q
-         JOIN customers c ON q.customer_id = c.id
-         JOIN currencies cur ON q.currency_id = cur.id
-         JOIN users u1 ON q.created_by = u1.id
-         LEFT JOIN users u2 ON q.approved_by = u2.id
-         ORDER BY q.id DESC`
-      );
-      res.json(rows);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
+// ✅ GET all quotations
+exports.getAllQuotations = (req, res) => {
+  const query = `
+    SELECT q.id, q.quotation_no AS quotationNo, q.quotation_no, 
+           c.name AS customerName, q.created_at AS quotationDate, q.net_amount AS totalAmount
+    FROM quotations q
+    JOIN customers c ON q.customer_id = c.id
+    ORDER BY q.id DESC
+  `;
+  db.query(query, (err, results) => {
+    if (err) return res.status(500).json({ error: "Failed to fetch quotations", details: err.message });
+    res.json(results);
+  });
+};
+
+// ✅ GET single quotation by id
+exports.getQuotationById = (req, res) => {
+  const { id } = req.params;
+  const query = `
+    SELECT q.*, c.name AS customerName
+    FROM quotations q
+    JOIN customers c ON q.customer_id = c.id
+    WHERE q.id = ?`;
+
+  db.query(query, [id], (err, results) => {
+    if (err) {
+      console.error(err);         // <-- check logs here
+      return res.status(500).json({ error: err.message });
     }
-  }
+    if (!results.length) return res.status(404).json({ error: "Quotation not found" });
 
-  // Get quotation by ID
-  async getById(req, res) {
-    try {
-      const [rows] = await pool.query(
-        `SELECT q.*, 
-                c.name AS customer_name, 
-                cur.name AS currency_name,
-                u1.name AS created_by_name,
-                u2.name AS approved_by_name
-         FROM quotations q
-         JOIN customers c ON q.customer_id = c.id
-         JOIN currencies cur ON q.currency_id = cur.id
-         JOIN users u1 ON q.created_by = u1.id
-         LEFT JOIN users u2 ON q.approved_by = u2.id
-         WHERE q.id = ?`,
-        [req.params.id]
-      );
-      if (rows.length === 0) return res.status(404).json({ message: "Not found" });
-      res.json(rows[0]);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-
-  // Create new quotation
-  async create(req, res) {
-    const {
-      quotation_no,
-      customer_id,
-      currency_id,
-      validity_date,
-      payment_terms,
-      delivery_terms,
-      status,
-      total_amount,
-      discount_amount,
-      tax_amount,
-      net_amount,
-      created_by,
-      approved_by
-    } = req.body;
-
-    if (!quotation_no || !customer_id || !currency_id || !created_by) {
-      return res.status(400).json({
-        error: "quotation_no, customer_id, currency_id and created_by are required",
-      });
-    }
-
-    try {
-      const [result] = await pool.query(
-        `INSERT INTO quotations 
-         (quotation_no, customer_id, currency_id, validity_date, payment_terms, delivery_terms, status,
-          total_amount, discount_amount, tax_amount, net_amount, created_by, approved_by)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          quotation_no,
-          customer_id,
-          currency_id,
-          validity_date,
-          payment_terms,
-          delivery_terms,
-          status ?? "draft",
-          total_amount ?? 0.0,
-          discount_amount ?? 0.0,
-          tax_amount ?? 0.0,
-          net_amount ?? 0.0,
-          created_by,
-          approved_by ?? null
-        ]
-      );
-
-      res.status(201).json({
-        id: result.insertId,
-        quotation_no,
-        customer_id,
-        currency_id,
-        validity_date,
-        payment_terms,
-        delivery_terms,
-        status: status ?? "draft",
-        total_amount: total_amount ?? 0.0,
-        discount_amount: discount_amount ?? 0.0,
-        tax_amount: tax_amount ?? 0.0,
-        net_amount: net_amount ?? 0.0,
-        created_by,
-        approved_by: approved_by ?? null
-      });
-    } catch (err) {
-      if (err.code === "ER_DUP_ENTRY") {
-        res.status(400).json({ error: "Quotation number already exists" });
-      } else {
-        res.status(500).json({ error: err.message });
+    const quotation = results[0];
+    
+    // Fetch products for this quotation
+    const prodQuery = "SELECT * FROM quotation_items WHERE quotation_id = ?";
+    db.query(prodQuery, [id], (err2, products) => {
+      if (err2) {
+        console.error(err2);
+        return res.status(500).json({ error: err2.message });
       }
+
+      res.json({ ...quotation, products });
+    });
+  });
+};
+
+
+// ✅ CREATE new quotation
+exports.createQuotation = (req, res) => {
+  const {
+    quotationNo,
+    customerId,
+    currencyId,
+    validityDate,
+    paymentTerms,
+    deliveryTerms,
+    totalAmount,
+    discountAmount,
+    taxAmount,
+    netAmount,
+    createdBy,
+  } = req.body;
+
+  const query = `
+    INSERT INTO quotations 
+      (quotation_no, customer_id, currency_id, validity_date, payment_terms, delivery_terms, total_amount, discount_amount, tax_amount, net_amount, created_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  db.query(
+    query,
+    [quotationNo, customerId, currencyId, validityDate, paymentTerms, deliveryTerms, totalAmount, discountAmount, taxAmount, netAmount, createdBy],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: "Failed to create quotation", details: err.message });
+      res.json({ message: "Quotation saved successfully!", id: result.insertId });
     }
-  }
+  );
+};
 
-  // Update quotation
-  async update(req, res) {
-    const {
-      quotation_no,
-      customer_id,
-      currency_id,
-      validity_date,
-      payment_terms,
-      delivery_terms,
-      status,
-      total_amount,
-      discount_amount,
-      tax_amount,
-      net_amount,
-      created_by,
-      approved_by
-    } = req.body;
+// ✅ UPDATE quotation
+exports.updateQuotation = (req, res) => {
+  const { id } = req.params;
+  const {
+    customerId,
+    currencyId,
+    validityDate,
+    paymentTerms,
+    deliveryTerms,
+    totalAmount,
+    discountAmount,
+    taxAmount,
+    netAmount,
+  } = req.body;
 
-    try {
-      const [result] = await pool.query(
-        `UPDATE quotations SET
-          quotation_no = ?, 
-          customer_id = ?, 
-          currency_id = ?, 
-          validity_date = ?, 
-          payment_terms = ?, 
-          delivery_terms = ?, 
-          status = ?, 
-          total_amount = ?, 
-          discount_amount = ?, 
-          tax_amount = ?, 
-          net_amount = ?, 
-          created_by = ?, 
-          approved_by = ?
-         WHERE id = ?`,
-        [
-          quotation_no,
-          customer_id,
-          currency_id,
-          validity_date,
-          payment_terms,
-          delivery_terms,
-          status,
-          total_amount,
-          discount_amount,
-          tax_amount,
-          net_amount,
-          created_by,
-          approved_by,
-          req.params.id,
-        ]
-      );
+  const query = `
+    UPDATE quotations
+    SET customer_id=?, currency_id=?, validity_date=?, payment_terms=?, delivery_terms=?, total_amount=?, discount_amount=?, tax_amount=?, net_amount=?
+    WHERE id=?
+  `;
+  db.query(query, [customerId, currencyId, validityDate, paymentTerms, deliveryTerms, totalAmount, discountAmount, taxAmount, netAmount, id], (err) => {
+    if (err) return res.status(500).json({ error: "Failed to update quotation", details: err.message });
+    res.json({ message: "Quotation updated successfully!" });
+  });
+};
 
-      if (result.affectedRows === 0)
-        return res.status(404).json({ message: "Not found" });
-
-      res.json({ message: "Updated successfully" });
-    } catch (err) {
-      if (err.code === "ER_DUP_ENTRY") {
-        res.status(400).json({ error: "Quotation number already exists" });
-      } else {
-        res.status(500).json({ error: err.message });
-      }
-    }
-  }
-
-  // Delete quotation
-  async delete(req, res) {
-    try {
-      const [result] = await pool.query("DELETE FROM quotations WHERE id = ?", [
-        req.params.id,
-      ]);
-      if (result.affectedRows === 0)
-        return res.status(404).json({ message: "Not found" });
-      res.json({ message: "Deleted successfully" });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-}
-
-module.exports = QuotationController;
+// ✅ DELETE quotation
+exports.deleteQuotation = (req, res) => {
+  const { id } = req.params;
+  const query = "DELETE FROM quotations WHERE id=?";
+  db.query(query, [id], (err) => {
+    if (err) return res.status(500).json({ error: "Failed to delete quotation", details: err.message });
+    res.json({ message: "Quotation deleted successfully!" });
+  });
+};

@@ -34,11 +34,11 @@ const navItems: NavItem[] = [
   
 
   {
-    name: "Quotation Module",
+    name: "Quotation-Module",
     icon: <ListIcon />,
     subItems: [
-      { name: "New Quatation", path: "/forms/company-master", pro: false },
-      { name: "All Quatation", path: "/forms/company-master", pro: false },
+     { name: "All Quotation", path: "/forms/quotation-all", pro: false },
+{ name: "New Quotation", path: "/forms/new-quotation", pro: false },
       { name: "Quotation Approval", path: "/forms/role-master", pro: false },
       { name: "Quotation Dispatch", path: "/forms/state-master", pro: false },
       { name: "Quotation Status Tracking", path: "/forms/district-master", pro: false },

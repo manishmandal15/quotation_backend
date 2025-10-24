@@ -25,6 +25,8 @@ import CustomerMaster from "./pages/Forms/CustomerMaster";
 import UserMaster from "./pages/Forms/UserMaster";
 import ProductMaster from "./pages/Forms/ProductMaster";
 import DistrictMaster from "./pages/Forms/DistrictMaster";
+import NewQuotation from "./quotation-module/NewQuotation";
+import QuotationAll from "./quotation-module/quotationAll";
 
 export default function App() {
   return (
@@ -46,7 +48,8 @@ export default function App() {
           <Route path="/forms/products" element={<ProductMaster />} />
           <Route path="/forms/customers" element={<CustomerMaster />} />
           <Route path="/forms/users" element={<UserMaster />} />
-
+          <Route path="/forms/quotation-all" element={<QuotationAll />} />
+        <Route path="/forms/new-quotation" element={<NewQuotation />} />
           {/* Tables */}
           <Route path="/basic-tables" element={<BasicTables />} />
 
