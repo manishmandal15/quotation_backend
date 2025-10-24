@@ -16,11 +16,12 @@ const stateRoutes = require("./routes/stateRoutes");
 const companyRoutes = require("./routes/companyRoutes");
 const currencyRoutes = require("./routes/currencyRoutes");
 const roleRoutes = require("./routes/roleRoutes");
-const quotationRoutes = require("./routes/quotations");
+// const quotationRoutes = require("./routes/quotations");
 const quotationItemRoutes = require("./routes/quotation_items");
 const quotationApprovalRoutes = require("./routes/quotation_approvals");
 const quotationAttachmentRoutes = require("./routes/quotation_attachments");
 const quotationCommentRoutes = require("./routes/quotation_comments");
+const quotationRoutes = require("./routes/quotationRoutes");
 
 
 
@@ -47,6 +48,7 @@ app.use("/api/states", stateRoutes);
 app.use("/api/company_settings", companyRoutes);
 app.use("/api/currencies", currencyRoutes);
 app.use("/api/roles", roleRoutes);
+// app.use("/api/quotations", quotationRoutes);
 app.use("/api/quotations", quotationRoutes);
 app.use("/api/quotation_items", quotationItemRoutes);
 app.use("/api/quotation_approvals", quotationApprovalRoutes);
