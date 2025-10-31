@@ -27,6 +27,7 @@ import ProductMaster from "./pages/Forms/ProductMaster";
 import DistrictMaster from "./pages/Forms/DistrictMaster";
 import NewQuotation from "./quotation-module/NewQuotation";
 import QuotationAll from "./quotation-module/quotationAll";
+import QuotationApproval from "./quotation-module/QuotationApproval";
 
 export default function App() {
   return (
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="/forms/users" element={<UserMaster />} />
           <Route path="/forms/quotation-all" element={<QuotationAll />} />
         <Route path="/forms/new-quotation" element={<NewQuotation />} />
+        <Route path="/forms/quotation-approval" element={<QuotationApproval />} />
           {/* Tables */}
           <Route path="/basic-tables" element={<BasicTables />} />
 
