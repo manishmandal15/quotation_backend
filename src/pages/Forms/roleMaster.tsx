@@ -12,79 +12,88 @@ import {
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
 
-// API setup
-const API = axios.create({
-  baseURL: "http://localhost:5000/api/states",
+// Roles API Instance
+const RolesAPI = axios.create({
+  baseURL: "http://localhost:5000/api/roles",
+  headers: { "Content-Type": "application/json" },
 });
 
-// Type definition
-interface StateItem {
+interface RoleItem {
   id: number;
   name: string;
+  description?: string;
   is_active: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
-const StateMaster: React.FC = () => {
-  const [states, setStates] = useState<StateItem[]>([]);
+const RolesMaster: React.FC = () => {
+  const [roles, setRoles] = useState<RoleItem[]>([]);
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
   const [editId, setEditId] = useState<number | null>(null);
 
-  // Fetch all states
-  const fetchStates = async () => {
+  // Fetch all roles
+  const fetchRoles = async () => {
     try {
-      const res = await API.get("/");
-      setStates(res.data);
-    } catch {
-      message.error("Failed to fetch states");
+      const res = await RolesAPI.get("/");
+      setRoles(res.data);
+    } catch (err) {
+      console.error(err);
+      message.error("❌ Failed to fetch roles");
     }
   };
 
   useEffect(() => {
-    fetchStates();
+    fetchRoles();
   }, []);
 
-  // Save state (Add/Edit)
+  // Add / Edit role
   const handleSave = async (values: any) => {
     try {
       if (editId) {
-        await API.put(`/${editId}`, values);
-        message.success("State updated successfully!");
+        await RolesAPI.put(`/${editId}`, values);
+        message.success("✅ Role updated successfully!");
       } else {
-        await API.post("/", values);
-        message.success("State added successfully!");
+        await RolesAPI.post("/", values);
+        message.success("✅ Role added successfully!");
       }
-      fetchStates();
+
+      fetchRoles();
       setOpen(false);
       form.resetFields();
       setEditId(null);
-    } catch {
-      message.error("Error saving state");
+    } catch (err) {
+      console.error(err);
+      // Attempt to surface backend validation error if available
+      const errMsg = err?.response?.data?.message || "❌ Error saving role";
+      message.error(errMsg);
     }
   };
 
-  // Edit state
-  const handleEdit = (record: StateItem) => {
-    setEditId(record.id);
+  // Edit
+  const handleEdit = (record: RoleItem) => {
     form.setFieldsValue(record);
+    setEditId(record.id);
     setOpen(true);
   };
 
-  // Delete state
+  // Delete
   const handleDelete = async (id: number) => {
     try {
-      await API.delete(`/${id}`);
-      message.success("State deleted successfully!");
-      fetchStates();
-    } catch {
-      message.error("Error deleting state");
+      await RolesAPI.delete(`/${id}`);
+      message.success("🗑️ Role deleted successfully!");
+      fetchRoles();
+    } catch (err) {
+      console.error(err);
+      message.error("❌ Error deleting role");
     }
   };
 
-  // Table columns
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id", width: 60 },
-    { title: "State Name", dataIndex: "name", key: "name" },
+    { title: "ID", dataIndex: "id", key: "id", width: 80 },
+    { title: "Role Name", dataIndex: "name", key: "name" },
+    { title: "Description", dataIndex: "description", key: "description" },
     {
       title: "Status",
       dataIndex: "is_active",
@@ -99,7 +108,7 @@ const StateMaster: React.FC = () => {
     {
       title: "Actions",
       key: "actions",
-      render: (_: any, record: StateItem) => (
+      render: (_: any, record: RoleItem) => (
         <div style={{ display: "flex", gap: 8 }}>
           <Button
             type="default"
@@ -114,7 +123,7 @@ const StateMaster: React.FC = () => {
             }}
           />
           <Popconfirm
-            title="Are you sure to delete this state?"
+            title="Are you sure to delete this role?"
             onConfirm={() => handleDelete(record.id)}
             okText="Yes"
             cancelText="No"
@@ -140,7 +149,7 @@ const StateMaster: React.FC = () => {
     <div className="p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold">State Master</h2>
+        <h2 className="text-2xl font-semibold">Roles Master</h2>
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -150,63 +159,37 @@ const StateMaster: React.FC = () => {
             setOpen(true);
           }}
         >
-          Add State
+          Add Role
         </Button>
       </div>
 
       {/* Table */}
-      <Table
-        dataSource={states}
-        columns={columns}
-        rowKey="id"
-        bordered
-        pagination={{ pageSize: 5 }}
-      />
+      <Table dataSource={roles} columns={columns} rowKey="id" bordered pagination={{ pageSize: 8 }} />
 
       {/* Modal Form */}
       <Modal
-        title={editId ? "Edit State" : "Add New State"}
+        title={editId ? "Edit Role" : "Add New Role"}
         open={open}
-        onCancel={() => {
-          setOpen(false);
-          form.resetFields();
-          setEditId(null);
-        }}
+        onCancel={() => setOpen(false)}
+        destroyOnClose
         footer={null}
-        width={600}
+        width={700}
       >
         <Form layout="vertical" form={form} onFinish={handleSave}>
-          <Form.Item
-            name="name"
-            label="State Name"
-            rules={[{ required: true, message: "Please enter state name" }]}
-          >
-            <Input placeholder="Enter state name" />
+          <Form.Item name="name" label="Role Name" rules={[{ required: true, message: "Please enter role name" }]}>
+            <Input placeholder="Enter role name" />
           </Form.Item>
 
-          <Form.Item
-            name="is_active"
-            label="Status"
-            initialValue={1}
-            rules={[{ required: true }]}
-          >
-            <Select
-              options={[
-                { value: 1, label: "Active" },
-                { value: 0, label: "Inactive" },
-              ]}
-            />
+          <Form.Item name="description" label="Description">
+            <Input.TextArea placeholder="Optional description" rows={3} />
+          </Form.Item>
+
+          <Form.Item name="is_active" label="Status" initialValue={1} rules={[{ required: true }]}>
+            <Select options={[{ value: 1, label: "Active" }, { value: 0, label: "Inactive" }]} />
           </Form.Item>
 
           <div className="flex justify-end mt-4">
-            <Button
-              onClick={() => {
-                setOpen(false);
-                form.resetFields();
-                setEditId(null);
-              }}
-              style={{ marginRight: 8 }}
-            >
+            <Button onClick={() => setOpen(false)} style={{ marginRight: 8 }}>
               Close
             </Button>
             <Button type="primary" htmlType="submit">
@@ -219,4 +202,4 @@ const StateMaster: React.FC = () => {
   );
 };
 
-export default StateMaster;
+export default RolesMaster;

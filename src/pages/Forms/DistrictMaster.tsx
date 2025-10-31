@@ -1,117 +1,137 @@
-// src/pages/Forms/StateMaster.tsx
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  Table,
   Button,
   Modal,
   Form,
+  Table,
   Input,
   Select,
   message,
   Popconfirm,
 } from "antd";
-import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
 
-const { Option } = Select;
+// ✅ District API Instance
+const DistrictAPI = axios.create({
+  baseURL: "http://localhost:5000/api/districts",
+  headers: { "Content-Type": "application/json" },
+});
 
-const StateMaster: React.FC = () => {
-  const [states, setStates] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+// ✅ States API Instance (For dropdown)
+const StatesAPI = axios.create({
+  baseURL: "http://localhost:5000/api/states",
+  headers: { "Content-Type": "application/json" },
+});
+
+interface DistrictItem {
+  id: number;
+  name: string;
+  state_id: number;
+  is_active: number;
+}
+
+interface StateItem {
+  id: number;
+  name: string;
+}
+
+const DistrictMaster: React.FC = () => {
+  const [districts, setDistricts] = useState<DistrictItem[]>([]);
+  const [states, setStates] = useState<StateItem[]>([]);
   const [open, setOpen] = useState(false);
-  const [editingState, setEditingState] = useState<any>(null);
   const [form] = Form.useForm();
+  const [editId, setEditId] = useState<number | null>(null);
 
-  const API = axios.create({
-    baseURL: "http://localhost:5000/api/states",
-  });
-
-  // Fetch all states
+  // ✅ Fetch all states for dropdown
   const fetchStates = async () => {
-    setLoading(true);
     try {
-      const res = await API.get("/");
+      const res = await StatesAPI.get("/");
       setStates(res.data);
-    } catch (err) {
-      console.error(err);
-      message.error("Failed to fetch states");
-    } finally {
-      setLoading(false);
+    } catch {
+      message.error("❌ Failed to fetch states");
+    }
+  };
+
+  // ✅ Fetch all districts
+  const fetchDistricts = async () => {
+    try {
+      const res = await DistrictAPI.get("/");
+      setDistricts(res.data);
+    } catch {
+      message.error("❌ Failed to fetch districts");
     }
   };
 
   useEffect(() => {
+    fetchDistricts();
     fetchStates();
   }, []);
 
-  // Add new state
-  const handleAdd = () => {
-    setEditingState(null);
-    form.resetFields();
-    setOpen(true);
-  };
-
-  // Edit state
-  const handleEdit = (record: any) => {
-    setEditingState(record);
-    form.setFieldsValue({
-      name: record.name,
-      is_active: String(record.is_active),
-    });
-    setOpen(true);
-  };
-
-  // Delete state
-  const handleDelete = async (id: number) => {
-    try {
-      await API.delete(`/${id}`);
-      message.success("State deleted successfully!");
-      fetchStates();
-    } catch (err) {
-      console.error(err);
-      message.error("Failed to delete state");
-    }
-  };
-
-  // Save state (Add/Edit)
+  // ✅ Add / Edit district
   const handleSave = async (values: any) => {
     try {
-      const payload = {
-        name: values.name.trim(),
-        is_active: Number(values.is_active),
-      };
-
-      if (editingState) {
-        await API.put(`/${editingState.id}`, payload);
-        message.success("State updated successfully!");
+      if (editId) {
+        await DistrictAPI.put(`/${editId}`, values);
+        message.success("✅ District updated successfully!");
       } else {
-        await API.post("/", payload);
-        message.success("State added successfully!");
+        await DistrictAPI.post("/", values);
+        message.success("✅ District added successfully!");
       }
 
+      fetchDistricts();
       setOpen(false);
-      fetchStates();
       form.resetFields();
-      setEditingState(null);
-    } catch (err) {
-      console.error(err);
-      message.error("Failed to save state");
+      setEditId(null);
+    } catch {
+      message.error("❌ Error saving district");
     }
   };
 
+  // ✅ Edit
+  const handleEdit = (record: DistrictItem) => {
+    form.setFieldsValue(record);
+    setEditId(record.id);
+    setOpen(true);
+  };
+
+  // ✅ Delete
+  const handleDelete = async (id: number) => {
+    try {
+      await DistrictAPI.delete(`/${id}`);
+      message.success("🗑️ District deleted successfully!");
+      fetchDistricts();
+    } catch {
+      message.error("❌ Error deleting district");
+    }
+  };
+
+  // ✅ Table columns
   const columns = [
     { title: "ID", dataIndex: "id", key: "id", width: 60 },
-    { title: "State Name", dataIndex: "name", key: "name" },
+    { title: "District Name", dataIndex: "name", key: "name" },
+    {
+      title: "State",
+      dataIndex: "state_id",
+      key: "state_id",
+      render: (state_id: number) =>
+        states.find((state) => state.id === state_id)?.name || "Unknown",
+    },
     {
       title: "Status",
       dataIndex: "is_active",
       key: "is_active",
-      render: (val: number) => (val === 1 ? "Active" : "Inactive"),
+      render: (val: number) =>
+        val === 1 ? (
+          <span style={{ color: "green", fontWeight: 500 }}>Active</span>
+        ) : (
+          <span style={{ color: "red", fontWeight: 500 }}>Inactive</span>
+        ),
     },
     {
       title: "Actions",
       key: "actions",
-      render: (_: any, record: any) => (
+      render: (_: any, record: DistrictItem) => (
         <div style={{ display: "flex", gap: 8 }}>
           <Button
             type="default"
@@ -126,7 +146,7 @@ const StateMaster: React.FC = () => {
             }}
           />
           <Popconfirm
-            title="Are you sure to delete this state?"
+            title="Are you sure to delete this district?"
             onConfirm={() => handleDelete(record.id)}
             okText="Yes"
             cancelText="No"
@@ -150,61 +170,79 @@ const StateMaster: React.FC = () => {
 
   return (
     <div className="p-6">
+      {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold">State Master</h2>
+        <h2 className="text-2xl font-semibold">District Master</h2>
         <Button
           type="primary"
           icon={<PlusOutlined />}
-          onClick={handleAdd}
+          onClick={() => {
+            form.resetFields();
+            setEditId(null);
+            setOpen(true);
+          }}
         >
-          Add State
+          Add District
         </Button>
       </div>
 
+      {/* Table */}
       <Table
-        dataSource={states}
+        dataSource={districts}
         columns={columns}
         rowKey="id"
-        loading={loading}
         bordered
         pagination={{ pageSize: 5 }}
       />
 
+      {/* Modal Form */}
       <Modal
-        title={editingState ? "Edit State" : "Add New State"}
+        title={editId ? "Edit District" : "Add New District"}
         open={open}
-        destroyOnClose
         onCancel={() => setOpen(false)}
+        destroyOnClose
         footer={null}
         width={600}
       >
         <Form layout="vertical" form={form} onFinish={handleSave}>
-          <div className="grid grid-cols-1 gap-4">
-            <Form.Item
-              name="name"
-              label="State Name"
-              rules={[{ required: true, message: "Please enter state name" }]}
-            >
-              <Input placeholder="Enter state name" />
-            </Form.Item>
+          <Form.Item
+            name="name"
+            label="District Name"
+            rules={[{ required: true, message: "Please enter district name" }]}
+          >
+            <Input placeholder="Enter district name" />
+          </Form.Item>
 
-            <Form.Item
-              name="is_active"
-              label="Status"
-              rules={[{ required: true, message: "Please select status" }]}
-            >
-              <Select>
-                <Option value="1">Active</Option>
-                <Option value="0">Inactive</Option>
-              </Select>
-            </Form.Item>
-          </div>
+          <Form.Item
+            name="state_id"
+            label="State"
+            rules={[{ required: true, message: "Please select state" }]}
+          >
+            <Select
+              placeholder="Select State"
+              options={states.map((state) => ({
+                value: state.id,
+                label: state.name,
+              }))}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="is_active"
+            label="Status"
+            initialValue={1}
+            rules={[{ required: true }]}
+          >
+            <Select
+              options={[
+                { value: 1, label: "Active" },
+                { value: 0, label: "Inactive" },
+              ]}
+            />
+          </Form.Item>
 
           <div className="flex justify-end mt-4">
-            <Button
-              onClick={() => setOpen(false)}
-              style={{ marginRight: 8 }}
-            >
+            <Button onClick={() => setOpen(false)} style={{ marginRight: 8 }}>
               Close
             </Button>
             <Button type="primary" htmlType="submit">
@@ -217,4 +255,4 @@ const StateMaster: React.FC = () => {
   );
 };
 
-export default StateMaster;
+export default DistrictMaster;
