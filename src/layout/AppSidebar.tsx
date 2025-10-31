@@ -3,16 +3,15 @@ import { Link, useLocation } from "react-router-dom"; // ✅ FIXED IMPORT
 
 // Assume these icons are imported from an icon library
 import {
-  BoxCubeIcon,
+ 
   CalenderIcon,
   ChevronDownIcon,
   GridIcon,
   HorizontaLDots,
   ListIcon,
-  PageIcon,
-  PieChartIcon,
+ 
   PlugInIcon,
-  TableIcon,
+ 
   UserCircleIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
@@ -34,18 +33,18 @@ const navItems: NavItem[] = [
   
 
   {
-    name: "Quotation-Module",
-    icon: <ListIcon />,
-    subItems: [
-      { name: "All Quotation", path: "/forms/quotation-all", pro: false },
-      { name: "New Quotation", path: "/forms/new-quotation", pro: false },
-      { name: "Quotation Approval", path: "/forms/role-master", pro: false },
-      { name: "Quotation Dispatch", path: "/quotation-tracking", pro: false },
-      { name: "Quotation Status Tracking", path: "/forms/district-master", pro: false },
-      { name: "Quotation Follow-Up & Reminders", path: "/forms/currency", pro: false },
-   
-    ],
-  },
+  name: "Quotation-Module",
+  icon: <ListIcon />,
+  subItems: [
+    { name: "All Quotation", path: "/forms/quotation-all", pro: false },
+    { name: "New Quotation", path: "/forms/new-quotation", pro: false },
+    { name: "Quotation Approval", path: "/forms/quotation-approval", pro: false },
+    { name: "Quotation Dispatch", path: "/quotation-tracking", pro: false },
+    { name: "Quotation Status Tracking", path: "/forms/quotation-status-tracking", pro: false },
+    { name: "Quotation Follow-Up & Reminders", path: "/forms/quotation-followup-reminders", pro: false },
+  ],
+},
+
 
 
   {
