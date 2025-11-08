@@ -37,9 +37,9 @@ const navItems: NavItem[] = [
   icon: <ListIcon />,
   subItems: [
     { name: "All Quotation", path: "/forms/quotation-all", pro: false },
-    { name: "New Quotation", path: "/forms/new-quotation", pro: false },
+    { name: " Quotation Desk", path: "/forms/new-quotation", pro: false },
     { name: "Quotation Approval", path: "/forms/quotation-approval", pro: false },
-    { name: "Quotation Dispatch", path: "/quotation-tracking", pro: false },
+    { name: "Quotation Dispatch & Follow-up", path: "/quotation-tracking", pro: false },
     { name: "Quotation Status Tracking", path: "/forms/quotation-status-tracking", pro: false },
     { name: "Quotation Follow-Up & Reminders", path: "/forms/quotation-followup-reminders", pro: false },
   ],
