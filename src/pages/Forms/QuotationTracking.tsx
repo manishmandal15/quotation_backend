@@ -614,7 +614,7 @@ const handleFollowupSave = async (values: any) => {
       <Table
         columns={columns}
         dataSource={quotations}
-        rowKey={(r) => r.id ?? r.quotation_id ?? r.sno}
+        rowKey={(r) => r.id ?? r.quotation_id ?? 0}
         loading={loading}
         bordered
         pagination={{ pageSize: 8 }}
