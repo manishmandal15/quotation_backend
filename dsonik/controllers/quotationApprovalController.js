@@ -1,124 +1,112 @@
 const db = require("../config/db");
 
-class QuotationApprovalController {
-  // Get all approvals
-  async getAll(req, res) {
-    try {
-      const [rows] = await pool.query(
-        `SELECT qa.*, 
-                q.quotation_no, 
-                u.name AS approver_name
-         FROM quotation_approvals qa
-         JOIN quotations q ON qa.quotation_id = q.id
-         JOIN users u ON qa.approver_id = u.id
-         ORDER BY qa.id DESC`
-      );
-      res.json(rows);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
+const QuotationApprovalController = {
+  // 🔹 Get all approvals
+  getAll: (req, res) => {
+    const sql = `
+      SELECT qa.*, 
+             q.quotation_no, 
+             u.name AS approver_name 
+      FROM quotation_approvals qa
+      JOIN quotations q ON qa.quotation_id = q.id
+      JOIN users u ON qa.approver_id = u.id
+      ORDER BY qa.id DESC
+    `;
+    db.query(sql, (err, results) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(results);
+    });
+  },
 
-  // Get approval by ID
-  async getById(req, res) {
-    try {
-      const [rows] = await pool.query(
-        `SELECT qa.*, 
-                q.quotation_no, 
-                u.name AS approver_name
-         FROM quotation_approvals qa
-         JOIN quotations q ON qa.quotation_id = q.id
-         JOIN users u ON qa.approver_id = u.id
-         WHERE qa.id = ?`,
-        [req.params.id]
-      );
+  // 🔹 Get approval by ID
+  getById: (req, res) => {
+    const sql = `
+      SELECT qa.*, 
+             q.quotation_no, 
+             u.name AS approver_name 
+      FROM quotation_approvals qa
+      JOIN quotations q ON qa.quotation_id = q.id
+      JOIN users u ON qa.approver_id = u.id
+      WHERE qa.id = ?
+    `;
+    db.query(sql, [req.params.id], (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!result.length)
+        return res.status(404).json({ message: "Approval not found" });
+      res.json(result[0]);
+    });
+  },
 
-      if (rows.length === 0)
-        return res.status(404).json({ message: "Not found" });
-
-      res.json(rows[0]);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-
-  // Create new approval
-  async create(req, res) {
+  // 🔹 Create approval
+  create: (req, res) => {
     const { quotation_id, approver_id, status, comments } = req.body;
 
-    if (!quotation_id || !approver_id) {
+    if (!quotation_id || !approver_id)
       return res
         .status(400)
-        .json({ error: "quotation_id and approver_id are required" });
-    }
+        .json({ message: "quotation_id and approver_id are required" });
 
-    try {
-      const [result] = await pool.query(
-        `INSERT INTO quotation_approvals 
-         (quotation_id, approver_id, status, comments, approved_at)
-         VALUES (?, ?, ?, ?, ?)`,
-        [
-          quotation_id,
-          approver_id,
-          status ?? "pending",
-          comments ?? null,
-          status === "approved" ? new Date() : null,
-        ]
-      );
+    const sql = `
+      INSERT INTO quotation_approvals 
+      (quotation_id, approver_id, status, comments, approved_at)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+    const values = [
+      quotation_id,
+      approver_id,
+      status || "pending",
+      comments || null,
+      status === "approved" ? new Date() : null,
+    ];
 
+    db.query(sql, values, (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
       res.status(201).json({
         id: result.insertId,
-        quotation_id,
-        approver_id,
-        status: status ?? "pending",
-        comments,
-        approved_at: status === "approved" ? new Date() : null,
+        message: "Approval created successfully",
       });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
+    });
+  },
 
-  // Update approval status or comments
-  async update(req, res) {
+  // 🔹 Update approval (approve / reject)
+  update: (req, res) => {
     const { status, comments } = req.body;
 
-    try {
-      const [result] = await pool.query(
-        `UPDATE quotation_approvals 
-         SET status = ?, comments = ?, approved_at = ?
-         WHERE id = ?`,
-        [
-          status,
-          comments,
-          status === "approved" ? new Date() : null,
-          req.params.id,
-        ]
-      );
+    const sql = `
+      UPDATE quotation_approvals
+      SET status = ?, comments = ?, approved_at = ?
+      WHERE id = ?
+    `;
+
+    const values = [
+      status,
+      comments || null,
+      status === "approved" ? new Date() : null,
+      req.params.id,
+    ];
+
+    db.query(sql, values, (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
 
       if (result.affectedRows === 0)
-        return res.status(404).json({ message: "Not found" });
+        return res.status(404).json({ message: "Approval not found" });
 
-      res.json({ message: "Updated successfully" });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
+      res.json({ message: "Approval updated successfully" });
+    });
+  },
 
-  // Delete approval record
-  async delete(req, res) {
-    try {
-      const [result] = await pool.query(
-        "DELETE FROM quotation_approvals WHERE id = ?",
-        [req.params.id]
-      );
+  // 🔹 Delete approval
+  delete: (req, res) => {
+    const sql = "DELETE FROM quotation_approvals WHERE id = ?";
+    db.query(sql, [req.params.id], (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+
       if (result.affectedRows === 0)
-        return res.status(404).json({ message: "Not found" });
-      res.json({ message: "Deleted successfully" });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-}
+        return res.status(404).json({ message: "Approval not found" });
+
+      res.json({ message: "Approval deleted successfully" });
+    });
+  },
+};
 
 module.exports = QuotationApprovalController;
