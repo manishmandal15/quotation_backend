@@ -18,18 +18,32 @@ import {
   ClockCircleOutlined,
   EyeOutlined,
   PlusOutlined,
-  CheckOutlined,
-  CloseOutlined
 } from "@ant-design/icons";
 import axios from "axios";
 import type { ColumnsType } from "antd/es/table";
+
+// const API = axios.create({
+//   baseURL: "http://localhost:5000/api/quotations",
+// });
 
 const API = axios.create({
   baseURL: "http://localhost:5000/api/quotation-tracking",
 });
 
+// const API = axios.create({
+//   baseURL: "http://localhost:5000/api",
+// });
+
+
+const Api = axios.create({
+  baseURL: "http://localhost:5000/api",
+});
+
+
+
 type Quotation = {
   id: number;
+   quotation_id: number;
   quotation_no: string;
   customer_name: string;
   quotation_date?: string; // ISO or formatted string
@@ -40,7 +54,13 @@ type Quotation = {
   dispatched_date?: string | null;
   dispatched_through?: string | null;
   deal_status?: string | null; // e.g. "Open" | "Closed"
-  follow_up_date?: string | null;
+  // follow_up_date?: string | null;
+  followup_date?: string | null;
+follow_up_date?: string | null;
+
+  dispatched_by?: number;          // ← add this
+   has_followup?: boolean;
+
 };
 
 type User = {
@@ -84,21 +104,80 @@ const QuotationTracking: React.FC = () => {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [viewRow, setViewRow] = useState<Quotation | null>(null);
 
-  // Fetch quotations (under process)
-  const fetchQuotations = async () => {
-    setLoading(true);
-    try {
-      // example GET / => returns array of quotations
-      const res = await API.get("/");
-      // expecting res.data = Quotation[]
-      setQuotations(res.data || []);
-    } catch (err) {
-      console.error(err);
-      message.error("Failed to fetch quotations");
-    } finally {
-      setLoading(false);
-    }
-  };
+
+//   const fetchQuotations = async () => {
+//   setLoading(true);
+//   try {
+//    const res = await axios.get("http://localhost:5000/api/quotations");
+//     //  const res = await API.get("/");
+//     const data = (res.data || []).map((q: any) => ({
+//       ...q,
+//       id: q.quotation_id 
+//     }));
+//     console.log("🔹 Quotations fetched:", data);
+
+//     setQuotations(data);
+//   } catch (err) {
+//     console.error(err);
+//     message.error("Failed to fetch quotations");
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+
+
+const fetchQuotations = async () => {
+  setLoading(true);
+  try {
+    // get plain quotations (primary source)
+    const [quotRes, trackRes] = await Promise.all([
+      axios.get("http://localhost:5000/api/quotations"),
+      axios.get("http://localhost:5000/api/quotation-tracking"),
+    ]);
+
+    const quotations = (quotRes.data || []).map((q: any) => ({
+      ...q,
+      // ensure canonical id exists (use DB id)
+      id: q.id ?? q.quotation_id ?? q.sno,
+    }));
+
+    const tracking = trackRes.data || []; // array of rows from quotation-tracking endpoint
+
+    // merge tracking data into quotations (if found)
+   const merged = tracking.map((t: any) => ({
+  //   id: quotations?.id ?? null,
+  // quotation_id: t.quotation_id ?? null,
+  id: t.id,                      // ✅ REAL quotation id
+  quotation_id: t.id,            // ✅ KEEP SAME everywhere
+  quotation_no: t.quotation_no ?? "-",
+  quotation_date: t.quotation_date ?? "-",
+  is_dispatched: t.is_dispatched ?? "No",
+  dispatched_date: t.dispatched_date ?? "-",
+  dispatched_through: t.dispatched_through ?? "-",
+  approved_by: t.approved_by ?? "-",
+  approved_date: t.approved_date ?? "-",
+  deal_status: t.deal_status ?? "Pending",
+  followup_date: t.followup_date ?? t.follow_up_date ?? "-",
+  dispatched_by: t.dispatched_by ?? null,
+  has_followup: t.has_followup ?? false,
+  net_amount: t.net_amount??"0",
+  customer_name: t.customer_name??"-",
+}));
+    console.log("TRACKING DATA SAMPLE:", tracking[0]);
+    console.log("🔹 Quotations fetched (merged):", merged);
+    setQuotations(merged);
+  } catch (err) {
+    console.error(err);
+    message.error("Failed to fetch quotations");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+
 
    // ✅ Fetch users for dropdown
   const fetchUsers = async () => {
@@ -118,92 +197,276 @@ const QuotationTracking: React.FC = () => {
 
   // Open dispatch modal
   const openDispatchModal = (row: Quotation) => {
-    setCurrentDispatchRow(row);
-    setIsDispatchOpen(true);
-    dispatchForm.resetFields();
-    // preset dispatched_by to logged in user
+     console.log("🧩 Record clicked for Dispatch:", row);
+  setCurrentDispatchRow(row);
+  setIsDispatchOpen(true);
+  dispatchForm.resetFields();
+
+  setTimeout(() => {
     dispatchForm.setFieldsValue({
       [DispatchFormFields.DISPATCHED_BY]: loggedInUser,
       [DispatchFormFields.DISPATCH_THROUGH]: "Email",
     });
-  };
+  }, 0);
+};
 
   // Handle dispatch save
-  const handleDispatchSave = async (values: any) => {
-    if (!currentDispatchRow) return;
-    try {
-      // Format date if DayJS/moment object provided
-      const dispatchedDate =
-        values[DispatchFormFields.DISPATCH_DATE] && values[DispatchFormFields.DISPATCH_DATE].format
-          ? values[DispatchFormFields.DISPATCH_DATE].format("YYYY-MM-DD")
-          : values[DispatchFormFields.DISPATCH_DATE];
+  // const handleDispatchSave = async (values: any) => {
+  //   if (!currentDispatchRow) return;
+  //   try {
+  //     // Format date if DayJS/moment object provided
+  //     const dispatchedDate =
+  //       values[DispatchFormFields.DISPATCH_DATE] && values[DispatchFormFields.DISPATCH_DATE].format
+  //         ? values[DispatchFormFields.DISPATCH_DATE].format("YYYY-MM-DD")
+  //         : values[DispatchFormFields.DISPATCH_DATE];
 
-      const payload = {
-        quotation_id: currentDispatchRow.id,
-        dispatched: true,
-        dispatched_through: values[DispatchFormFields.DISPATCH_THROUGH],
-        dispatched_date: dispatchedDate,
-        dispatched_by: values[DispatchFormFields.DISPATCHED_BY],
-      };
+  //     const payload = {
+  //       quotation_id: currentDispatchRow.id,
+  //       dispatched: true,
+  //       dispatched_through: values[DispatchFormFields.DISPATCH_THROUGH],
+  //       dispatched_date: dispatchedDate,
+  //       dispatched_by: values[DispatchFormFields.DISPATCHED_BY],
+  //     };
+       
+  //     console.log("🚀 Dispatch Payload:", payload);
+  //     // POST to dispatch endpoint (change to your real endpoint)
+  //     await API.post(`/dispatch`, payload);
 
-      // POST to dispatch endpoint (change to your real endpoint)
-      await API.post(`/dispatch`, payload);
+  //     message.success("Dispatched successfully");
+  //     setIsDispatchOpen(false);
+  //     fetchQuotations();
+  //   } catch (err) {
+  //     console.error(err);
+  //     message.error("Error while dispatching");
+  //   }
+  // };
 
-      message.success("Dispatched successfully");
-      setIsDispatchOpen(false);
-      fetchQuotations();
-    } catch (err) {
-      console.error(err);
-      message.error("Error while dispatching");
-    }
-  };
+
+ // ✅ Handle Dispatch Save
+// const handleDispatchSave = async (values: any) => {
+//   if (!currentDispatchRow) return;
+
+//   try {
+//     // Format date safely
+//     const dispatchedDate =
+//       values[DispatchFormFields.DISPATCH_DATE] &&
+//       values[DispatchFormFields.DISPATCH_DATE].format
+//         ? values[DispatchFormFields.DISPATCH_DATE].format("YYYY-MM-DD HH:mm:ss")
+//         : values[DispatchFormFields.DISPATCH_DATE];
+
+//     // ✅ Prepare correct payload (matching backend fields)
+//     const payload = {
+//       quotation_id: currentDispatchRow.quotation_id,
+//       sent_by: values[DispatchFormFields.DISPATCHED_BY], // user name or ID
+//       method: values[DispatchFormFields.DISPATCH_THROUGH],
+//       sent_at: dispatchedDate || new Date().toISOString().slice(0, 19).replace("T", " "),
+//       sent_to_email: "customer@example.com", // optional (if backend requires)
+//     };
+
+//     console.log("🚀 Dispatch Payload (Final):", payload);
+
+//     // ✅ Correct API endpoint (no double path)
+//     const url = `/quotation-dispatches`;
+//     console.log("📡 POST URL:", Api.defaults.baseURL + url);
+
+//     // await API.post(url, payload);
+//        await Api.post(url, payload);
+
+//     message.success("Dispatched successfully ✅");
+//     setIsDispatchOpen(false);
+//     fetchQuotations();
+    
+//   } catch (err: any) {
+//     console.error("❌ Axios Error:", err);
+//     message.error("Error while dispatching");
+//   }
+// };
+
+
+
+
+
+const handleDispatchSave = async (values: any) => {
+  if (!currentDispatchRow) return;
+
+  try {
+    const dispatchedDate =
+      values[DispatchFormFields.DISPATCH_DATE] && values[DispatchFormFields.DISPATCH_DATE].format
+        ? values[DispatchFormFields.DISPATCH_DATE].format("YYYY-MM-DD HH:mm:ss")
+        : values[DispatchFormFields.DISPATCH_DATE];
+
+    const payload = {
+      quotation_id: currentDispatchRow.id,           // <- use id (guaranteed by fetchQuotations)
+      sent_by: Number(values[DispatchFormFields.DISPATCHED_BY]), // ensure numeric user id
+      method: String(values[DispatchFormFields.DISPATCH_THROUGH]).toLowerCase(), // normalize
+      sent_at: dispatchedDate || new Date().toISOString().slice(0, 19).replace("T", " "),
+      sent_to_email: currentDispatchRow.customer_email ?? "customer@example.com",
+    };
+
+    console.log("📤 Dispatch Payload:", payload);
+
+    await Api.post("/quotation-dispatches", payload);
+
+    message.success("Dispatched successfully ✅");
+    setIsDispatchOpen(false);
+    fetchQuotations();
+  } catch (err: any) {
+    console.error("❌ Dispatch Error:", err);
+    message.error("Error while dispatching");
+  }
+};
+
+
+
 
   // Open followup modal
-  const openFollowupModal = (row: Quotation) => {
-    setCurrentFollowupRow(row);
-    setIsFollowupOpen(true);
-    followupForm.resetFields();
+  // const openFollowupModal = (row: Quotation) => {
+  //   setCurrentFollowupRow(row);
+  //   setIsFollowupOpen(true);
+  //   followupForm.resetFields();
 
-    // preset planned & actual followup dates if exist
-    followupForm.setFieldsValue({
-      [FollowupFormFields.PLANNED_FOLLOWUP_DATE]: row.follow_up_date || null,
-      [FollowupFormFields.FOLLOWUP_BY]: loggedInUser,
-      [FollowupFormFields.IS_DEAL_FINALISED]: "No",
-      [FollowupFormFields.CUSTOMER_WANTS_TIME]: "No",
-    });
-  };
+  //   // preset planned & actual followup dates if exist
+  //   followupForm.setFieldsValue({
+  //     [FollowupFormFields.PLANNED_FOLLOWUP_DATE]: row.follow_up_date || null,
+  //     [FollowupFormFields.FOLLOWUP_BY]: loggedInUser,
+  //     [FollowupFormFields.IS_DEAL_FINALISED]: "No",
+  //     [FollowupFormFields.CUSTOMER_WANTS_TIME]: "No",
+  //   });
+  // };
+
+  const openFollowupModal = (row: Quotation) => {
+  setCurrentFollowupRow(row);
+  setIsFollowupOpen(true);
+  followupForm.resetFields();
+};
 
   // Handle followup save
-  const handleFollowupSave = async (values: any) => {
-    if (!currentFollowupRow) return;
-    try {
-      const nextFollowupDate =
-        values[FollowupFormFields.NEXT_FOLLOWUP_DATE] && values[FollowupFormFields.NEXT_FOLLOWUP_DATE].format
-          ? values[FollowupFormFields.NEXT_FOLLOWUP_DATE].format("YYYY-MM-DD")
-          : values[FollowupFormFields.NEXT_FOLLOWUP_DATE];
+  // const handleFollowupSave = async (values: any) => {
+  //   if (!currentFollowupRow) return;
+  //   try {
+  //     const nextFollowupDate =
+  //       values[FollowupFormFields.NEXT_FOLLOWUP_DATE] && values[FollowupFormFields.NEXT_FOLLOWUP_DATE].format
+  //         ? values[FollowupFormFields.NEXT_FOLLOWUP_DATE].format("YYYY-MM-DD")
+  //         : values[FollowupFormFields.NEXT_FOLLOWUP_DATE];
 
-      const payload = {
-        quotation_id: currentFollowupRow.id,
-        planned_followup_date: values[FollowupFormFields.PLANNED_FOLLOWUP_DATE] || currentFollowupRow.follow_up_date,
-        actual_followup_date: values[FollowupFormFields.ACTUAL_FOLLOWUP_DATE] || null,
-        is_deal_finalised: values[FollowupFormFields.IS_DEAL_FINALISED] === "Yes",
-        invoice_no: values[FollowupFormFields.INVOICE_NO] || null,
-        customer_wants_time: values[FollowupFormFields.CUSTOMER_WANTS_TIME] === "Yes",
-        next_followup_date: nextFollowupDate || null,
-        followup_by: values[FollowupFormFields.FOLLOWUP_BY] || loggedInUser,
-      };
+  //     const payload = {
+  //       quotation_id: currentFollowupRow.id,
+  //       planned_followup_date: values[FollowupFormFields.PLANNED_FOLLOWUP_DATE] || currentFollowupRow.follow_up_date,
+  //       actual_followup_date: values[FollowupFormFields.ACTUAL_FOLLOWUP_DATE] || null,
+  //       is_deal_finalised: values[FollowupFormFields.IS_DEAL_FINALISED] === "Yes",
+  //       invoice_no: values[FollowupFormFields.INVOICE_NO] || null,
+  //       customer_wants_time: values[FollowupFormFields.CUSTOMER_WANTS_TIME] === "Yes",
+  //       next_followup_date: nextFollowupDate || null,
+  //       followup_by: values[FollowupFormFields.FOLLOWUP_BY] || loggedInUser,
+  //     };
 
-      // POST to followup endpoint (change to your real endpoint)
-      await API.post(`/followup`, payload);
+  //     // POST to followup endpoint (change to your real endpoint)
+  //     await API.post(`/quotation_followups`, payload);
 
-      message.success("Followup saved");
-      setIsFollowupOpen(false);
-      fetchQuotations();
-    } catch (err) {
-      console.error(err);
-      message.error("Error while saving followup");
-    }
-  };
+  //     message.success("Followup saved");
+  //     setIsFollowupOpen(false);
+  //     fetchQuotations();
+  //   } catch (err) {
+  //     console.error(err);
+  //     message.error("Error while saving followup");
+  //   }
+  // };
+
+
+
+  // Handle Followup Save
+// const handleFollowupSave = async (values: any) => {
+//   if (!currentFollowupRow) return;
+
+//   try {
+//     const followupDate =
+//       values.followup_date && values.followup_date.format
+//         ? values.followup_date.format("YYYY-MM-DD")
+//         : values.followup_date;
+
+//     const payload = {
+//       quotation_id: currentFollowupRow.quotation_id || currentFollowupRow.id,
+//       // user_id: Number(localStorage.getItem("user_id") || 1), // 🔹 replace with real login user id if available
+//       user_id: values.user_id,
+//       notes: values.notes || "",
+//       followup_date: followupDate,
+//     };
+
+//     console.log("📤 Sending Follow-Up Payload:", payload);
+
+//     await Api.post("/quotation_followups", payload);
+
+//     message.success("Follow-up saved successfully ✅");
+//     setIsFollowupOpen(false);
+//     fetchQuotations(); // refresh table
+//   } catch (err: any) {
+//     console.error("❌ Follow-Up Save Error:", err);
+//     message.error("Error saving follow-up");
+//   }
+// };
+
+
+
+const handleFollowupSave = async (values: any) => {
+  if (!currentFollowupRow) return;
+
+  try {
+    // ✅ Convert next followup date to proper format
+    const nextFollowupDate =
+      values.next_followup_date && values.next_followup_date.format
+        ? values.next_followup_date.format("YYYY-MM-DD HH:mm:ss")
+        : values.next_followup_date || null;
+
+     const followupDate =
+      values.followup_date && values.followup_date.format
+        ? values.followup_date.format("YYYY-MM-DD")
+        : values.followup_date;
+
+    // ✅ Convert planned followup date (disabled → row se)
+    // const plannedFollowupDate = currentFollowupRow.follow_up_date
+    //   ? currentFollowupRow.follow_up_date
+    //   : null;
+
+    // ✅ Auto actual followup (backend ko dede)
+    const actualFollowupDate = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+    // ✅ Prepare Final Payload
+    const payload = {
+      // quotation_id: currentFollowupRow.quotation_id || currentFollowupRow.id,
+     quotation_id: currentFollowupRow.quotation_id, 
+
+
+      user_id: values.user_id,
+
+      notes: values.notes || "",
+
+      // followup_date: currentFollowupRow.follow_up_date,
+      // followup_date: currentFollowupRow.followup_date,
+       followup_date: actualFollowupDate, 
+      invoice_no: values.invoice_no || null,
+      is_deal_finalised: values.is_deal_finalised,
+      time_needed: values.customer_wants_time,  // ✅ matches DB column
+      next_followup_date: nextFollowupDate,
+      followup_by: values.user_id,
+
+      actual_followup_date: actualFollowupDate, // 🔹 if backend supports it
+    };
+    console.log("ROW:", currentFollowupRow);
+
+    console.log("📤 Sending Follow-Up Payload:", payload);
+
+    await Api.post("/quotation_followups", payload);
+
+    message.success("Follow-up saved successfully ✅");
+    setIsFollowupOpen(false);
+    fetchQuotations();
+
+  } catch (err: any) {
+    console.error("❌ Follow-Up Save Error:", err);
+    message.error("Error saving follow-up");
+  }
+};
+
 
   // Optional View details (simple view modal)
   // const [isViewOpen, setIsViewOpen] = useState(false);
@@ -214,28 +477,9 @@ const QuotationTracking: React.FC = () => {
     setIsViewOpen(true);
   };
 
-  // Approve / Reject handlers (optional)
-  const handleApprove = async (row: Quotation) => {
-    try {
-      await API.post(`/approve`, { quotation_id: row.id, approved_by: loggedInUser });
-      message.success("Quotation approved");
-      fetchQuotations();
-    } catch (err) {
-      console.error(err);
-      message.error("Error while approving");
-    }
-  };
+ 
 
-  const handleReject = async (row: Quotation) => {
-    try {
-      await API.post(`/reject`, { quotation_id: row.id, rejected_by: loggedInUser });
-      message.success("Quotation rejected");
-      fetchQuotations();
-    } catch (err) {
-      console.error(err);
-      message.error("Error while rejecting");
-    }
-  };
+ 
 
   // Table columns
   const columns: ColumnsType<Quotation> = [
@@ -254,8 +498,8 @@ const QuotationTracking: React.FC = () => {
       render: (d: string) => (d ? d : "-"),
     },
     { title: "Net Amount", dataIndex: "net_amount", key: "net_amount" },
-    { title: "Approved By", dataIndex: "approved_by", key: "approved_by" },
-    { title: "Approved Date", dataIndex: "approved_date", key: "approved_date" },
+    // { title: "Approved By", dataIndex: "approved_by", key: "approved_by" },
+    // { title: "Approved Date", dataIndex: "approved_date", key: "approved_date" },
     {
       title: "Dispatched",
       dataIndex: "is_dispatched",
@@ -270,7 +514,7 @@ const QuotationTracking: React.FC = () => {
       title: "Action",
       key: "actions",
       fixed: "right",
-      width: 220,
+      width: 150,
       render: (_text, record) => (
         <Space>
              <Tooltip title="view">
@@ -285,19 +529,29 @@ const QuotationTracking: React.FC = () => {
           </Tooltip>
 
           {/* Send (Dispatch) - always visible when not dispatched */}
-          <Tooltip title="send">
+           {/* ✅ Dispatch button visible only if approved_by is set */}
+      {record.approved_by && record.approved_by !== "-" ? (
+        <Tooltip title="Send / Dispatch">
           <Button
             type="primary"
             icon={<SendOutlined />}
             onClick={() => openDispatchModal(record)}
             style={{ borderRadius: 4 }}
-          >
-            
-          </Button>
-          </Tooltip>
+          />
+        </Tooltip>
+      ) : (
+        <Tooltip title="Approve quotation before dispatch">
+          <Button
+            type="primary"
+            icon={<SendOutlined />}
+            disabled
+            style={{ borderRadius: 4, opacity: 0.5 }}
+          />
+        </Tooltip>
+      )}
 
           {/* Followup - enable if dispatched = true, otherwise disabled */}
-          <Tooltip title="Follow-up">
+          {/* <Tooltip title="Follow-up">
                <Button
                 type="default"
                 icon={<ClockCircleOutlined />}
@@ -305,29 +559,40 @@ const QuotationTracking: React.FC = () => {
                  disabled={!record.is_dispatched}
                   style={{ borderRadius: 4 }}
                  />
-           </Tooltip>
+           </Tooltip> */}
 
-          {/* Optional approve/reject quick controls */}
-          <Popconfirm
-             title="Approve this quotation?"
-              onConfirm={() => handleApprove(record)}
-               >
-               <Tooltip title="Approve Quotation">
-                   <Button type="default" icon={<CheckOutlined />} />
-               </Tooltip>
-           </Popconfirm>
 
-          
-
-          <Popconfirm
-            title="Reject this quotation?"
-            onConfirm={() => handleReject(record)}
-           >
-          <Tooltip title="Reject Quotation">
-               <Button type="default" icon={<CloseOutlined />} danger />
-          </Tooltip>
-          </Popconfirm>
-          
+          <Tooltip
+  title={
+    !record.approved_by || record.approved_by === "-"
+      ? "Approve the quotation first"
+      : !record.is_dispatched
+      ? "Dispatch before follow-up"
+      : record.has_followup
+      ? "Follow-up already done"
+      : "Add Follow-up"
+  }
+>
+  <Button
+    type="default"
+    icon={<ClockCircleOutlined />}
+    onClick={() => openFollowupModal(record)}
+    disabled={
+      !record.approved_by ||
+      record.approved_by === "-" ||
+      !record.is_dispatched ||
+      record.has_followup
+    }
+    style={{
+      borderRadius: 4,
+      opacity:
+        !record.approved_by || record.approved_by === "-" || !record.is_dispatched
+          ? 0.5
+          : 1,
+    }}
+  />
+</Tooltip>
+  
         </Space>
       ),
     },
@@ -336,7 +601,7 @@ const QuotationTracking: React.FC = () => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold">Quotation Tracking</h2>
+        <h2 className="text-2xl font-semibold">Quotation Dispatch and FollowUp</h2>
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -349,7 +614,7 @@ const QuotationTracking: React.FC = () => {
       <Table
         columns={columns}
         dataSource={quotations}
-        rowKey={(r) => r.id}
+        rowKey={(r) => r.id ?? r.quotation_id ?? r.sno}
         loading={loading}
         bordered
         pagination={{ pageSize: 8 }}
@@ -387,9 +652,10 @@ const QuotationTracking: React.FC = () => {
           </Form.Item>
 
           {/* ✅ Changed from Input → Dropdown (Users) */}
-          <Form.Item
+          {/* <Form.Item
             label="Dispatched By"
             name={DispatchFormFields.DISPATCHED_BY}
+            
             rules={[{ required: true, message: "Select dispatched by user" }]}
           >
             <Select placeholder="Select User">
@@ -399,7 +665,25 @@ const QuotationTracking: React.FC = () => {
                 </Select.Option>
               ))}
             </Select>
-          </Form.Item>
+          </Form.Item> */}
+
+
+          <Form.Item
+  label="Dispatched By"
+  name={DispatchFormFields.DISPATCHED_BY}
+  rules={[{ required: true, message: "Select dispatched by user" }]}
+>
+  <Select
+    placeholder="Select User"
+    showSearch
+    optionFilterProp="label"
+    options={users.map((u) => ({
+      label: u.name,
+      value: u.id, // ✅ send ID instead of name
+    }))}
+  />
+</Form.Item>
+
 
           <div className="flex justify-end mt-4">
             <Button onClick={() => setIsDispatchOpen(false)} style={{ marginRight: 8 }}>
@@ -459,9 +743,25 @@ const QuotationTracking: React.FC = () => {
             <DatePicker style={{ width: "100%" }} />
           </Form.Item>
 
-          <Form.Item label="Follow up By" name={FollowupFormFields.FOLLOWUP_BY}>
+          {/* <Form.Item label="Follow up By" name={FollowupFormFields.FOLLOWUP_BY}>
             <Input disabled />
-          </Form.Item>
+          </Form.Item> */}
+
+           <Form.Item
+      label="User"
+      name="user_id"
+      rules={[{ required: true, message: "Select user" }]}
+    >
+      <Select
+        placeholder="Select User"
+        showSearch
+        optionFilterProp="label"
+        options={users.map((u) => ({
+          label: u.name,
+          value: u.id, // ✅ send ID instead of name
+        }))}
+      />
+    </Form.Item>
 
           <div className="flex justify-end mt-4">
             <Button onClick={() => setIsFollowupOpen(false)} style={{ marginRight: 8 }}>
@@ -473,6 +773,114 @@ const QuotationTracking: React.FC = () => {
           </div>
         </Form>
       </Modal>
+
+
+
+    {/* Followup Modal */}
+{/* <Modal
+  title={`Follow-Up - ${currentFollowupRow?.quotation_no || ""}`}
+  open={isFollowupOpen}
+  onCancel={() => setIsFollowupOpen(false)}
+  footer={null}
+  destroyOnClose
+>
+  <Form layout="vertical" form={followupForm} onFinish={handleFollowupSave}>
+    <Form.Item
+      label="Follow-Up Date"
+      name="followup_date"
+      rules={[{ required: true, message: "Please select follow-up date" }]}
+    >
+      <DatePicker
+        className="w-full"
+        format="YYYY-MM-DD"
+        placeholder="Select follow-up date"
+      />
+    </Form.Item>
+
+    
+    
+
+    <Form.Item
+      label="Notes / Remarks"
+      name="notes"
+      rules={[{ required: true, message: "Please enter notes" }]}
+    >
+      <Input.TextArea rows={4} placeholder="Enter follow-up notes or remarks..." />
+    </Form.Item>
+
+    <div style={{ textAlign: "right" }}>
+      <Button onClick={() => setIsFollowupOpen(false)} style={{ marginRight: 8 }}>
+        Cancel
+      </Button>
+      <Button type="primary" htmlType="submit">
+        Save
+      </Button>
+    </div>
+  </Form>
+</Modal> */}
+
+
+
+
+{/* <Modal
+  title={`Add Follow-Up - ${currentFollowupRow?.quotation_no || ""}`}
+  open={isFollowupOpen}
+  onCancel={() => setIsFollowupOpen(false)}
+  footer={null}
+>
+  <Form layout="vertical" onFinish={handleFollowupSave}>
+   
+    <Form.Item
+      label="User"
+      name="user_id"
+      rules={[{ required: true, message: "Select user" }]}
+    >
+      <Select
+        placeholder="Select User"
+        showSearch
+        optionFilterProp="label"
+        options={users.map((u) => ({
+          label: u.name,
+          value: u.id, // ✅ send ID instead of name
+        }))}
+      />
+    </Form.Item>
+
+    <Form.Item
+      label="Follow-Up Date"
+      name="followup_date"
+      rules={[{ required: true, message: "Please select follow-up date" }]}
+    >
+      <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
+    </Form.Item>
+
+    <Form.Item
+      label="Notes"
+      name="notes"
+      rules={[{ required: true, message: "Please enter notes" }]}
+    >
+      <Input.TextArea rows={4} placeholder="Enter follow-up notes" />
+    </Form.Item>
+
+    {/* <Form.Item>
+      <Button type="primary" htmlType="submit" loading={savingFollowup} block>
+        Save Follow-Up
+      </Button>
+    </Form.Item> 
+
+     <div style={{ textAlign: "right" }}>
+      <Button onClick={() => setIsFollowupOpen(false)} style={{ marginRight: 8 }}>
+        Cancel
+      </Button>
+      <Button type="primary" htmlType="submit">
+        Save
+      </Button>
+    </div>
+  </Form>
+</Modal> */}
+
+
+
 
       {/* View Modal */}
       <Modal

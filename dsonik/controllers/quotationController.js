@@ -4,22 +4,33 @@ class QuotationController {
 
   // 1️⃣ Get all quotations
   getAll(req, res) {
-    const query = `
-      SELECT q.*, c.name AS customer_name, cu.code AS currency_code,
-             u.name AS created_by_name, a.name AS approved_by_name
-      FROM quotations q
-      LEFT JOIN customers c ON c.id = q.customer_id
-      LEFT JOIN currencies cu ON cu.id = q.currency_id
-      LEFT JOIN users u ON u.id = q.created_by
-      LEFT JOIN users a ON a.id = q.approved_by
-      ORDER BY q.id DESC
-    `;
+  const query = `
+    SELECT 
+      q.id AS quotation_id,           -- ✅ ab ye ID frontend me quotation_id ke naam se aayegi
+      q.quotation_no,
+      q.customer_id,
+      c.name AS customer_name,
+      cu.code AS currency_code,
+      q.total_amount,
+      q.net_amount,
+      q.status,
+      q.created_at,
+      u.name AS created_by_name,
+      a.name AS approved_by_name
+    FROM quotations q
+    LEFT JOIN customers c ON c.id = q.customer_id
+    LEFT JOIN currencies cu ON cu.id = q.currency_id
+    LEFT JOIN users u ON u.id = q.created_by
+    LEFT JOIN users a ON a.id = q.approved_by
+    ORDER BY q.id DESC
+  `;
 
-    db.query(query, (err, results) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json(results);
-    });
-  }
+  db.query(query, (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  });
+}
+
 
   // 2️⃣ Get quotation by ID
   getById(req, res) {

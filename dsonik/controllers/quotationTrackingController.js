@@ -4,7 +4,7 @@ const db = require("../config/db");
 exports.getQuotationTracking = (req, res) => {
   const query = `
     SELECT 
-      q.id AS quotation_id,
+      q.id AS id,
       q.quotation_no,
       DATE_FORMAT(q.created_at, '%d-%m-%Y' ) AS quotation_date,
       q.net_amount,
@@ -26,10 +26,11 @@ exports.getQuotationTracking = (req, res) => {
 
     FROM quotations q
     LEFT JOIN customers c ON q.customer_id = c.id
-    LEFT JOIN quotation_approvals qa ON q.id = qa.quotation_id
+    inner JOIN quotation_approvals qa ON q.id = qa.quotation_id
     LEFT JOIN users u ON qa.approver_id = u.id
     LEFT JOIN quotation_dispatches qd ON q.id = qd.quotation_id
     LEFT JOIN quotation_followups qf ON q.id = qf.quotation_id
+    where qa.status='approved'
     ORDER BY q.id DESC
   `;
 
@@ -44,6 +45,8 @@ exports.getQuotationTracking = (req, res) => {
 
     // 🧩 Format data for frontend (clean and safe)
     const formatted = results.map((row, index) => ({
+       id: row.id,                  // ✅ REAL quotation ID
+       quotation_id: row.id,        // ✅ same alias for consistency
       sno: index + 1,
       quotation_no: row.quotation_no || "-",
       customer_name: row.customer_name || "-",
@@ -66,3 +69,60 @@ exports.getQuotationTracking = (req, res) => {
     res.json(formatted);
   });
 };
+
+
+
+
+
+exports.getAllQuotationTracking = (req, res) => {
+  const query = `
+    SELECT 
+      q.id,
+      q.quotation_no,
+      q.customer_id,
+      c.customer_name,
+      q.total_amount,
+      q.status,
+      q.created_at,
+      q.updated_at,
+      q.dispatched
+    FROM quotations AS q
+    LEFT JOIN customers AS c ON q.customer_id = c.id
+    ORDER BY q.id DESC
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("❌ Error fetching quotation tracking:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+    res.json(results);
+  });
+};
+
+/**
+ * ✅ Handle Dispatch Save (called from modal)
+ */
+exports.dispatchQuotation = async (req, res) => {
+  try {
+    const { quotation_id, dispatched_through, dispatched_date, dispatched_by } = req.body;
+    if (!quotation_id || !dispatched_through || !dispatched_date || !dispatched_by) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // Example query (MySQL)
+    await db.query(
+      `UPDATE quotations 
+       SET is_dispatched = 1, dispatched_through = ?, dispatched_date = ?, dispatched_by = ?
+       WHERE id = ?`,
+      [dispatched_through, dispatched_date, dispatched_by, quotation_id]
+    );
+
+    res.json({ success: true, message: "Quotation dispatched successfully" });
+  } catch (err) {
+    console.error("Dispatch Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
