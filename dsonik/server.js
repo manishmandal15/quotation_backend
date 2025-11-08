@@ -27,6 +27,9 @@ const quotationCommentRoutes = require("./routes/quotation_comments");
 const quotationTrackingRoutes = require("./routes/quotationTrackingRoutes");
 const dispatchRoutes = require("./routes/quotationDispatchesRoutes");
 const quotationFollowupRoutes = require("./routes/quotationFollowupRoutes");
+const authRoutes = require("./routes/authRoutes");
+
+
 
 
 
@@ -62,6 +65,7 @@ app.use("/api/quotation_attachments", quotationAttachmentRoutes);
 app.use("/api/quotation_comments", quotationCommentRoutes);
 app.use("/api/quotation-tracking", quotationTrackingRoutes);
 app.use("/api/quotation_followups", quotationFollowupRoutes);
+app.use("/api/auth", authRoutes);
 
 
 

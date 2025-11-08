@@ -57,6 +57,7 @@ type Quotation = {
   // follow_up_date?: string | null;
   followup_date?: string | null;
 follow_up_date?: string | null;
+nextfollowup_date?: string | null;
 
   dispatched_by?: number;          // ← add this
    has_followup?: boolean;
@@ -159,6 +160,8 @@ const fetchQuotations = async () => {
   approved_date: t.approved_date ?? "-",
   deal_status: t.deal_status ?? "Pending",
   followup_date: t.followup_date ?? t.follow_up_date ?? "-",
+
+  nextfollowup_date: t.nextfollowup_date ?? t.nextfollowup_date ?? "-",
   dispatched_by: t.dispatched_by ?? null,
   has_followup: t.has_followup ?? false,
   net_amount: t.net_amount??"0",
@@ -510,6 +513,7 @@ const handleFollowupSave = async (values: any) => {
     { title: "Dispatched Through", dataIndex: "dispatched_through", key: "dispatched_through" },
     { title: "Deal Status", dataIndex: "deal_status", key: "deal_status" },
     { title: "Follow Up Date", dataIndex: "followup_date", key: "followup_date" },
+     { title: "Next Up Date", dataIndex: "nextfollowup_date", key: "nextfollowup_date" },
     {
       title: "Action",
       key: "actions",
@@ -577,12 +581,11 @@ const handleFollowupSave = async (values: any) => {
     type="default"
     icon={<ClockCircleOutlined />}
     onClick={() => openFollowupModal(record)}
-    disabled={
-      !record.approved_by ||
-      record.approved_by === "-" ||
-      !record.is_dispatched ||
-      record.has_followup
-    }
+   disabled={
+  !record.followup_date || 
+  record.followup_date === "-" ||
+  record.followup_date.trim() === ""
+}
     style={{
       borderRadius: 4,
       opacity:

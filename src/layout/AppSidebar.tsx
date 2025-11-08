@@ -17,6 +17,14 @@ import {
 import { useSidebar } from "../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
 
+
+
+
+import { useNavigate } from "react-router";
+
+
+
+
 type NavItem = {
   name: string;
   icon: React.ReactNode;
@@ -194,6 +202,36 @@ const AppSidebar: React.FC = () => {
     [location.pathname]
   );
 
+
+
+  const navigate = useNavigate();
+
+  const [user, setUser] = useState<any>(null);
+  const [isOpen, setIsOpen] = useState(false);
+
+  // ✅ USER LOGIN VALIDATION
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+
+    if (!savedUser) {
+      alert("Please login first");
+      navigate("/signin");
+      return;
+    }
+
+    const parsed = JSON.parse(savedUser);
+
+    if (!parsed?.name || parsed.name.trim() === "") {
+      alert("Invalid session. Please login again.");
+      localStorage.removeItem("user");
+      navigate("/signin");
+      return;
+    }
+
+    setUser(parsed);
+  }, []);
+
+
   useEffect(() => {
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
@@ -211,6 +249,8 @@ const AppSidebar: React.FC = () => {
     });
     if (!submenuMatched) setOpenSubmenu(null);
   }, [location, isActive]);
+
+
 
   useEffect(() => {
     if (openSubmenu !== null) {

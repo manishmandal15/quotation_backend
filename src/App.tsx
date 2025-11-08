@@ -35,9 +35,13 @@ export default function App() {
     <Router>
       <ScrollToTop />
       <Routes>
+        
+       <Route index path="/" element={<SignIn />} />
+
         {/* Dashboard Layout */}
         <Route element={<AppLayout />}>
-          <Route index path="/" element={<Home />} />
+          
+          <Route path="/home" element={<Home />} />
           <Route path="/profile" element={<UserProfiles />} />
           <Route path="/calendar" element={<Calendar />} />
 
