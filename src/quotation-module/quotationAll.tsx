@@ -1,114 +1,331 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Form,
-  Input,
-  Select,
-  Button,
-  DatePicker,
+  Card,
   Table,
-  InputNumber,
+  Button,
+  Typography,
+  Form,
   Row,
   Col,
-  Card,
+  Input,
+  Select,
+  DatePicker,
+  InputNumber,
   message,
+  Popconfirm,
+  Space,
 } from "antd";
+import {
+  PlusOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  EyeOutlined,
+  PrinterOutlined,
+  ArrowLeftOutlined,
+} from "@ant-design/icons";
+import axios from "axios";
 import dayjs from "dayjs";
+import QuotationPreview from "./QuotationPreview";
 
+const { Title } = Typography;
 const { Option } = Select;
-const { TextArea } = Input;
 
-const QuotationAll: React.FC = () => {
+const QUOTATION_API = axios.create({ baseURL: "http://localhost:5000/api/quotations" });
+const CUSTOMER_API = axios.create({ baseURL: "http://localhost:5000/api/customers" });
+const CURRENCY_API = axios.create({ baseURL: "http://localhost:5000/api/currencies" });
+const PRODUCT_API = axios.create({ baseURL: "http://localhost:5000/api/products" });
+
+const NewQuotation: React.FC = () => {
   const [form] = Form.useForm();
-  const [showTable, setShowTable] = useState(false);
-  const [dataSource, setDataSource] = useState<any[]>([]);
-  const [count, setCount] = useState(1);
+  const [quotations, setQuotations] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [currencies, setCurrencies] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [items, setItems] = useState<any[]>([]);
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const [products] = useState([
-    { id: 1, name: "Product A", hsn: "1001", unitPrice: 100 },
-    { id: 2, name: "Product B", hsn: "1002", unitPrice: 200 },
-    { id: 3, name: "Product C", hsn: "1003", unitPrice: 300 },
-  ]);
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [selectedPreview, setSelectedPreview] = useState<any>(null);
 
-  // Step 1: Move to product list
-  const handleNext = () => {
-    form
-      .validateFields()
-      .then(() => setShowTable(true))
-      .catch(() => message.error("Please fill all required fields"));
+useEffect(() => {
+  fetchQuotations();
+  fetchCustomers();
+  fetchCurrencies();
+  fetchProducts();
+
+  // Open new quotation by default
+  setIsFormVisible(true);
+  setEditId(null);
+  form.resetFields();
+  setItems([]);
+}, []);
+
+
+  const fetchQuotations = async () => {
+    try {
+      const res = await QUOTATION_API.get("/");
+      setQuotations(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  // Step 2: Add new product row
-  const handleAddProduct = () => {
-    const newRow = {
-      key: count,
-      sno: count,
-      product: "",
-      hsn: "",
-      unitPrice: 0,
-      qty: 1,
-      discount: 0,
-      gstRate: 0,
-      gstAmount: 0,
-      netAmt: 0,
+  const fetchCustomers = async () => {
+    try {
+      const res = await CUSTOMER_API.get("/");
+      setCustomers(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchCurrencies = async () => {
+    try {
+      const res = await CURRENCY_API.get("/");
+      setCurrencies(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const res = await PRODUCT_API.get("/");
+      setProducts(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const addItem = () => {
+    setItems((prev) => [
+      ...prev,
+      {
+        key: Date.now(),
+        product_id: null,
+        description: "",
+        quantity: 1,
+        unit_price: 0,
+        discount: 0,
+        tax_rate: 0,
+        line_total: 0,
+      },
+    ]);
+  };
+
+  const removeItem = (key: number) => {
+    setItems((prev) => prev.filter((it) => it.key !== key));
+  };
+
+  const updateItem = (key: number, field: string, value: any) => {
+    setItems((prev) =>
+      prev.map((it) => {
+        if (it.key !== key) return it;
+        const updated = { ...it, [field]: value };
+        const qty = Number(updated.quantity || 0);
+        const price = Number(updated.unit_price || 0);
+        const disc = Number(updated.discount || 0);
+        const tax = Number(updated.tax_rate || 0);
+        const base = qty * price;
+        const afterDiscount = base - (disc / 100) * base;
+        const afterTax = afterDiscount + (tax / 100) * afterDiscount;
+        updated.line_total = parseFloat(afterTax.toFixed(2));
+        return updated;
+      })
+    );
+  };
+
+  const onCustomerChange = (id: number) => {
+    const customer = customers.find((c) => c.id === id);
+    if (customer) {
+      form.setFieldsValue({
+        phone: customer.phone,
+        gst_no: customer.gst_no,
+        cstate: customer.cstate,
+        district: customer.district,
+        address: customer.address,
+      });
+    }
+  };
+
+  const totals = items.reduce(
+    (acc, it) => {
+      acc.total_amount += Number(it.line_total || 0);
+      acc.discount_amount +=
+        (Number(it.discount || 0) / 100) *
+        (Number(it.quantity || 0) * Number(it.unit_price || 0));
+      acc.tax_amount +=
+        (Number(it.tax_rate || 0) / 100) *
+        (Number(it.quantity || 0) * Number(it.unit_price || 0));
+      return acc;
+    },
+    { total_amount: 0, discount_amount: 0, tax_amount: 0 }
+  );
+
+  const closeForm = () => {
+    form.resetFields();
+    setItems([]);
+    setEditId(null);
+    setIsFormVisible(false);
+  };
+
+  const onFinish = async (values: any) => {
+    if (!items.length) {
+      message.warning("Please add at least one item.");
+      return;
+    }
+
+    const payload = {
+      quotationNo: values.quotation_no,
+      customerId: values.customer_id,
+      currencyId: values.currency_id,
+      validityDate: values.validity_date
+        ? dayjs(values.validity_date).format("YYYY-MM-DD")
+        : null,
+      paymentTerms: values.payment_terms,
+      deliveryTerms: values.delivery_terms,
+      status: values.status,
+      totalAmount: totals.total_amount,
+      discountAmount: totals.discount_amount,
+      taxAmount: totals.tax_amount,
+      netAmount: totals.total_amount,
+      createdBy: 1,
+      products: items.map((it) => ({
+        product_id: it.product_id,
+        description: it.description,
+        quantity: it.quantity,
+        unit_price: it.unit_price,
+        discount: it.discount,
+        tax_rate: it.tax_rate,
+        line_total: it.line_total,
+      })),
+      terms_conditions: values.terms_conditions,
     };
-    setDataSource([...dataSource, newRow]);
-    setCount(count + 1);
-  };
 
-  // Handle Product Change
-  const handleProductChange = (value: number, record: any) => {
-    const selected = products.find((p) => p.id === value);
-    if (!selected) return;
-    const newData = dataSource.map((item) => {
-      if (item.key === record.key) {
-        const gstAmount =
-          ((selected.unitPrice * item.qty - item.discount) * item.gstRate) /
-          100;
-        const netAmt =
-          selected.unitPrice * item.qty - item.discount + gstAmount;
-        return {
-          ...item,
-          product: selected.name,
-          hsn: selected.hsn,
-          unitPrice: selected.unitPrice,
-          gstAmount,
-          netAmt,
-        };
+    try {
+      setLoading(true);
+      if (editId) {
+        await QUOTATION_API.put(`/${editId}`, payload);
+        message.success("Quotation updated successfully");
+      } else {
+        await QUOTATION_API.post("/", payload);
+        message.success("Quotation created successfully");
       }
-      return item;
-    });
-    setDataSource(newData);
+      fetchQuotations();
+      closeForm();
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to submit quotation");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Handle numeric field changes
-  const handleChange = (value: any, record: any, field: string) => {
-    const newData = dataSource.map((item) => {
-      if (item.key === record.key) {
-        const updated = { ...item, [field]: value };
-        const gstAmount =
-          ((updated.unitPrice * updated.qty - updated.discount) *
-            updated.gstRate) /
-          100;
-        const netAmt =
-          updated.unitPrice * updated.qty - updated.discount + gstAmount;
-        return { ...updated, gstAmount, netAmt };
-      }
-      return item;
+  const onEdit = async (record: any) => {
+    setIsFormVisible(true);
+    setEditId(record.id);
+    form.setFieldsValue({
+      quotation_no: record.quotation_no,
+      validity_date: record.validity_date ? dayjs(record.validity_date) : null,
+      currency_id: record.currency_id,
+      customer_id: record.customer_id,
+      phone: record.phone,
+      gst_no: record.gst_no,
+      cstate: record.cstate,
+      district: record.district,
+      address: record.address,
+      terms_conditions: record.terms_conditions,
     });
-    setDataSource(newData);
+
+    try {
+      const { data } = await QUOTATION_API.get(`/${record.id}`);
+      const itemsFromServer = data.products ?? [];
+      const mappedItems = Array.isArray(itemsFromServer)
+        ? itemsFromServer.map((it: any, idx: number) => ({
+          key: it.id || Date.now() + idx,
+          product_id: it.product_id,
+          description: it.description || "",
+          quantity: it.quantity || 1,
+          unit_price: it.unit_price || 0,
+          discount: it.discount || 0,
+          tax_rate: it.tax_rate || 0,
+          line_total: it.line_total || 0,
+        }))
+        : [];
+      setItems(mappedItems);
+    } catch (err) {
+      console.error("Failed to load quotation details:", err);
+      message.error("Failed to load quotation items");
+    }
   };
 
-  // Table Columns
-  const columns = [
-    { title: "S.No", dataIndex: "sno", width: 60 },
+  const onDelete = async (rec: any) => {
+    try {
+      await QUOTATION_API.delete(`/${rec.id}`);
+      message.success("Quotation deleted successfully");
+      fetchQuotations();
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to delete quotation");
+    }
+  };
+
+ const onView = async (record: any) => {
+  try {
+    const { data } = await QUOTATION_API.get(`/${record.id}`);
+    console.log("Preview data:", data);  
+    setSelectedPreview(data);
+    setPreviewVisible(true);
+  } catch (err) {
+    console.error("Failed to load quotation preview:", err);
+    message.error("Unable to load quotation preview");
+  }
+};
+
+
+  const listColumns = [
+    {
+      title: "S.No",
+      render: (_: any, __: any, index: number) => index + 1,
+    },
+    { title: "Quotation No", dataIndex: "quotation_no" },
+    { title: "Customer", dataIndex: "customer_name" },
+    { title: "Validity", dataIndex: "validity_date" },
+    { title: "Net Amount", dataIndex: "net_amount" },
+    { title: "Status", dataIndex: "status" },
+    {
+      title: "Action",
+      render: (_: any, rec: any) => (
+        <Space>
+          <Button icon={<EyeOutlined />} onClick={() => onView(rec)} />
+          <Button icon={<PrinterOutlined />} onClick={() => onView(rec)} />
+          <Button icon={<EditOutlined />} onClick={() => onEdit(rec)} />
+          <Popconfirm title="Delete quotation?" onConfirm={() => onDelete(rec)}>
+            <Button danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  const itemColumns = [
     {
       title: "Product",
-      dataIndex: "product",
+      dataIndex: "product_id",
       render: (_: any, record: any) => (
         <Select
-          placeholder="Select Product"
-          style={{ width: 150 }}
-          onChange={(value) => handleProductChange(value, record)}
+          value={record.product_id}
+          onChange={(v) => {
+            const selected = products.find((p) => p.id === v);
+            updateItem(record.key, "product_id", v);
+            if (selected) {
+              updateItem(record.key, "description", selected.description || "");
+              updateItem(record.key, "unit_price", selected.price || 0);
+            }
+          }}
+          placeholder="Select product"
         >
           {products.map((p) => (
             <Option key={p.id} value={p.id}>
@@ -118,178 +335,221 @@ const QuotationAll: React.FC = () => {
         </Select>
       ),
     },
-    { title: "HSN No.", dataIndex: "hsn", width: 100 },
     {
-      title: "Unit Price",
-      dataIndex: "unitPrice",
-      render: (text: any, record: any) => (
-        <InputNumber
-          value={text}
-          onChange={(value) => handleChange(value, record, "unitPrice")}
+      title: "Description",
+      dataIndex: "description",
+      render: (_: any, record: any) => (
+        <Input
+          value={record.description}
+          onChange={(e) => updateItem(record.key, "description", e.target.value)}
         />
       ),
     },
     {
       title: "Qty",
-      dataIndex: "qty",
-      render: (text: any, record: any) => (
+      dataIndex: "quantity",
+      render: (_: any, record: any) => (
         <InputNumber
           min={1}
-          value={text}
-          onChange={(value) => handleChange(value, record, "qty")}
+          value={record.quantity}
+          onChange={(v) => updateItem(record.key, "quantity", v)}
         />
       ),
     },
     {
-      title: "Discount",
+      title: "Unit Price",
+      dataIndex: "unit_price",
+      render: (_: any, record: any) => (
+        <InputNumber
+          min={0}
+          value={record.unit_price}
+          onChange={(v) => updateItem(record.key, "unit_price", v)}
+        />
+      ),
+    },
+    {
+      title: "Discount (%)",
       dataIndex: "discount",
-      render: (text: any, record: any) => (
+      render: (_: any, record: any) => (
         <InputNumber
           min={0}
-          value={text}
-          onChange={(value) => handleChange(value, record, "discount")}
+          value={record.discount}
+          onChange={(v) => updateItem(record.key, "discount", v)}
         />
       ),
     },
     {
-      title: "GST Rate (%)",
-      dataIndex: "gstRate",
-      render: (text: any, record: any) => (
+      title: "Tax (%)",
+      dataIndex: "tax_rate",
+      render: (_: any, record: any) => (
         <InputNumber
           min={0}
-          value={text}
-          onChange={(value) => handleChange(value, record, "gstRate")}
+          value={record.tax_rate}
+          onChange={(v) => updateItem(record.key, "tax_rate", v)}
         />
       ),
     },
     {
-      title: "GST Amount",
-      dataIndex: "gstAmount",
-      render: (text: number) => text.toFixed(2),
+      title: "Line Total",
+      dataIndex: "line_total",
+      render: (val: any) => `₹ ${Number(val || 0).toFixed(2)}`,
     },
     {
-      title: "Net Amount",
-      dataIndex: "netAmt",
-      render: (text: number) => text.toFixed(2),
+      title: "Action",
+      render: (_: any, record: any) => (
+        <Popconfirm title="Remove item?" onConfirm={() => removeItem(record.key)}>
+          <Button danger icon={<DeleteOutlined />} />
+        </Popconfirm>
+      ),
     },
   ];
 
-  const totalAmount = dataSource.reduce(
-    (sum, row) => sum + (row.netAmt || 0),
-    0
-  );
-
-  // Final Submit
-  const handleSubmit = () => {
-    const formValues = form.getFieldsValue();
-    const finalData = {
-      ...formValues,
-      quotationDate: formValues.quotationDate?.format("YYYY-MM-DD"),
-      products: dataSource,
-      totalAmount,
-    };
-    console.log("Quotation Data:", finalData);
-    message.success("Quotation Saved Successfully!");
-  };
-
   return (
-    <Card title="Quotation Form" style={{ margin: 20, borderRadius: 12 }}>
-      {!showTable && (
-        <Form
-          form={form}
-          layout="vertical"
-          initialValues={{ quotationDate: dayjs() }}
-        >
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item
-                name="customerName"
-                label="Customer Name"
-                rules={[{ required: true, message: "Select a customer" }]}
-              >
-                <Select placeholder="Select Customer">
-                  <Option value="cust1">Customer 1</Option>
-                  <Option value="cust2">Customer 2</Option>
-                </Select>
-              </Form.Item>
-            </Col>
+    <Card>
+      {!isFormVisible ? (
+        <>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <Title level={4}>Quotation List</Title>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setIsFormVisible(true)}
+            >
+              Add Quotation
+            </Button>
+          </div>
+          <Table dataSource={quotations} columns={listColumns} rowKey="id" />
+        </>
+      ) : (
+        <>
+          <div style={{ marginBottom: 16 }}>
+           
+          </div>
 
-            <Col span={8}>
-              <Form.Item
-                name="quotationDate"
-                label="Quotation Date"
-                rules={[{ required: true }]}
-              >
-                <DatePicker style={{ width: "100%" }} />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form form={form} layout="vertical" onFinish={onFinish}>
+            {/* --- Quotation Form --- */}
+            <Row gutter={16}>
+              <Col span={6}>
+                <Form.Item
+                  label="Quotation No"
+                  name="quotation_no"
+                  rules={[{ required: true }]}
+                >
+                  <Input placeholder="Enter quotation number" />
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item label="Customer" name="customer_id" rules={[{ required: true }]}>
+                  <Select placeholder="Select customer" onChange={onCustomerChange}>
+                    {customers.map((c) => (
+                      <Option key={c.id} value={c.id}>
+                        {c.name}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item label="Currency" name="currency_id">
+                  <Select placeholder="Select currency">
+                    {currencies.map((c) => (
+                      <Option key={c.id} value={c.id}>
+                        {c.name}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item label="Validity Date" name="validity_date">
+                  <DatePicker style={{ width: "100%" }} />
+                </Form.Item>
+              </Col>
+            </Row>
 
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item name="address" label="Address">
-                <TextArea rows={2} />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="mobile" label="Mobile No.">
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="gst" label="GST No.">
-                <Input />
-              </Form.Item>
-            </Col>
-          </Row>
+            {/* --- Customer Info --- */}
+            <Row gutter={16}>
+              <Col span={6}>
+                <Form.Item label="Phone" name="phone">
+                  <Input disabled />
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item label="GST No" name="gst_no">
+                  <Input disabled />
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item label="State" name="cstate">
+                  <Input disabled />
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item label="District" name="district">
+                  <Input disabled />
+                </Form.Item>
+              </Col>
+            </Row>
 
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item name="paymentTerms" label="Payment Terms">
-                <TextArea rows={2} />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="deliveryTerms" label="Delivery Terms">
-                <TextArea rows={2} />
-              </Form.Item>
-            </Col>
-          </Row>
+            <Form.Item label="Address" name="address">
+              <Input.TextArea rows={2} disabled />
+            </Form.Item>
 
-          <Button type="primary" onClick={handleNext}>
-            Next (Add Products)
-          </Button>
-        </Form>
+            <Title level={5}>Product Details</Title>
+            <Button
+              type="dashed"
+              onClick={addItem}
+              icon={<PlusOutlined />}
+              style={{ marginBottom: 10 }}
+            >
+              Add Item
+            </Button>
+            <Table dataSource={items} columns={itemColumns} pagination={false} rowKey="key" />
+
+            <Row justify="end" style={{ marginTop: 20 }}>
+              <Col span={6}>
+                <div style={{ textAlign: "right" }}>
+                  <p>Total: ₹{totals.total_amount.toFixed(2)}</p>
+                  <p>Discount: ₹{totals.discount_amount.toFixed(2)}</p>
+                  <p>Tax: ₹{totals.tax_amount.toFixed(2)}</p>
+                  <h3>Net Amount: ₹{totals.total_amount.toFixed(2)}</h3>
+                </div>
+              </Col>
+            </Row>
+
+            <Form.Item label="Terms & Conditions" name="terms_conditions">
+              <Input.TextArea rows={3} placeholder="Enter terms & conditions" />
+            </Form.Item>
+
+            <Form.Item label="Status" name="status">
+              <Select>
+                <Option value="Draft">Draft</Option>
+                <Option value="Final">Final</Option>
+              </Select>
+            </Form.Item>
+
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              style={{ marginTop: 10 }}
+            >
+              {editId ? "Update Quotation" : "Create Quotation"}
+            </Button>
+          </Form>
+        </>
       )}
 
-      {showTable && (
-        <>
-          <Button
-            type="dashed"
-            onClick={handleAddProduct}
-            style={{ marginBottom: 10 }}
-          >
-            + Add Product
-          </Button>
-
-          <Table
-            columns={columns}
-            dataSource={dataSource}
-            pagination={false}
-            bordered
-          />
-
-          <h3 style={{ textAlign: "right", marginTop: 10 }}>
-            Total Net Amount: ₹ {totalAmount.toFixed(2)}
-          </h3>
-
-          <Button type="primary" onClick={handleSubmit}>
-            Submit Quotation
-          </Button>
-        </>
+      {previewVisible && (
+        <QuotationPreview
+          visible={previewVisible}
+          onClose={() => setPreviewVisible(false)}
+          previewData={selectedPreview}
+          
+        />
       )}
     </Card>
   );
 };
 
-export default QuotationAll;
+export default NewQuotation;
