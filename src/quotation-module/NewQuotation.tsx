@@ -30,10 +30,14 @@ import QuotationPreview from "./QuotationPreview";
 const { Title } = Typography;
 const { Option } = Select;
 
-const QUOTATION_API = axios.create({ baseURL: "http://localhost:5000/api/quotations" });
-const CUSTOMER_API = axios.create({ baseURL: "http://localhost:5000/api/customers" });
-const CURRENCY_API = axios.create({ baseURL: "http://localhost:5000/api/currencies" });
-const PRODUCT_API = axios.create({ baseURL: "http://localhost:5000/api/products" });
+// import.meta.env se variable access karo
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ;
+
+const QUOTATION_API = axios.create({ baseURL: `${BASE_URL}/quotations` });
+const CUSTOMER_API = axios.create({ baseURL: `${BASE_URL}/customers` });
+const CURRENCY_API = axios.create({ baseURL: `${BASE_URL}/currencies` });
+const PRODUCT_API = axios.create({ baseURL: `${BASE_URL}/products` });
+
 
 const NewQuotation: React.FC = () => {
   const [form] = Form.useForm();
@@ -403,7 +407,7 @@ const NewQuotation: React.FC = () => {
       {!isFormVisible ? (
         <>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <Title level={4}>Quotation List</Title>
+            <Title level={4}> 🗂 Quotation Desk</Title>
             <Button
               type="primary"
               icon={<PlusOutlined />}

@@ -44,7 +44,7 @@ const navItems: NavItem[] = [
   name: "Quotation-Module",
   icon: <ListIcon />,
   subItems: [
-    { name: "All Quotation", path: "/forms/quotation-all", pro: false },
+    { name: "New Quotation", path: "/forms/quotation-all", pro: false },
     { name: " Quotation Desk", path: "/forms/new-quotation", pro: false },
     { name: "Quotation Approval", path: "/forms/quotation-approval", pro: false },
     { name: "Quotation Dispatch & Follow-up", path: "/quotation-tracking", pro: false },
