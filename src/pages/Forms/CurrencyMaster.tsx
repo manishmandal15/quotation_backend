@@ -1,3 +1,4 @@
+// src/pages/Forms/CurrencyMaster.tsx
 import React, { useEffect, useState } from "react";
 import {
   Table,
@@ -14,6 +15,15 @@ import axios from "axios";
 
 const { Option } = Select;
 
+// ✅ Load base URL from .env file
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// ✅ Create axios instance (clean + reusable)
+const API = axios.create({
+  baseURL: `${BASE_URL}/currencies`,
+  headers: { "Content-Type": "application/json" },
+});
+
 const CurrencyMaster: React.FC = () => {
   const [currencies, setCurrencies] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -21,12 +31,11 @@ const CurrencyMaster: React.FC = () => {
   const [editingCurrency, setEditingCurrency] = useState<any>(null);
   const [form] = Form.useForm();
 
-  const API_BASE = "http://localhost:5000/api";
-
+  // ✅ Fetch all currencies
   const fetchCurrencies = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/currencies`);
+      const res = await API.get("/");
       setCurrencies(res.data);
     } catch (err) {
       console.error(err);
@@ -40,12 +49,14 @@ const CurrencyMaster: React.FC = () => {
     fetchCurrencies();
   }, []);
 
+  // ✅ Add currency
   const handleAdd = () => {
     setEditingCurrency(null);
     form.resetFields();
     setIsModalVisible(true);
   };
 
+  // ✅ Edit currency
   const handleEdit = (record: any) => {
     setEditingCurrency(record);
     form.setFieldsValue({
@@ -57,9 +68,10 @@ const CurrencyMaster: React.FC = () => {
     setIsModalVisible(true);
   };
 
+  // ✅ Delete currency
   const handleDelete = async (id: number) => {
     try {
-      await axios.delete(`${API_BASE}/currencies/${id}`);
+      await API.delete(`/${id}`);
       message.success("Currency deleted successfully");
       fetchCurrencies();
     } catch (err) {
@@ -68,6 +80,7 @@ const CurrencyMaster: React.FC = () => {
     }
   };
 
+  // ✅ Save or Update currency
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
@@ -79,10 +92,10 @@ const CurrencyMaster: React.FC = () => {
       };
 
       if (editingCurrency) {
-        await axios.put(`${API_BASE}/currencies/${editingCurrency.id}`, payload);
+        await API.put(`/${editingCurrency.id}`, payload);
         message.success("Currency updated successfully");
       } else {
-        await axios.post(`${API_BASE}/currencies`, payload);
+        await API.post("/", payload);
         message.success("Currency added successfully");
       }
 
@@ -100,6 +113,7 @@ const CurrencyMaster: React.FC = () => {
     }
   };
 
+  // ✅ Table columns
   const columns = [
     { title: "ID", dataIndex: "id", key: "id", width: "10%" },
     { title: "Code", dataIndex: "code", key: "code" },

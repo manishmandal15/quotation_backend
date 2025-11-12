@@ -15,6 +15,15 @@ import axios from "axios";
 
 const { Option } = Select;
 
+// ✅ Use environment variable for base URL
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+
+// ✅ Axios instance
+const API = axios.create({
+  baseURL: `${BASE_URL}/users`,
+  headers: { "Content-Type": "application/json" },
+});
+
 interface User {
   id: number;
   role_id: number;
@@ -25,23 +34,19 @@ interface User {
   is_active: number; // 1 = Active, 0 = Inactive
 }
 
-const API = axios.create({
-  baseURL: "http://localhost:5000/api/users",
-});
-
 const UserMaster: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
   const [editId, setEditId] = useState<number | null>(null);
 
-  // Fetch all users
+  // ✅ Fetch all users
   const fetchUsers = async () => {
     try {
       const res = await API.get("/");
       setUsers(res.data);
     } catch (err) {
-      message.error("Failed to fetch users");
+      message.error("❌ Failed to fetch users");
       console.error(err);
     }
   };
@@ -50,20 +55,17 @@ const UserMaster: React.FC = () => {
     fetchUsers();
   }, []);
 
-  // Save or Update user
+  // ✅ Save or Update user
   const handleSave = async (values: any) => {
     try {
-      const payload = {
-        ...values,
-        is_active: Number(values.is_active),
-      };
+      const payload = { ...values, is_active: Number(values.is_active) };
 
       if (editId) {
         await API.put(`/${editId}`, payload);
-        message.success("User updated successfully!");
+        message.success("✅ User updated successfully!");
       } else {
         await API.post("/", payload);
-        message.success("User added successfully!");
+        message.success("✅ User added successfully!");
       }
 
       fetchUsers();
@@ -72,36 +74,29 @@ const UserMaster: React.FC = () => {
       setEditId(null);
     } catch (err: any) {
       console.error(err);
-      message.error(err.response?.data?.error || "Error saving user");
+      message.error(err.response?.data?.error || "❌ Error saving user");
     }
   };
 
-  // Edit user
+  // ✅ Edit user
   const handleEdit = (record: User) => {
     setEditId(record.id);
-    form.setFieldsValue({
-      role_id: record.role_id,
-      name: record.name,
-      email: record.email,
-      password: record.password,
-      phone: record.phone,
-      is_active: record.is_active,
-    });
+    form.setFieldsValue(record);
     setOpen(true);
   };
 
-  // Delete user
+  // ✅ Delete user
   const handleDelete = async (id: number) => {
     try {
       await API.delete(`/${id}`);
-      message.success("User deleted successfully!");
+      message.success("🗑️ User deleted successfully!");
       fetchUsers();
-    } catch (err) {
-      message.error("Error deleting user");
+    } catch {
+      message.error("❌ Error deleting user");
     }
   };
 
-  // Table columns
+  // ✅ Table columns
   const columns = [
     { title: "ID", dataIndex: "id", key: "id", width: 60 },
     { title: "Name", dataIndex: "name", key: "name" },
@@ -112,7 +107,8 @@ const UserMaster: React.FC = () => {
       title: "Status",
       dataIndex: "is_active",
       key: "is_active",
-      render: (val: number) => (val === 1 ? "Active" : "Inactive"),
+      render: (val: number) =>
+        val === 1 ? "Active" : "Inactive",
     },
     {
       title: "Actions",
@@ -142,6 +138,7 @@ const UserMaster: React.FC = () => {
 
   return (
     <div className="p-6">
+      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold">User Master</h2>
         <Button
@@ -157,6 +154,7 @@ const UserMaster: React.FC = () => {
         </Button>
       </div>
 
+      {/* Table */}
       <Table
         dataSource={users}
         columns={columns}

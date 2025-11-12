@@ -204,29 +204,68 @@ const QuotationApprovalDesk: React.FC = () => {
     },
   ];
 
-  return (
-    <Card>
-      <div className="flex justify-between items-center mb-4">
-        <Title level={4}>🗂 Quotation Approval Desk</Title>
-      </div>
+ return (
+  <Card
+    bodyStyle={{ padding: "16px" }}
+    style={{ width: "100%", overflowX: "auto" }}
+  >
+    {/* Header Section */}
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 12,
+        marginBottom: 16,
+      }}
+    >
+      <Title level={4} style={{ margin: 0 }}>
+        🗂 Quotation Approval Desk
+      </Title>
+      <Button
+        onClick={loadAllData}
+        type="default"
+        style={{ minWidth: 120 }}
+        loading={loading}
+      >
+        Refresh
+      </Button>
+    </div>
 
+    {/* Responsive Table */}
+    <div style={{ overflowX: "auto" }}>
       <Table
         columns={columns}
         dataSource={quotationList}
         rowKey="id"
         bordered
         loading={loading}
+        pagination={{
+          pageSize: 8,
+          showSizeChanger: false,
+          position: ["bottomCenter"],
+        }}
+        size="small"
+        scroll={{ x: "max-content" }} // ✅ Enables horizontal scroll on mobile
+        style={{
+          minWidth: "100%",
+          whiteSpace: "nowrap",
+        }}
       />
+    </div>
 
-      {previewVisible && selectedQuotation && (
-        <QuotationPreview
-          visible={previewVisible}
-          onClose={() => setPreviewVisible(false)}
-          previewData={selectedQuotation}
-        />
-      )}
-    </Card>
-  );
+    {/* Preview Modal */}
+    {previewVisible && selectedQuotation && (
+      <QuotationPreview
+        visible={previewVisible}
+        onClose={() => setPreviewVisible(false)}
+        previewData={selectedQuotation}
+      />
+    )}
+  </Card>
+);
+
 };
 
 export default QuotationApprovalDesk;

@@ -30,14 +30,12 @@ import QuotationPreview from "./QuotationPreview";
 const { Title } = Typography;
 const { Option } = Select;
 
-// import.meta.env se variable access karo
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const QUOTATION_API = axios.create({ baseURL: `${BASE_URL}/quotations` });
 const CUSTOMER_API = axios.create({ baseURL: `${BASE_URL}/customers` });
 const CURRENCY_API = axios.create({ baseURL: `${BASE_URL}/currencies` });
 const PRODUCT_API = axios.create({ baseURL: `${BASE_URL}/products` });
-
 
 const NewQuotation: React.FC = () => {
   const [form] = Form.useForm();
@@ -49,10 +47,8 @@ const NewQuotation: React.FC = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-
   const [previewVisible, setPreviewVisible] = useState(false);
   const [selectedPreview, setSelectedPreview] = useState<any>(null);
-
 
   useEffect(() => {
     fetchQuotations();
@@ -180,7 +176,7 @@ const NewQuotation: React.FC = () => {
       customerId: values.customer_id,
       currencyId: values.currency_id,
       validityDate: values.validity_date
-        ? dayjs(values.validity_date).format("DD-MM-YYYY HH:mm")
+        ? dayjs(values.validity_date).format("YYYY-MM-DD")
         : null,
       paymentTerms: values.payment_terms,
       deliveryTerms: values.delivery_terms,
@@ -242,15 +238,15 @@ const NewQuotation: React.FC = () => {
       const itemsFromServer = data.products ?? [];
       const mappedItems = Array.isArray(itemsFromServer)
         ? itemsFromServer.map((it: any, idx: number) => ({
-          key: it.id || Date.now() + idx,
-          product_id: it.product_id,
-          description: it.description || "",
-          quantity: it.quantity || 1,
-          unit_price: it.unit_price || 0,
-          discount: it.discount || 0,
-          tax_rate: it.tax_rate || 0,
-          line_total: it.line_total || 0,
-        }))
+            key: it.id || Date.now() + idx,
+            product_id: it.product_id,
+            description: it.description || "",
+            quantity: it.quantity || 1,
+            unit_price: it.unit_price || 0,
+            discount: it.discount || 0,
+            tax_rate: it.tax_rate || 0,
+            line_total: it.line_total || 0,
+          }))
         : [];
       setItems(mappedItems);
     } catch (err) {
@@ -270,24 +266,19 @@ const NewQuotation: React.FC = () => {
     }
   };
 
- const onView = async (record: any) => {
-  try {
-    const { data } = await QUOTATION_API.get(`/${record.id}`);
-    console.log("Preview data:", data);  
-    setSelectedPreview(data);
-    setPreviewVisible(true);
-  } catch (err) {
-    console.error("Failed to load quotation preview:", err);
-    message.error("Unable to load quotation preview");
-  }
-};
-
+  const onView = async (record: any) => {
+    try {
+      const { data } = await QUOTATION_API.get(`/${record.id}`);
+      setSelectedPreview(data);
+      setPreviewVisible(true);
+    } catch (err) {
+      console.error("Failed to load quotation preview:", err);
+      message.error("Unable to load quotation preview");
+    }
+  };
 
   const listColumns = [
-    {
-      title: "S.No",
-      render: (_: any, __: any, index: number) => index + 1,
-    },
+    { title: "S.No", render: (_: any, __: any, i: number) => i + 1 },
     { title: "Quotation No", dataIndex: "quotation_no" },
     { title: "Customer", dataIndex: "customer_name" },
     { title: "Validity", dataIndex: "validity_date" },
@@ -296,7 +287,7 @@ const NewQuotation: React.FC = () => {
     {
       title: "Action",
       render: (_: any, rec: any) => (
-        <Space>
+        <Space wrap>
           <Button icon={<EyeOutlined />} onClick={() => onView(rec)} />
           <Button icon={<PrinterOutlined />} onClick={() => onView(rec)} />
           <Button icon={<EditOutlined />} onClick={() => onEdit(rec)} />
@@ -324,6 +315,7 @@ const NewQuotation: React.FC = () => {
             }
           }}
           placeholder="Select product"
+          style={{ minWidth: 120 }}
         >
           {products.map((p) => (
             <Option key={p.id} value={p.id}>
@@ -333,112 +325,51 @@ const NewQuotation: React.FC = () => {
         </Select>
       ),
     },
-    {
-      title: "Description",
-      dataIndex: "description",
-      render: (_: any, record: any) => (
-        <Input
-          value={record.description}
-          onChange={(e) => updateItem(record.key, "description", e.target.value)}
-        />
-      ),
-    },
-    {
-      title: "Qty",
-      dataIndex: "quantity",
-      render: (_: any, record: any) => (
-        <InputNumber
-          min={1}
-          value={record.quantity}
-          onChange={(v) => updateItem(record.key, "quantity", v)}
-        />
-      ),
-    },
-    {
-      title: "Unit Price",
-      dataIndex: "unit_price",
-      render: (_: any, record: any) => (
-        <InputNumber
-          min={0}
-          value={record.unit_price}
-          onChange={(v) => updateItem(record.key, "unit_price", v)}
-        />
-      ),
-    },
-    {
-      title: "Discount (%)",
-      dataIndex: "discount",
-      render: (_: any, record: any) => (
-        <InputNumber
-          min={0}
-          value={record.discount}
-          onChange={(v) => updateItem(record.key, "discount", v)}
-        />
-      ),
-    },
-    {
-      title: "Tax (%)",
-      dataIndex: "tax_rate",
-      render: (_: any, record: any) => (
-        <InputNumber
-          min={0}
-          value={record.tax_rate}
-          onChange={(v) => updateItem(record.key, "tax_rate", v)}
-        />
-      ),
-    },
-    {
-      title: "Line Total",
-      dataIndex: "line_total",
-      render: (val: any) => `₹ ${Number(val || 0).toFixed(2)}`,
-    },
-    {
-      title: "Action",
-      render: (_: any, record: any) => (
-        <Popconfirm title="Remove item?" onConfirm={() => removeItem(record.key)}>
-          <Button danger icon={<DeleteOutlined />} />
-        </Popconfirm>
-      ),
-    },
+    { title: "Description", dataIndex: "description", render: (_: any, r: any) => <Input value={r.description} onChange={(e) => updateItem(r.key, "description", e.target.value)} /> },
+    { title: "Qty", dataIndex: "quantity", render: (_: any, r: any) => <InputNumber min={1} value={r.quantity} onChange={(v) => updateItem(r.key, "quantity", v)} /> },
+    { title: "Unit Price", dataIndex: "unit_price", render: (_: any, r: any) => <InputNumber min={0} value={r.unit_price} onChange={(v) => updateItem(r.key, "unit_price", v)} /> },
+    { title: "Discount (%)", dataIndex: "discount", render: (_: any, r: any) => <InputNumber min={0} value={r.discount} onChange={(v) => updateItem(r.key, "discount", v)} /> },
+    { title: "Tax (%)", dataIndex: "tax_rate", render: (_: any, r: any) => <InputNumber min={0} value={r.tax_rate} onChange={(v) => updateItem(r.key, "tax_rate", v)} /> },
+    { title: "Line Total", dataIndex: "line_total", render: (val: any) => `₹ ${Number(val || 0).toFixed(2)}` },
+    { title: "Action", render: (_: any, record: any) => <Popconfirm title="Remove item?" onConfirm={() => removeItem(record.key)}><Button danger icon={<DeleteOutlined />} /></Popconfirm> },
   ];
 
   return (
-    <Card>
+    <Card bodyStyle={{ padding: 16 }}>
       {!isFormVisible ? (
         <>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <Title level={4}> 🗂 Quotation Desk</Title>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setIsFormVisible(true)}
-            >
+          <div className="flex justify-between flex-wrap mb-4 gap-2">
+            <Title level={4} style={{ margin: 0 }}>
+              🗂 Quotation Desk
+            </Title>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsFormVisible(true)}>
               Add Quotation
             </Button>
           </div>
-          <Table dataSource={quotations} columns={listColumns} rowKey="id" />
+
+          <Table
+            dataSource={quotations}
+            columns={listColumns}
+            rowKey="id"
+            scroll={{ x: 800 }}
+          />
         </>
       ) : (
         <>
-          <div style={{ marginBottom: 16 }}>
+          <div className="mb-4">
             <Button icon={<ArrowLeftOutlined />} onClick={closeForm}>
               Back
             </Button>
           </div>
 
           <Form form={form} layout="vertical" onFinish={onFinish}>
-            {/* --- Quotation Form --- */}
-            <Row gutter={16}>
-              <Col span={6}>
-                <Form.Item
-                  label="Quotation No"
-                  name="quotation_no"
-                  rules={[{ required: true }]}
-                >
+            <Row gutter={[16, 16]}>
+              <Col xs={24} sm={12} md={8} lg={6}>
+                <Form.Item label="Quotation No" name="quotation_no" rules={[{ required: true }]}>
                   <Input placeholder="Enter quotation number" />
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={8} lg={6}>
                 <Form.Item label="Customer" name="customer_id" rules={[{ required: true }]}>
                   <Select placeholder="Select customer" onChange={onCustomerChange}>
                     {customers.map((c) => (
@@ -449,7 +380,7 @@ const NewQuotation: React.FC = () => {
                   </Select>
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={8} lg={6}>
                 <Form.Item label="Currency" name="currency_id">
                   <Select placeholder="Select currency">
                     {currencies.map((c) => (
@@ -460,31 +391,30 @@ const NewQuotation: React.FC = () => {
                   </Select>
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={8} lg={6}>
                 <Form.Item label="Validity Date" name="validity_date">
                   <DatePicker style={{ width: "100%" }} />
                 </Form.Item>
               </Col>
             </Row>
 
-            {/* --- Customer Info --- */}
-            <Row gutter={16}>
-              <Col span={6}>
+            <Row gutter={[16, 16]}>
+              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="Phone" name="phone">
                   <Input disabled />
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="GST No" name="gst_no">
                   <Input disabled />
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="State" name="cstate">
                   <Input disabled />
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="District" name="district">
                   <Input disabled />
                 </Form.Item>
@@ -496,18 +426,16 @@ const NewQuotation: React.FC = () => {
             </Form.Item>
 
             <Title level={5}>Product Details</Title>
-            <Button
-              type="dashed"
-              onClick={addItem}
-              icon={<PlusOutlined />}
-              style={{ marginBottom: 10 }}
-            >
+            <Button type="dashed" onClick={addItem} icon={<PlusOutlined />} style={{ marginBottom: 10 }}>
               Add Item
             </Button>
-            <Table dataSource={items} columns={itemColumns} pagination={false} rowKey="key" />
+
+            <div style={{ overflowX: "auto" }}>
+              <Table dataSource={items} columns={itemColumns} pagination={false} rowKey="key" scroll={{ x: 800 }} />
+            </div>
 
             <Row justify="end" style={{ marginTop: 20 }}>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={8} lg={6}>
                 <div style={{ textAlign: "right" }}>
                   <p>Total: ₹{totals.total_amount.toFixed(2)}</p>
                   <p>Discount: ₹{totals.discount_amount.toFixed(2)}</p>
@@ -528,12 +456,7 @@ const NewQuotation: React.FC = () => {
               </Select>
             </Form.Item>
 
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              style={{ marginTop: 10 }}
-            >
+            <Button type="primary" htmlType="submit" loading={loading} style={{ marginTop: 10 }}>
               {editId ? "Update Quotation" : "Create Quotation"}
             </Button>
           </Form>
@@ -545,7 +468,6 @@ const NewQuotation: React.FC = () => {
           visible={previewVisible}
           onClose={() => setPreviewVisible(false)}
           previewData={selectedPreview}
-          
         />
       )}
     </Card>

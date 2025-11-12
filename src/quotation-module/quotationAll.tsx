@@ -409,151 +409,238 @@ useEffect(() => {
   ];
 
   return (
-    <Card>
-      {!isFormVisible ? (
-        <>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <Title level={4}>Quotation List</Title>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setIsFormVisible(true)}
-            >
-              Add Quotation
-            </Button>
-          </div>
-          <Table dataSource={quotations} columns={listColumns} rowKey="id" />
-        </>
-      ) : (
-        <>
-          <div style={{ marginBottom: 16 }}>
-           
-          </div>
+  <Card bodyStyle={{ padding: "16px" }}>
+    {!isFormVisible ? (
+      <>
+        {/* --- Header Section --- */}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 16,
+          }}
+        >
+          <Title level={4} style={{ margin: 0 }}>
+            🗂 Quotation List
+          </Title>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setIsFormVisible(true)}
+          >
+            Add Quotation
+          </Button>
+        </div>
 
-          <Form form={form} layout="vertical" onFinish={onFinish}>
-            {/* --- Quotation Form --- */}
-            <Row gutter={16}>
-              <Col span={6}>
-                <Form.Item
-                  label="Quotation No"
-                  name="quotation_no"
-                  rules={[{ required: true }]}
+        {/* --- Quotation Table --- */}
+        <Table
+          dataSource={quotations}
+          columns={listColumns}
+          rowKey="id"
+          size="small"
+          scroll={{ x: "max-content" }} // ✅ horizontal scroll for small screens
+        />
+      </>
+    ) : (
+      <>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 16,
+          }}
+        >
+          <Title level={4} style={{ margin: 0 }}>
+            ✏️ {editId ? "Edit Quotation" : "New Quotation"}
+          </Title>
+          <Button icon={<ArrowLeftOutlined />} onClick={closeForm}>
+            Back to List
+          </Button>
+        </div>
+
+        {/* --- Responsive Quotation Form --- */}
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
+          style={{ width: "100%" }}
+        >
+          {/* --- Quotation Info --- */}
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item
+                label="Quotation No"
+                name="quotation_no"
+                rules={[{ required: true }]}
+              >
+                <Input placeholder="Enter quotation number" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item
+                label="Customer"
+                name="customer_id"
+                rules={[{ required: true }]}
+              >
+                <Select
+                  placeholder="Select customer"
+                  onChange={onCustomerChange}
+                  showSearch
+                  optionFilterProp="children"
                 >
-                  <Input placeholder="Enter quotation number" />
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Form.Item label="Customer" name="customer_id" rules={[{ required: true }]}>
-                  <Select placeholder="Select customer" onChange={onCustomerChange}>
-                    {customers.map((c) => (
-                      <Option key={c.id} value={c.id}>
-                        {c.name}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Form.Item label="Currency" name="currency_id">
-                  <Select placeholder="Select currency">
-                    {currencies.map((c) => (
-                      <Option key={c.id} value={c.id}>
-                        {c.name}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Form.Item label="Validity Date" name="validity_date">
-                  <DatePicker style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-            </Row>
+                  {customers.map((c) => (
+                    <Option key={c.id} value={c.id}>
+                      {c.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="Currency" name="currency_id">
+                <Select placeholder="Select currency">
+                  {currencies.map((c) => (
+                    <Option key={c.id} value={c.id}>
+                      {c.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="Validity Date" name="validity_date">
+                <DatePicker style={{ width: "100%" }} />
+              </Form.Item>
+            </Col>
+          </Row>
 
-            {/* --- Customer Info --- */}
-            <Row gutter={16}>
-              <Col span={6}>
-                <Form.Item label="Phone" name="phone">
-                  <Input disabled />
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Form.Item label="GST No" name="gst_no">
-                  <Input disabled />
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Form.Item label="State" name="cstate">
-                  <Input disabled />
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Form.Item label="District" name="district">
-                  <Input disabled />
-                </Form.Item>
-              </Col>
-            </Row>
+          {/* --- Customer Info --- */}
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="Phone" name="phone">
+                <Input disabled />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="GST No" name="gst_no">
+                <Input disabled />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="State" name="cstate">
+                <Input disabled />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item label="District" name="district">
+                <Input disabled />
+              </Form.Item>
+            </Col>
+          </Row>
 
-            <Form.Item label="Address" name="address">
-              <Input.TextArea rows={2} disabled />
-            </Form.Item>
+          <Form.Item label="Address" name="address">
+            <Input.TextArea rows={2} disabled />
+          </Form.Item>
 
-            <Title level={5}>Product Details</Title>
+          {/* --- Product Details --- */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 8,
+              marginTop: 16,
+              marginBottom: 8,
+            }}
+          >
+            <Title level={5} style={{ margin: 0 }}>
+              📦 Product Details
+            </Title>
             <Button
               type="dashed"
               onClick={addItem}
               icon={<PlusOutlined />}
-              style={{ marginBottom: 10 }}
+              style={{ width: "100%", maxWidth: 200 }}
             >
               Add Item
             </Button>
-            <Table dataSource={items} columns={itemColumns} pagination={false} rowKey="key" />
+          </div>
 
-            <Row justify="end" style={{ marginTop: 20 }}>
-              <Col span={6}>
-                <div style={{ textAlign: "right" }}>
-                  <p>Total: ₹{totals.total_amount.toFixed(2)}</p>
-                  <p>Discount: ₹{totals.discount_amount.toFixed(2)}</p>
-                  <p>Tax: ₹{totals.tax_amount.toFixed(2)}</p>
-                  <h3>Net Amount: ₹{totals.total_amount.toFixed(2)}</h3>
-                </div>
-              </Col>
-            </Row>
+          <div style={{ overflowX: "auto" }}>
+            <Table
+              dataSource={items}
+              columns={itemColumns}
+              pagination={false}
+              rowKey="key"
+              size="small"
+              scroll={{ x: 800 }} // ✅ horizontal scroll for small screens
+            />
+          </div>
 
-            <Form.Item label="Terms & Conditions" name="terms_conditions">
-              <Input.TextArea rows={3} placeholder="Enter terms & conditions" />
-            </Form.Item>
+          {/* --- Totals Section --- */}
+          <Row justify="end" style={{ marginTop: 20 }}>
+            <Col xs={24} sm={12} md={6}>
+              <div style={{ textAlign: "right" }}>
+                <p>Total: ₹{totals.total_amount.toFixed(2)}</p>
+                <p>Discount: ₹{totals.discount_amount.toFixed(2)}</p>
+                <p>Tax: ₹{totals.tax_amount.toFixed(2)}</p>
+                <h3>Net Amount: ₹{totals.total_amount.toFixed(2)}</h3>
+              </div>
+            </Col>
+          </Row>
 
-            <Form.Item label="Status" name="status">
-              <Select>
-                <Option value="Draft">Draft</Option>
-                <Option value="Final">Final</Option>
-              </Select>
-            </Form.Item>
+          {/* --- Terms & Status --- */}
+          <Form.Item label="Terms & Conditions" name="terms_conditions">
+            <Input.TextArea rows={3} placeholder="Enter terms & conditions" />
+          </Form.Item>
 
+          <Form.Item label="Status" name="status">
+            <Select>
+              <Option value="Draft">Draft</Option>
+              <Option value="Final">Final</Option>
+            </Select>
+          </Form.Item>
+
+          {/* --- Submit Button --- */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              flexWrap: "wrap",
+              marginTop: 20,
+            }}
+          >
             <Button
               type="primary"
               htmlType="submit"
               loading={loading}
-              style={{ marginTop: 10 }}
+              style={{ width: "100%", maxWidth: 240 }}
             >
               {editId ? "Update Quotation" : "Create Quotation"}
             </Button>
-          </Form>
-        </>
-      )}
+          </div>
+        </Form>
+      </>
+    )}
 
-      {previewVisible && (
-        <QuotationPreview
-          visible={previewVisible}
-          onClose={() => setPreviewVisible(false)}
-          previewData={selectedPreview}
-          
-        />
-      )}
-    </Card>
-  );
+    {/* --- Preview Modal --- */}
+    {previewVisible && (
+      <QuotationPreview
+        visible={previewVisible}
+        onClose={() => setPreviewVisible(false)}
+        previewData={selectedPreview}
+      />
+    )}
+  </Card>
+);
+
 };
 
 export default NewQuotation;

@@ -12,15 +12,17 @@ import {
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 // ✅ District API Instance
 const DistrictAPI = axios.create({
-  baseURL: "http://localhost:5000/api/districts",
+  baseURL: `${BASE_URL}/districts`,
   headers: { "Content-Type": "application/json" },
 });
 
 // ✅ States API Instance (For dropdown)
 const StatesAPI = axios.create({
-  baseURL: "http://localhost:5000/api/states",
+  baseURL: `${BASE_URL}/states`,
   headers: { "Content-Type": "application/json" },
 });
 
