@@ -61,7 +61,6 @@ nextfollowup_date?: string | null;
 
   dispatched_by?: number;          // ← add this
    has_followup?: boolean;
-   is_deal_finalised?: string | null;
 
 };
 
@@ -88,7 +87,7 @@ const FollowupFormFields = {
   FOLLOWUP_BY: "followup_by",
 };
 
-const QuotationTracking: React.FC = () => {
+const QuotationFollowupReminder: React.FC = () => {
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -167,7 +166,6 @@ const fetchQuotations = async () => {
   has_followup: t.has_followup ?? false,
   net_amount: t.net_amount??"0",
   customer_name: t.customer_name??"-",
-  is_deal_finalised: t.is_deal_finalised ?? "No",
 }));
     console.log("TRACKING DATA SAMPLE:", tracking[0]);
     console.log("🔹 Quotations fetched (merged):", merged);
@@ -513,20 +511,14 @@ const handleFollowupSave = async (values: any) => {
     },
     { title: "Dispatched Date", dataIndex: "dispatched_date", key: "dispatched_date" },
     { title: "Dispatched Through", dataIndex: "dispatched_through", key: "dispatched_through" },
-    {
-  title: "Deal Finalised",
-  dataIndex: "is_deal_finalised",
-  key: "is_deal_finalised",
-  render: (v: any) => (v === "Yes" ? "✅ Yes" : "❌ No"),
-},
-
+    { title: "Deal Status", dataIndex: "deal_status", key: "deal_status" },
     { title: "Follow Up Date", dataIndex: "followup_date", key: "followup_date" },
      { title: "Next Up Date", dataIndex: "nextfollowup_date", key: "nextfollowup_date" },
     {
       title: "Action",
       key: "actions",
       fixed: "right",
-      width: 150,
+      width: 120,
       render: (_text, record) => (
         <Space>
              <Tooltip title="view">
@@ -542,7 +534,7 @@ const handleFollowupSave = async (values: any) => {
 
           {/* Send (Dispatch) - always visible when not dispatched */}
            {/* ✅ Dispatch button visible only if approved_by is set */}
-      {record.approved_by && record.approved_by !== "-" ? (
+      {/* {record.approved_by && record.approved_by !== "-" ? (
         <Tooltip title="Send / Dispatch">
           <Button
             type="primary"
@@ -560,7 +552,7 @@ const handleFollowupSave = async (values: any) => {
             style={{ borderRadius: 4, opacity: 0.5 }}
           />
         </Tooltip>
-      )}
+      )} */}
 
           {/* Followup - enable if dispatched = true, otherwise disabled */}
           {/* <Tooltip title="Follow-up">
@@ -612,7 +604,7 @@ const handleFollowupSave = async (values: any) => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold">Quotation Dispatch and FollowUp</h2>
+        <h2 className="text-2xl font-semibold">Quotation Followup & reminders</h2>
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -918,7 +910,6 @@ const handleFollowupSave = async (values: any) => {
             <p><strong>Dispatched Date:</strong> {viewRow.dispatched_date}</p>
             <p><strong>Dispatched Through:</strong> {viewRow.dispatched_through}</p>
             <p><strong>Deal Status:</strong> {viewRow.deal_status}</p>
-            <p><strong>Deal Finalised:</strong> {viewRow.is_deal_finalised === "Yes" ? "Yes" : "No"}</p>
             <p><strong>Follow Up Date:</strong> {viewRow.follow_up_date}</p>
           </div>
         ) : null}
@@ -927,7 +918,7 @@ const handleFollowupSave = async (values: any) => {
   );
 };
 
-export default QuotationTracking;
+export default QuotationFollowupReminder;
 
 
 

@@ -61,7 +61,6 @@ nextfollowup_date?: string | null;
 
   dispatched_by?: number;          // ← add this
    has_followup?: boolean;
-   is_deal_finalised?: string | null;
 
 };
 
@@ -88,10 +87,12 @@ const FollowupFormFields = {
   FOLLOWUP_BY: "followup_by",
 };
 
-const QuotationTracking: React.FC = () => {
+const QuotationTrackingStatus: React.FC = () => {
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
+
 
   // Dispatch modal state
   const [isDispatchOpen, setIsDispatchOpen] = useState(false);
@@ -167,7 +168,6 @@ const fetchQuotations = async () => {
   has_followup: t.has_followup ?? false,
   net_amount: t.net_amount??"0",
   customer_name: t.customer_name??"-",
-  is_deal_finalised: t.is_deal_finalised ?? "No",
 }));
     console.log("TRACKING DATA SAMPLE:", tracking[0]);
     console.log("🔹 Quotations fetched (merged):", merged);
@@ -503,8 +503,8 @@ const handleFollowupSave = async (values: any) => {
       render: (d: string) => (d ? d : "-"),
     },
     { title: "Net Amount", dataIndex: "net_amount", key: "net_amount" },
-    // { title: "Approved By", dataIndex: "approved_by", key: "approved_by" },
-    // { title: "Approved Date", dataIndex: "approved_date", key: "approved_date" },
+    { title: "Approved By", dataIndex: "approved_by", key: "approved_by" },
+    { title: "Approved Date", dataIndex: "approved_date", key: "approved_date" },
      {
       title: "Dispatched",
       dataIndex: "is_dispatched",
@@ -513,118 +513,133 @@ const handleFollowupSave = async (values: any) => {
     },
     { title: "Dispatched Date", dataIndex: "dispatched_date", key: "dispatched_date" },
     { title: "Dispatched Through", dataIndex: "dispatched_through", key: "dispatched_through" },
-    {
-  title: "Deal Finalised",
-  dataIndex: "is_deal_finalised",
-  key: "is_deal_finalised",
-  render: (v: any) => (v === "Yes" ? "✅ Yes" : "❌ No"),
-},
-
+    { title: "Deal Status", dataIndex: "deal_status", key: "deal_status" },
     { title: "Follow Up Date", dataIndex: "followup_date", key: "followup_date" },
-     { title: "Next Up Date", dataIndex: "nextfollowup_date", key: "nextfollowup_date" },
-    {
-      title: "Action",
-      key: "actions",
-      fixed: "right",
-      width: 150,
-      render: (_text, record) => (
-        <Space>
-             <Tooltip title="view">
-          <Button
-            type="default"
-            icon={<EyeOutlined />}
-            onClick={() => openViewModal(record)}
-            style={{ borderRadius: 4 }}
-          >
+     { title: "Next Followup", dataIndex: "nextfollowup_date", key: "nextfollowup_date" },
+//     {
+//       title: "Action",
+//       key: "actions",
+//       fixed: "right",
+//       width: 150,
+//       render: (_text, record) => (
+//         <Space>
+//              <Tooltip title="view">
+//           <Button
+//             type="default"
+//             icon={<EyeOutlined />}
+//             onClick={() => openViewModal(record)}
+//             style={{ borderRadius: 4 }}
+//           >
             
-          </Button>
-          </Tooltip>
+//           </Button>
+//           </Tooltip>
 
-          {/* Send (Dispatch) - always visible when not dispatched */}
-           {/* ✅ Dispatch button visible only if approved_by is set */}
-      {record.approved_by && record.approved_by !== "-" ? (
-        <Tooltip title="Send / Dispatch">
-          <Button
-            type="primary"
-            icon={<SendOutlined />}
-            onClick={() => openDispatchModal(record)}
-            style={{ borderRadius: 4 }}
-          />
-        </Tooltip>
-      ) : (
-        <Tooltip title="Approve quotation before dispatch">
-          <Button
-            type="primary"
-            icon={<SendOutlined />}
-            disabled
-            style={{ borderRadius: 4, opacity: 0.5 }}
-          />
-        </Tooltip>
-      )}
+//           {/* Send (Dispatch) - always visible when not dispatched */}
+//            {/* ✅ Dispatch button visible only if approved_by is set */}
+//       {record.approved_by && record.approved_by !== "-" ? (
+//         <Tooltip title="Send / Dispatch">
+//           <Button
+//             type="primary"
+//             icon={<SendOutlined />}
+//             onClick={() => openDispatchModal(record)}
+//             style={{ borderRadius: 4 }}
+//           />
+//         </Tooltip>
+//       ) : (
+//         <Tooltip title="Approve quotation before dispatch">
+//           <Button
+//             type="primary"
+//             icon={<SendOutlined />}
+//             disabled
+//             style={{ borderRadius: 4, opacity: 0.5 }}
+//           />
+//         </Tooltip>
+//       )}
 
-          {/* Followup - enable if dispatched = true, otherwise disabled */}
-          {/* <Tooltip title="Follow-up">
-               <Button
-                type="default"
-                icon={<ClockCircleOutlined />}
-                onClick={() => openFollowupModal(record)}
-                 disabled={!record.is_dispatched}
-                  style={{ borderRadius: 4 }}
-                 />
-           </Tooltip> */}
+//           {/* Followup - enable if dispatched = true, otherwise disabled */}
+//           {/* <Tooltip title="Follow-up">
+//                <Button
+//                 type="default"
+//                 icon={<ClockCircleOutlined />}
+//                 onClick={() => openFollowupModal(record)}
+//                  disabled={!record.is_dispatched}
+//                   style={{ borderRadius: 4 }}
+//                  />
+//            </Tooltip> */}
 
 
-          <Tooltip
-  title={
-    !record.approved_by || record.approved_by === "-"
-      ? "Approve the quotation first"
-      : !record.is_dispatched
-      ? "Dispatch before follow-up"
-      : record.has_followup
-      ? "Follow-up already done"
-      : "Add Follow-up"
-  }
->
-  <Button
-    type="default"
-    icon={<ClockCircleOutlined />}
-    onClick={() => openFollowupModal(record)}
-   disabled={
-  !record.followup_date || 
-  record.followup_date === "-" ||
-  record.followup_date.trim() === ""
-}
-    style={{
-      borderRadius: 4,
-      opacity:
-        !record.approved_by || record.approved_by === "-" || !record.is_dispatched
-          ? 0.5
-          : 1,
-    }}
-  />
-</Tooltip>
+//           <Tooltip
+//   title={
+//     !record.approved_by || record.approved_by === "-"
+//       ? "Approve the quotation first"
+//       : !record.is_dispatched
+//       ? "Dispatch before follow-up"
+//       : record.has_followup
+//       ? "Follow-up already done"
+//       : "Add Follow-up"
+//   }
+// >
+//   <Button
+//     type="default"
+//     icon={<ClockCircleOutlined />}
+//     onClick={() => openFollowupModal(record)}
+//    disabled={
+//   !record.followup_date || 
+//   record.followup_date === "-" ||
+//   record.followup_date.trim() === ""
+// }
+//     style={{
+//       borderRadius: 4,
+//       opacity:
+//         !record.approved_by || record.approved_by === "-" || !record.is_dispatched
+//           ? 0.5
+//           : 1,
+//     }}
+//   />
+// </Tooltip>
   
-        </Space>
-      ),
-    },
+//         </Space>
+//       ),
+//     },
   ];
+
+
+  const filteredData = quotations.filter((q) =>
+  q.quotation_no?.toLowerCase().includes(searchText.toLowerCase()) ||
+  q.customer_name?.toLowerCase().includes(searchText.toLowerCase()) ||
+  q.deal_status?.toLowerCase().includes(searchText.toLowerCase())
+);
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold">Quotation Dispatch and FollowUp</h2>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => fetchQuotations()}
-        >
-          Refresh
-        </Button>
-      </div>
+  <h2 className="text-2xl font-semibold">Quotation Status Tracking</h2>
+
+  <div className="flex gap-3">
+    <Input
+      placeholder="Search quotation..."
+      value={searchText}
+      onChange={(e) => setSearchText(e.target.value)}
+      style={{ width: 400 }}
+      allowClear
+    />
+
+    {/* <Button
+      type="primary"
+      icon={<PlusOutlined />}
+      onClick={() => fetchQuotations()}
+    >
+      Refresh
+    </Button> */}
+  </div>
+</div>
+      
+      
 
       <Table
         columns={columns}
-        dataSource={quotations}
+        // dataSource={quotations}
+        dataSource={filteredData}
         rowKey={(r) => r.id ?? r.quotation_id ?? 0}
         loading={loading}
         bordered
@@ -747,7 +762,6 @@ const handleFollowupSave = async (values: any) => {
             <Select>
               <Select.Option value="Yes">Yes</Select.Option>
               <Select.Option value="No">No</Select.Option>
-              <Select.Option value="No">Customer not interested</Select.Option>
             </Select>
           </Form.Item>
 
@@ -918,7 +932,6 @@ const handleFollowupSave = async (values: any) => {
             <p><strong>Dispatched Date:</strong> {viewRow.dispatched_date}</p>
             <p><strong>Dispatched Through:</strong> {viewRow.dispatched_through}</p>
             <p><strong>Deal Status:</strong> {viewRow.deal_status}</p>
-            <p><strong>Deal Finalised:</strong> {viewRow.is_deal_finalised === "Yes" ? "Yes" : "No"}</p>
             <p><strong>Follow Up Date:</strong> {viewRow.follow_up_date}</p>
           </div>
         ) : null}
@@ -927,7 +940,7 @@ const handleFollowupSave = async (values: any) => {
   );
 };
 
-export default QuotationTracking;
+export default QuotationTrackingStatus;
 
 
 

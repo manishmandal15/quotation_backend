@@ -91,7 +91,13 @@ const RolesMaster: React.FC = () => {
   };
 
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id", width: 80 },
+     {
+      title: "Sno",
+      key: "sno",
+      render: (_text, _record, index) => index + 1,
+      width: 60,
+    },
+    // { title: "ID", dataIndex: "id", key: "id", width: 80 },
     { title: "Role Name", dataIndex: "name", key: "name" },
     { title: "Description", dataIndex: "description", key: "description" },
     {

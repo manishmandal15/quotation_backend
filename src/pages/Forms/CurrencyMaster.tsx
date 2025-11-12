@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+// import Api from "./api";
+
 import {
   Table,
   Button,
@@ -12,6 +14,7 @@ import {
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import axios from "axios";
 
+
 const { Option } = Select;
 
 const CurrencyMaster: React.FC = () => {
@@ -21,12 +24,13 @@ const CurrencyMaster: React.FC = () => {
   const [editingCurrency, setEditingCurrency] = useState<any>(null);
   const [form] = Form.useForm();
 
-  const API_BASE = "http://localhost:5000/api";
+  // const API_BASE = "http://localhost:5000/api";
 
   const fetchCurrencies = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/currencies`);
+      const res = await Api.get("/company_settings");
+
       setCurrencies(res.data);
     } catch (err) {
       console.error(err);
@@ -101,7 +105,13 @@ const CurrencyMaster: React.FC = () => {
   };
 
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id", width: "10%" },
+    {
+      title: "Sno",
+      key: "sno",
+      render: (_text, _record, index) => index + 1,
+      width: 60,
+    },
+    // { title: "ID", dataIndex: "id", key: "id", width: "10%" },
     { title: "Code", dataIndex: "code", key: "code" },
     { title: "Name", dataIndex: "name", key: "name" },
     { title: "Symbol", dataIndex: "symbol", key: "symbol" },

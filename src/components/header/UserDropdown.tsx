@@ -177,9 +177,9 @@ export default function UserDropdown() {
         onClick={toggleDropdown}
         className="flex items-center text-gray-700 dark:text-gray-400"
       >
-        <span className="mr-3 rounded-full h-11 w-11 overflow-hidden">
+        {/* <span className="mr-3 rounded-full h-11 w-11 overflow-hidden">
           <img src="/images/user/owner.jpg" alt="User" />
-        </span>
+        </span> */}
 
         <span className="mr-1 font-medium text-theme-sm">
           {user ? user.name : "Guest User"}
