@@ -776,21 +776,16 @@ import {
 import axios from "axios";
 import type { ColumnsType } from "antd/es/table";
 
-// const API = axios.create({
-//   baseURL: "http://localhost:5000/api/quotations",
-// });
+// ✅ Get base URL from .env (Vite)
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// ✅ Centralized API instances
 const API = axios.create({
-  baseURL: "http://localhost:5000/api/quotation-tracking",
+  baseURL: `${BASE_URL}/quotation-tracking`,
 });
 
-// const API = axios.create({
-//   baseURL: "http://localhost:5000/api",
-// });
-
-
 const Api = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: BASE_URL,
 });
 
 
@@ -890,8 +885,8 @@ const fetchQuotations = async () => {
   try {
     // get plain quotations (primary source)
     const [quotRes, trackRes] = await Promise.all([
-      axios.get("http://localhost:5000/api/quotations"),
-      axios.get("http://localhost:5000/api/quotation-tracking"),
+       axios.get(`${BASE_URL}/quotations`),
+        axios.get(`${BASE_URL}/quotation-tracking`),
     ]);
 
     const quotations = (quotRes.data || []).map((q: any) => ({
@@ -943,7 +938,7 @@ const fetchQuotations = async () => {
    // ✅ Fetch users for dropdown
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/users");
+      const res = await axios.get(`${BASE_URL}/users`);
       setUsers(res.data || []);
     } catch (err) {
       console.error("❌ Error fetching users:", err);
