@@ -98,7 +98,13 @@ const UserMaster: React.FC = () => {
 
   // ✅ Table columns
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id", width: 60 },
+    {
+      title: "Sno",
+      key: "sno",
+      render: (_text, _record, index) => index + 1,
+      width: 60,
+    },
+    // { title: "ID", dataIndex: "id", key: "id", width: 60 },
     { title: "Name", dataIndex: "name", key: "name" },
     { title: "Email", dataIndex: "email", key: "email" },
     { title: "Phone", dataIndex: "phone", key: "phone" },

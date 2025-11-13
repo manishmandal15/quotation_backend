@@ -1,3 +1,5 @@
+// src/quotation-module/QuotationFollowupReminder.tsx
+
 import React, { useEffect, useState } from "react";
 import {
   Table,
@@ -20,15 +22,19 @@ import {
 import axios from "axios";
 import type { ColumnsType } from "antd/es/table";
 
-// ✅ Get base URL from .env (Vite)
+// ✅ Use .env base URL
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// ✅ Centralized API instances
-const API = axios.create({
+// ✅ Centralized axios instances
+const quotationAPI = axios.create({
+  baseURL: `${BASE_URL}/quotations`,
+});
+
+const trackingAPI = axios.create({
   baseURL: `${BASE_URL}/quotation-tracking`,
 });
 
-const Api = axios.create({
+const commonAPI = axios.create({
   baseURL: BASE_URL,
 });
 
@@ -41,16 +47,14 @@ type Quotation = {
   net_amount?: number;
   approved_by?: string;
   approved_date?: string;
-  is_dispatched?: boolean | string;
+  is_dispatched?: boolean;
   dispatched_date?: string | null;
   dispatched_through?: string | null;
   deal_status?: string | null;
   followup_date?: string | null;
-  follow_up_date?: string | null;
   nextfollowup_date?: string | null;
   dispatched_by?: number;
   has_followup?: boolean;
-  is_deal_finalised?: string | null;
 };
 
 type User = {
@@ -76,25 +80,29 @@ const FollowupFormFields = {
   FOLLOWUP_BY: "followup_by",
 };
 
-const QuotationTracking: React.FC = () => {
+const QuotationFollowupReminder: React.FC = () => {
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+
   const [isDispatchOpen, setIsDispatchOpen] = useState(false);
   const [dispatchForm] = Form.useForm();
   const [currentDispatchRow, setCurrentDispatchRow] = useState<Quotation | null>(null);
+
   const [isFollowupOpen, setIsFollowupOpen] = useState(false);
   const [followupForm] = Form.useForm();
   const [currentFollowupRow, setCurrentFollowupRow] = useState<Quotation | null>(null);
+
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [viewRow, setViewRow] = useState<Quotation | null>(null);
 
+  // ✅ Fetch Quotations
   const fetchQuotations = async () => {
     setLoading(true);
     try {
       const [quotRes, trackRes] = await Promise.all([
-        axios.get(`${BASE_URL}/quotations`),
-        axios.get(`${BASE_URL}/quotation-tracking`),
+        quotationAPI.get("/"),
+        trackingAPI.get("/"),
       ]);
 
       const quotations = (quotRes.data || []).map((q: any) => ({
@@ -103,6 +111,7 @@ const QuotationTracking: React.FC = () => {
       }));
 
       const tracking = trackRes.data || [];
+
       const merged = tracking.map((t: any) => ({
         id: t.id,
         quotation_id: t.id,
@@ -120,7 +129,6 @@ const QuotationTracking: React.FC = () => {
         has_followup: t.has_followup ?? false,
         net_amount: t.net_amount ?? "0",
         customer_name: t.customer_name ?? "-",
-        is_deal_finalised: t.is_deal_finalised ?? "No",
       }));
 
       setQuotations(merged);
@@ -132,12 +140,13 @@ const QuotationTracking: React.FC = () => {
     }
   };
 
+  // ✅ Fetch Users
   const fetchUsers = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/users`);
+      const res = await commonAPI.get("/users");
       setUsers(res.data || []);
     } catch (err) {
-      console.error(err);
+      console.error("❌ Error fetching users:", err);
       message.error("Failed to load users");
     }
   };
@@ -147,24 +156,12 @@ const QuotationTracking: React.FC = () => {
     fetchUsers();
   }, []);
 
-  const openDispatchModal = (row: Quotation) => {
-    setCurrentDispatchRow(row);
-    setIsDispatchOpen(true);
-    dispatchForm.resetFields();
-
-    setTimeout(() => {
-      dispatchForm.setFieldsValue({
-        [DispatchFormFields.DISPATCHED_BY]: loggedInUser,
-        [DispatchFormFields.DISPATCH_THROUGH]: "Email",
-      });
-    }, 0);
-  };
-
+  // ✅ Dispatch Save
   const handleDispatchSave = async (values: any) => {
     if (!currentDispatchRow) return;
     try {
       const dispatchedDate =
-        values[DispatchFormFields.DISPATCH_DATE]?.format?.("YYYY-MM-DD HH:mm:ss") ??
+        values[DispatchFormFields.DISPATCH_DATE]?.format?.("YYYY-MM-DD HH:mm:ss") ||
         values[DispatchFormFields.DISPATCH_DATE];
 
       const payload = {
@@ -175,31 +172,27 @@ const QuotationTracking: React.FC = () => {
         sent_to_email: currentDispatchRow.customer_email ?? "customer@example.com",
       };
 
-      await Api.post("/quotation-dispatches", payload);
+      await commonAPI.post("/quotation-dispatches", payload);
       message.success("Dispatched successfully ✅");
       setIsDispatchOpen(false);
       fetchQuotations();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       message.error("Error while dispatching");
     }
   };
 
-  const openFollowupModal = (row: Quotation) => {
-    setCurrentFollowupRow(row);
-    setIsFollowupOpen(true);
-    followupForm.resetFields();
-  };
-
+  // ✅ Followup Save
   const handleFollowupSave = async (values: any) => {
     if (!currentFollowupRow) return;
     try {
       const nextFollowupDate =
-        values.next_followup_date?.format?.("YYYY-MM-DD HH:mm:ss") ??
-        values.next_followup_date ??
+        values.next_followup_date?.format?.("YYYY-MM-DD HH:mm:ss") ||
+        values.next_followup_date ||
         null;
 
       const actualFollowupDate = new Date().toISOString().slice(0, 19).replace("T", " ");
+
       const payload = {
         quotation_id: currentFollowupRow.quotation_id,
         user_id: values.user_id,
@@ -213,14 +206,27 @@ const QuotationTracking: React.FC = () => {
         actual_followup_date: actualFollowupDate,
       };
 
-      await Api.post("/quotation_followups", payload);
+      await commonAPI.post("/quotation_followups", payload);
       message.success("Follow-up saved successfully ✅");
       setIsFollowupOpen(false);
       fetchQuotations();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       message.error("Error saving follow-up");
     }
+  };
+
+  // ✅ Dispatch + Followup + View modals
+  const openDispatchModal = (row: Quotation) => {
+    setCurrentDispatchRow(row);
+    setIsDispatchOpen(true);
+    dispatchForm.resetFields();
+  };
+
+  const openFollowupModal = (row: Quotation) => {
+    setCurrentFollowupRow(row);
+    setIsFollowupOpen(true);
+    followupForm.resetFields();
   };
 
   const openViewModal = (row: Quotation) => {
@@ -229,67 +235,41 @@ const QuotationTracking: React.FC = () => {
   };
 
   const columns: ColumnsType<Quotation> = [
-    {
-      title: "S.No",
-      key: "sno",
-      render: (_text, _record, index) => index + 1,
-      width: 60,
-    },
-    { title: "Quotation No", dataIndex: "quotation_no", key: "quotation_no" },
-    { title: "Customer", dataIndex: "customer_name", key: "customer_name" },
-    { title: "Quotation Date", dataIndex: "quotation_date", key: "quotation_date" },
-    { title: "Net Amount", dataIndex: "net_amount", key: "net_amount" },
-    {
-      title: "Dispatched",
-      dataIndex: "is_dispatched",
-      key: "is_dispatched",
-    },
-    { title: "Dispatched Date", dataIndex: "dispatched_date", key: "dispatched_date" },
-    { title: "Through", dataIndex: "dispatched_through", key: "dispatched_through" },
-    {
-      title: "Deal Finalised",
-      dataIndex: "is_deal_finalised",
-      key: "is_deal_finalised",
-      render: (v: any) => (v === "Yes" ? "✅ Yes" : "❌ No"),
-    },
-    { title: "Follow-Up Date", dataIndex: "followup_date", key: "followup_date" },
-    { title: "Next Follow-Up", dataIndex: "nextfollowup_date", key: "nextfollowup_date" },
+    { title: "S.No", render: (_: any, __: any, i: number) => i + 1, width: 60 },
+    { title: "Quotation No", dataIndex: "quotation_no" },
+    { title: "Customer Name", dataIndex: "customer_name" },
+    { title: "Quotation Date", dataIndex: "quotation_date" },
+    { title: "Net Amount", dataIndex: "net_amount" },
+    { title: "Dispatched", dataIndex: "is_dispatched" },
+    { title: "Dispatched Date", dataIndex: "dispatched_date" },
+    { title: "Dispatched Through", dataIndex: "dispatched_through" },
+    { title: "Deal Status", dataIndex: "deal_status" },
+    { title: "Followup Date", dataIndex: "followup_date" },
+    { title: "Next Followup Date", dataIndex: "nextfollowup_date" },
     {
       title: "Action",
       key: "actions",
       fixed: "right",
-      width: 150,
+      width: 120,
       render: (_text, record) => (
         <Space>
           <Tooltip title="View">
-            <Button icon={<EyeOutlined />} onClick={() => openViewModal(record)} />
-          </Tooltip>
-
-          <Tooltip title="Dispatch">
             <Button
-              type="primary"
-              icon={<SendOutlined />}
-              onClick={() => openDispatchModal(record)}
-              disabled={!record.approved_by || record.approved_by === "-"}
+              type="default"
+              icon={<EyeOutlined />}
+              onClick={() => openViewModal(record)}
+              style={{ borderRadius: 4 }}
             />
           </Tooltip>
 
-          {/* ✅ Follow-Up button visible but disabled when dispatch is "No" */}
-          <Tooltip
-            title={
-              record.is_dispatched && record.is_dispatched !== "No"
-                ? "Add Follow-Up"
-                : "Follow-Up disabled until dispatched"
-            }
-          >
+
+
+          <Tooltip title="Follow-Up">
             <Button
+              type="default"
               icon={<ClockCircleOutlined />}
               onClick={() => openFollowupModal(record)}
-              disabled={
-                !record.is_dispatched ||
-                record.is_dispatched === "No" ||
-                record.is_dispatched === "-"
-              }
+              style={{ borderRadius: 4 }}
             />
           </Tooltip>
         </Space>
@@ -300,8 +280,12 @@ const QuotationTracking: React.FC = () => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Quotation Dispatch & Follow-Up</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={fetchQuotations}>
+        <h2 className="text-2xl font-semibold">Quotation Followup & Reminders</h2>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={fetchQuotations}
+        >
           Refresh
         </Button>
       </div>
@@ -309,7 +293,7 @@ const QuotationTracking: React.FC = () => {
       <Table
         columns={columns}
         dataSource={quotations}
-        rowKey={(r) => r.id}
+        rowKey={(r) => r.id ?? r.quotation_id ?? 0}
         loading={loading}
         bordered
         pagination={{ pageSize: 8 }}
@@ -343,7 +327,7 @@ const QuotationTracking: React.FC = () => {
             name={DispatchFormFields.DISPATCH_DATE}
             rules={[{ required: true }]}
           >
-            <DatePicker showTime style={{ width: "100%" }} />
+            <DatePicker style={{ width: "100%" }} />
           </Form.Item>
 
           <Form.Item
@@ -353,13 +337,18 @@ const QuotationTracking: React.FC = () => {
           >
             <Select
               placeholder="Select User"
-              options={users.map((u) => ({ label: u.name, value: u.id }))}
+              showSearch
+              optionFilterProp="label"
+              options={users.map((u) => ({
+                label: u.name,
+                value: u.id,
+              }))}
             />
           </Form.Item>
 
-          <div style={{ textAlign: "right" }}>
+          <div className="flex justify-end mt-4">
             <Button onClick={() => setIsDispatchOpen(false)} style={{ marginRight: 8 }}>
-              Cancel
+              Close
             </Button>
             <Button type="primary" htmlType="submit">
               Save
@@ -368,121 +357,82 @@ const QuotationTracking: React.FC = () => {
         </Form>
       </Modal>
 
-      {/* Follow-Up Modal */}
-      <Modal
-        title={`Follow-Up - Quotation ${currentFollowupRow?.quotation_no ?? ""}`}
-        open={isFollowupOpen}
-        onCancel={() => setIsFollowupOpen(false)}
-        footer={null}
-        destroyOnClose
-      >
-        <Form layout="vertical" form={followupForm} onFinish={handleFollowupSave}>
-          <Form.Item
-            label="Is Deal Finalised?"
-            name="is_deal_finalised"
-            rules={[{ required: true }]}
-          >
-            <Select>
-              <Select.Option value="Yes">Yes</Select.Option>
-              <Select.Option value="No">No</Select.Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item label="Invoice No" name="invoice_no">
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            label="Customer Wants Time?"
-            name="customer_wants_time"
-            rules={[{ required: true }]}
-          >
-            <Select>
-              <Select.Option value="Yes">Yes</Select.Option>
-              <Select.Option value="No">No</Select.Option>
-              <Select.Option value="Not Interested">Not Interested</Select.Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item label="Next Follow-Up Date" name="next_followup_date">
-            <DatePicker showTime style={{ width: "100%" }} />
-          </Form.Item>
-
-          <Form.Item label="User" name="user_id" rules={[{ required: true }]}>
-            <Select
-              placeholder="Select User"
-              options={users.map((u) => ({ label: u.name, value: u.id }))}
-            />
-          </Form.Item>
-
-          <div style={{ textAlign: "right" }}>
-            <Button onClick={() => setIsFollowupOpen(false)} style={{ marginRight: 8 }}>
-              Cancel
-            </Button>
-            <Button type="primary" htmlType="submit">
-              Save
-            </Button>
-          </div>
-        </Form>
-      </Modal>
+      {/* Followup Modal */}
+     <Modal
+             title={`Follow-Up - Quotation ${currentFollowupRow?.quotation_no ?? ""}`}
+             open={isFollowupOpen}
+             onCancel={() => setIsFollowupOpen(false)}
+             footer={null}
+             destroyOnClose
+           >
+             <Form layout="vertical" form={followupForm} onFinish={handleFollowupSave}>
+               <Form.Item label="Is Deal Finalised?" name="is_deal_finalised" rules={[{ required: true }]}>
+                 <Select>
+                   <Select.Option value="Yes">Yes</Select.Option>
+                   <Select.Option value="No">No</Select.Option>
+                 </Select>
+               </Form.Item>
+     
+               <Form.Item label="Invoice No" name="invoice_no">
+                 <Input />
+               </Form.Item>
+     
+               <Form.Item label="Customer Wants Time?" name="customer_wants_time" rules={[{ required: true }]}>
+                 <Select>
+                   <Select.Option value="Yes">Yes</Select.Option>
+                   <Select.Option value="No">No</Select.Option>
+                   <Select.Option value="Not Interested">Not Interested</Select.Option>
+                 </Select>
+               </Form.Item>
+     
+               <Form.Item label="Next Follow-Up Date" name="next_followup_date">
+                 <DatePicker showTime style={{ width: "100%" }} />
+               </Form.Item>
+     
+               <Form.Item label="User" name="user_id" rules={[{ required: true }]}>
+                 <Select
+                   placeholder="Select User"
+                   options={users.map((u) => ({ label: u.name, value: u.id }))}
+                 />
+               </Form.Item>
+     
+               <div style={{ textAlign: "right" }}>
+                 <Button onClick={() => setIsFollowupOpen(false)} style={{ marginRight: 8 }}>
+                   Cancel
+                 </Button>
+                 <Button type="primary" htmlType="submit">
+                   Save
+                 </Button>
+               </div>
+             </Form>
+           </Modal>
 
       {/* View Modal */}
       <Modal
         title={`Quotation Details ${viewRow?.quotation_no ?? ""}`}
         open={isViewOpen}
         onCancel={() => setIsViewOpen(false)}
-        footer={[
-          <Button key="close" onClick={() => setIsViewOpen(false)}>
-            Close
-          </Button>,
-        ]}
+        footer={[<Button key="close" onClick={() => setIsViewOpen(false)}>Close</Button>]}
+        destroyOnClose
       >
         {viewRow && (
-          <div>
-            <p>
-              <strong>Quotation No:</strong> {viewRow.quotation_no}
-            </p>
-            <p>
-              <strong>Customer:</strong> {viewRow.customer_name}
-            </p>
-            <p>
-              <strong>Quotation Date:</strong> {viewRow.quotation_date}
-            </p>
-            <p>
-              <strong>Net Amount:</strong> {viewRow.net_amount}
-            </p>
-            <p>
-              <strong>Approved By:</strong> {viewRow.approved_by}
-            </p>
-            <p>
-              <strong>Approved Date:</strong> {viewRow.approved_date}
-            </p>
-            <p>
-              <strong>Dispatched:</strong>{" "}
-              {viewRow.is_dispatched ? "Yes" : "No"}
-            </p>
-            <p>
-              <strong>Dispatched Date:</strong> {viewRow.dispatched_date}
-            </p>
-            <p>
-              <strong>Dispatched Through:</strong>{" "}
-              {viewRow.dispatched_through}
-            </p>
-            <p>
-              <strong>Deal Status:</strong> {viewRow.deal_status}
-            </p>
-            <p>
-              <strong>Deal Finalised:</strong>{" "}
-              {viewRow.is_deal_finalised === "Yes" ? "Yes" : "No"}
-            </p>
-            <p>
-              <strong>Follow Up Date:</strong> {viewRow.follow_up_date}
-            </p>
-          </div>
+         <div>
+            <p><strong>Quotation No:</strong> {viewRow.quotation_no}</p>
+            <p><strong>Customer:</strong> {viewRow.customer_name}</p>
+            <p><strong>Quotation Date:</strong> {viewRow.quotation_date}</p>
+            <p><strong>Net Amount:</strong> {viewRow.net_amount}</p>
+            <p><strong>Approved By:</strong> {viewRow.approved_by}</p>
+            <p><strong>Approved Date:</strong> {viewRow.approved_date}</p>
+            <p><strong>Dispatched:</strong> {viewRow.is_dispatched ? "Yes" : "No"}</p>
+            <p><strong>Dispatched Date:</strong> {viewRow.dispatched_date}</p>
+            <p><strong>Dispatched Through:</strong> {viewRow.dispatched_through}</p>
+            <p><strong>Deal Status:</strong> {viewRow.deal_status}</p>
+            <p><strong>Follow Up Date:</strong> {viewRow.follow_up_date}</p>
+          </div>
         )}
       </Modal>
     </div>
   );
 };
 
-export default QuotationTracking;
+export default QuotationFollowupReminder;

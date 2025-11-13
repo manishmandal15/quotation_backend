@@ -446,11 +446,17 @@ const CustomerMaster: React.FC = () => {
   pagination={{ pageSize: 5 }}
   columns={[
     {
-      title: "ID",
-      dataIndex: "id",
+      title: "Sno",
+      key: "sno",
+      render: (_text, _record, index) => index + 1,
       width: 60,
-      fixed: "left",
     },
+    // {
+    //   title: "ID",
+    //   dataIndex: "id",
+    //   width: 60,
+    //   fixed: "left",
+    // },
     {
       title: "Customer Name",
       dataIndex: "name",
@@ -475,10 +481,10 @@ const CustomerMaster: React.FC = () => {
       title: "PAN No",
       dataIndex: "pan_no",
     },
-    {
-      title: "Billing City",
-      dataIndex: "city",
-    },
+    // {
+    //   title: "Billing City",
+    //   dataIndex: "city",
+    // },
     {
       title: "Billing State",
       dataIndex: "state_id",
@@ -491,10 +497,10 @@ const CustomerMaster: React.FC = () => {
       render: (id: number) =>
         districts.find((d) => d.id === id)?.name || "-",
     },
-    {
-      title: "Shipping City",
-      dataIndex: "shipping_city",
-    },
+    // {
+    //   title: "Shipping City",
+    //   dataIndex: "shipping_city",
+    // },
     {
       title: "Shipping State",
       dataIndex: "shipping_state",

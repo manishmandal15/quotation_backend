@@ -175,6 +175,7 @@ const NewQuotation: React.FC = () => {
       quotationNo: values.quotation_no,
       customerId: values.customer_id,
       currencyId: values.currency_id,
+      created_at:values.created_at,
       validityDate: values.validity_date
         ? dayjs(values.validity_date).format("YYYY-MM-DD")
         : null,
@@ -268,8 +269,30 @@ const NewQuotation: React.FC = () => {
 
   const onView = async (record: any) => {
     try {
-      const { data } = await QUOTATION_API.get(`/${record.id}`);
-      setSelectedPreview(data);
+      const { data: quotationData } = await QUOTATION_API.get(`/${record.id}`);
+
+      // Map products for preview
+      const productsMapped = (quotationData.products ?? []).map((item: any) => {
+        const prod = products.find((p) => p.id === item.product_id);
+        return {
+          ...item,
+          product_name: prod?.name || "Unnamed Product",
+          description: item.description || prod?.description || "",
+          unit_price: item.unit_price || prod?.price || 0,
+        };
+      });
+
+      // Map customer object for preview
+      const customerObj = customers.find((c) => c.id === quotationData.customer_id) || {
+        name: quotationData.customer_name || "N/A",
+        phone: quotationData.phone || "",
+        gst_no: quotationData.gst_no || "",
+        address: quotationData.address || "",
+        cstate: quotationData.cstate || "",
+        district: quotationData.district || "",
+      };
+
+      setSelectedPreview({ ...quotationData, products: productsMapped, customer: customerObj });
       setPreviewVisible(true);
     } catch (err) {
       console.error("Failed to load quotation preview:", err);
@@ -281,7 +304,14 @@ const NewQuotation: React.FC = () => {
     { title: "S.No", render: (_: any, __: any, i: number) => i + 1 },
     { title: "Quotation No", dataIndex: "quotation_no" },
     { title: "Customer", dataIndex: "customer_name" },
-    { title: "Validity", dataIndex: "validity_date" },
+    { title: "Created At", dataIndex: "created_at" ,
+      render: (v: string | null) => (v ? dayjs(v).format("DD-MM-YYYY ") : "-"),
+    },
+   
+    { title: "Validity", dataIndex: "validity_date",
+      render: (v: string | null) => (v ? dayjs(v).format("DD-MM-YYYY ") : "-"),
+
+     },
     { title: "Net Amount", dataIndex: "net_amount" },
     { title: "Status", dataIndex: "status" },
     {
@@ -325,13 +355,46 @@ const NewQuotation: React.FC = () => {
         </Select>
       ),
     },
-    { title: "Description", dataIndex: "description", render: (_: any, r: any) => <Input value={r.description} onChange={(e) => updateItem(r.key, "description", e.target.value)} /> },
-    { title: "Qty", dataIndex: "quantity", render: (_: any, r: any) => <InputNumber min={1} value={r.quantity} onChange={(v) => updateItem(r.key, "quantity", v)} /> },
-    { title: "Unit Price", dataIndex: "unit_price", render: (_: any, r: any) => <InputNumber min={0} value={r.unit_price} onChange={(v) => updateItem(r.key, "unit_price", v)} /> },
-    { title: "Discount (%)", dataIndex: "discount", render: (_: any, r: any) => <InputNumber min={0} value={r.discount} onChange={(v) => updateItem(r.key, "discount", v)} /> },
-    { title: "Tax (%)", dataIndex: "tax_rate", render: (_: any, r: any) => <InputNumber min={0} value={r.tax_rate} onChange={(v) => updateItem(r.key, "tax_rate", v)} /> },
-    { title: "Line Total", dataIndex: "line_total", render: (val: any) => `₹ ${Number(val || 0).toFixed(2)}` },
-    { title: "Action", render: (_: any, record: any) => <Popconfirm title="Remove item?" onConfirm={() => removeItem(record.key)}><Button danger icon={<DeleteOutlined />} /></Popconfirm> },
+    {
+      title: "Description",
+      dataIndex: "description",
+      render: (_: any, r: any) => (
+        <Input value={r.description} onChange={(e) => updateItem(r.key, "description", e.target.value)} />
+      ),
+    },
+    {
+      title: "Qty",
+      dataIndex: "quantity",
+      render: (_: any, r: any) => <InputNumber min={1} value={r.quantity} onChange={(v) => updateItem(r.key, "quantity", v)} />,
+    },
+    {
+      title: "Unit Price",
+      dataIndex: "unit_price",
+      render: (_: any, r: any) => <InputNumber min={0} value={r.unit_price} onChange={(v) => updateItem(r.key, "unit_price", v)} />,
+    },
+    {
+      title: "Discount (%)",
+      dataIndex: "discount",
+      render: (_: any, r: any) => <InputNumber min={0} value={r.discount} onChange={(v) => updateItem(r.key, "discount", v)} />,
+    },
+    {
+      title: "Tax (%)",
+      dataIndex: "tax_rate",
+      render: (_: any, r: any) => <InputNumber min={0} value={r.tax_rate} onChange={(v) => updateItem(r.key, "tax_rate", v)} />,
+    },
+    {
+      title: "Line Total",
+      dataIndex: "line_total",
+      render: (val: any) => `₹ ${Number(val || 0).toFixed(2)}`,
+    },
+    {
+      title: "Action",
+      render: (_: any, record: any) => (
+        <Popconfirm title="Remove item?" onConfirm={() => removeItem(record.key)}>
+          <Button danger icon={<DeleteOutlined />} />
+        </Popconfirm>
+      ),
+    },
   ];
 
   return (
@@ -347,12 +410,7 @@ const NewQuotation: React.FC = () => {
             </Button>
           </div>
 
-          <Table
-            dataSource={quotations}
-            columns={listColumns}
-            rowKey="id"
-            scroll={{ x: 800 }}
-          />
+          <Table dataSource={quotations} columns={listColumns} rowKey="id" scroll={{ x: 800 }} />
         </>
       ) : (
         <>
@@ -463,7 +521,7 @@ const NewQuotation: React.FC = () => {
         </>
       )}
 
-      {previewVisible && (
+      {previewVisible && selectedPreview && (
         <QuotationPreview
           visible={previewVisible}
           onClose={() => setPreviewVisible(false)}

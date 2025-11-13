@@ -88,7 +88,13 @@ const StateMaster: React.FC = () => {
 
   // ✅ Table columns
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id", width: 60 },
+    {
+      title: "Sno",
+      key: "sno",
+      render: (_text, _record, index) => index + 1,
+      width: 60,
+    },
+    // { title: "ID", dataIndex: "id", key: "id", width: 60 },
     { title: "State Name", dataIndex: "name", key: "name" },
     {
       title: "Status",

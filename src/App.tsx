@@ -28,6 +28,8 @@ import DistrictMaster from "./pages/Forms/DistrictMaster";
 import NewQuotation from "./quotation-module/NewQuotation";
 import QuotationAll from "./quotation-module/quotationAll";
 import QuotationTracking from "./pages/Forms/QuotationTracking";
+import QuotationTrackingStatus from "./pages/Forms/QuotationTrackingStatus";
+import QuotationFollowupReminder from "./pages/Forms/QuotationFollowupReminder";
 import QuotationApproval from "./quotation-module/QuotationApproval";
 
 export default function App() {
@@ -57,6 +59,8 @@ export default function App() {
           <Route path="/forms/quotation-all" element={<QuotationAll />} />
         <Route path="/forms/new-quotation" element={<NewQuotation />} />
         <Route path="/quotation-tracking" element={<QuotationTracking />} />
+        <Route path="/quotation-tracking-status" element={<QuotationTrackingStatus />} />
+        <Route path="/quotation-Followup-Reminder" element={<QuotationFollowupReminder />} />
         <Route path="/forms/quotation-approval" element={<QuotationApproval />} />
           {/* Tables */}
           <Route path="/basic-tables" element={<BasicTables />} />

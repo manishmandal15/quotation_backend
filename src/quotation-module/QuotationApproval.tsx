@@ -11,23 +11,36 @@ import {
 import { EyeOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import axios from "axios";
 import dayjs from "dayjs";
-import QuotationPreview from "./QuotationPreview"; // ⬅️ use preview component
+import QuotationPreview from "./QuotationPreview";
 
 const { Title } = Typography;
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// 🔹 API Clients
+// API clients
 const APPROVAL_API = axios.create({ baseURL: `${BASE_URL}/quotation-approvals` });
 const QUOTATION_API = axios.create({ baseURL: `${BASE_URL}/quotations` });
 const CUSTOMER_API = axios.create({ baseURL: `${BASE_URL}/customers` });
+// Optional: define PRODUCT_API if needed
+const PRODUCT_API = axios.create({ baseURL: `${BASE_URL}/products` });
 
 const QuotationApprovalDesk: React.FC = () => {
   const [quotationList, setQuotationList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [previewVisible, setPreviewVisible] = useState(false); // modal state
-  const [selectedQuotation, setSelectedQuotation] = useState<any>(null); // selected quotation for preview
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [selectedQuotation, setSelectedQuotation] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
 
-  // ✅ Load quotations + customers + approvals
+  // Fetch products (optional)
+  const fetchProducts = async () => {
+    try {
+      const res = await PRODUCT_API.get("/");
+      setProducts(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
+    }
+  };
+
+  // Load quotations + customers + approvals
   const loadAllData = async () => {
     try {
       setLoading(true);
@@ -41,21 +54,14 @@ const QuotationApprovalDesk: React.FC = () => {
       const customers = Array.isArray(customerRes.data) ? customerRes.data : [];
       const approvals = Array.isArray(approvalRes.data) ? approvalRes.data : [];
 
-      // ✅ Merge quotation + customer + approval
       const mapped = quotations.map((q: any) => {
-        const customer =
-          customers.find(
-            (c) =>
-              String(c.id) === String(q.customer_id) ||
-              String(c.customer_id) === String(q.customer_id)
-          ) || {};
+        const customer = customers.find(
+          (c) => String(c.id) === String(q.customer_id)
+        ) || {};
 
-        const approval =
-          approvals.find(
-            (a) =>
-              String(a.quotation_id) === String(q.id) ||
-              String(a.id) === String(q.approval_id)
-          ) || {};
+        const approval = approvals.find(
+          (a) => String(a.quotation_id) === String(q.id)
+        );
 
         const net_amount =
           Number(q.net_amount) ||
@@ -69,12 +75,13 @@ const QuotationApprovalDesk: React.FC = () => {
 
         return {
           ...q,
-          customer_name: q.customer_name || customer.name || "N/A",
           customer,
-          approval_id: approval.id || null,
-          approver_name: approval.approver_name || "-",
-          status: approval.status || "pending",
-          approved_at: approval.approved_at || null,
+          customer_name: q.customer_name || customer.name || "N/A",
+          approval_id: approval?.id || null,
+          created_at: q.created_at,
+          approver_name: approval?.approver_name || "-",
+          status: approval?.status ,//g",,
+          approved_at: approval?.approved_at || null,
           net_amount,
         };
       });
@@ -89,72 +96,100 @@ const QuotationApprovalDesk: React.FC = () => {
   };
 
   useEffect(() => {
+    fetchProducts();
     loadAllData();
   }, []);
 
-  // ✅ Approve
+  // Approve quotation
   const handleApprove = async (record: any) => {
     try {
-      const approverName = localStorage.getItem("username") || "Admin";
+      const approverId = Number(localStorage.getItem("user_id") || 1);
       const approvedAt = dayjs().format("YYYY-MM-DD HH:mm:ss");
 
-      await APPROVAL_API.put(`/${record.approval_id || record.id}`, {
+      const payload = {
+        quotation_id: record.id,
+        approver_id: approverId,
         status: "approved",
-        approver_name: approverName,
         approved_at: approvedAt,
         comments: "Approved successfully",
-      });
+      };
+
+      if (record.approval_id) {
+        await APPROVAL_API.put(`/${record.approval_id}`, payload);
+      } else {
+        await APPROVAL_API.post("/", payload);
+      }
 
       message.success("Quotation approved successfully!");
       loadAllData();
-    } catch {
-      message.error("Approval failed");
+    } catch (err) {
+      console.error("Approval failed:", err);
+      message.error("Approval failed — check console");
     }
   };
 
-  // ✅ Reject
+  // Reject quotation
   const handleReject = async (record: any) => {
     try {
-      const approverName = localStorage.getItem("username") || "Admin";
+      const approverId = Number(localStorage.getItem("user_id") || 1);
       const rejectedAt = dayjs().format("YYYY-MM-DD HH:mm:ss");
 
-      await APPROVAL_API.put(`/${record.approval_id || record.id}`, {
+      const payload = {
+        quotation_id: record.id,
+        approver_id: approverId,
         status: "rejected",
-        approver_name: approverName,
         approved_at: rejectedAt,
         comments: "Rejected by approver",
-      });
+      };
+
+      if (record.approval_id) {
+        await APPROVAL_API.put(`/${record.approval_id}`, payload);
+      } else {
+        await APPROVAL_API.post("/", payload);
+      }
 
       message.success("Quotation rejected!");
       loadAllData();
-    } catch {
-      message.error("Rejection failed");
+    } catch (err) {
+      console.error("Rejection failed:", err);
+      message.error("Rejection failed — check console");
     }
   };
 
-  // ✅ Preview modal
-  const handlePreview = (record: any) => {
-    setSelectedQuotation(record);
-    setPreviewVisible(true);
+  // Preview quotation
+  const handlePreview = async (record: any) => {
+    try {
+      const { data } = await QUOTATION_API.get(`/${record.id}`);
+      const productsMapped = (data.products ?? []).map((item: any) => {
+        const product = products.find((p) => p.id === item.product_id);
+        return {
+          ...item,
+          product_name: product?.name || "Unnamed Product",
+          description: item.description || product?.description || "",
+          unit_price: item.unit_price || product?.price || 0,
+        };
+      });
+      setSelectedQuotation({ ...data, products: productsMapped, customer: record.customer });
+      setPreviewVisible(true);
+    } catch (err) {
+      console.error("Failed to load quotation preview:", err);
+      message.error("Unable to load quotation preview");
+    }
   };
 
   const columns = [
     { title: "S.No", render: (_: any, __: any, i: number) => i + 1, width: 60 },
     { title: "Quotation No", dataIndex: "quotation_no", key: "quotation_no" },
     { title: "Customer Name", dataIndex: "customer_name", key: "customer_name" },
-    {
-      title: "Net Amount (₹)",
-      dataIndex: "net_amount",
-      key: "net_amount",
+    { title: "Created At", dataIndex: "created_at", key: "created_at",
+      render: (v: string | null) => (v ? dayjs(v).format("DD-MM-YYYY") : "-"),
+    },
+    { title: "Net Amount (₹)", dataIndex: "net_amount", key: "net_amount",
       align: "right" as const,
-      render: (v: number) =>
-        v ? v.toLocaleString("en-IN", { minimumFractionDigits: 2 }) : "0.00",
+      render: (v: number) => v.toLocaleString("en-IN", { minimumFractionDigits: 2 }),
     },
     { title: "Approver Name", dataIndex: "approver_name", key: "approver_name" },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
+    { title: "Status", dataIndex: "status", key: "status",
       render: (v: string) => (
         <span
           style={{
@@ -167,11 +202,8 @@ const QuotationApprovalDesk: React.FC = () => {
         </span>
       ),
     },
-    {
-      title: "Approved Date",
-      dataIndex: "approved_at",
-      key: "approved_at",
-      render: (v: string | null) => (v ? dayjs(v).format("DD-MM-YYYY HH:mm") : "-"),
+    { title: "Approved Date", dataIndex: "approved_at", key: "approved_at",
+      render: (v: string | null) => (v ? dayjs(v).format("DD-MM-YYYY") : "-"),
     },
     {
       title: "Action",
@@ -179,93 +211,71 @@ const QuotationApprovalDesk: React.FC = () => {
       render: (_: any, record: any) => (
         <Space>
           <Button icon={<EyeOutlined />} shape="circle" onClick={() => handlePreview(record)} />
-          <Popconfirm
-            title="Approve this quotation?"
-            onConfirm={() => handleApprove(record)}
+
+          <Button
+            icon={<CheckOutlined />}
+            type="primary"
+            shape="circle"
+            onClick={() => handleApprove(record)}
             disabled={record.status === "approved"}
-          >
-            <Button
-              icon={<CheckOutlined />}
-              type="primary"
-              shape="circle"
-              disabled={record.status === "approved"}
-              style={{ background: "#52c41a", borderColor: "#52c41a" }}
-            />
-          </Popconfirm>
-          <Popconfirm
-            title="Reject this quotation?"
-            onConfirm={() => handleReject(record)}
+            style={{ background: "#52c41a", borderColor: "#52c41a" }}
+          />
+
+          <Button
+            icon={<CloseOutlined />}
+            danger
+            shape="circle"
+            onClick={() => handleReject(record)}
             disabled={record.status === "rejected"}
-          >
-            <Button icon={<CloseOutlined />} danger shape="circle" disabled={record.status === "rejected"} />
-          </Popconfirm>
+          />
         </Space>
       ),
     },
   ];
 
- return (
-  <Card
-    bodyStyle={{ padding: "16px" }}
-    style={{ width: "100%", overflowX: "auto" }}
-  >
-    {/* Header Section */}
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: 12,
-        marginBottom: 16,
-      }}
-    >
-      <Title level={4} style={{ margin: 0 }}>
-        🗂 Quotation Approval Desk
-      </Title>
-      <Button
-        onClick={loadAllData}
-        type="default"
-        style={{ minWidth: 120 }}
-        loading={loading}
-      >
-        Refresh
-      </Button>
-    </div>
-
-    {/* Responsive Table */}
-    <div style={{ overflowX: "auto" }}>
-      <Table
-        columns={columns}
-        dataSource={quotationList}
-        rowKey="id"
-        bordered
-        loading={loading}
-        pagination={{
-          pageSize: 8,
-          showSizeChanger: false,
-          position: ["bottomCenter"],
-        }}
-        size="small"
-        scroll={{ x: "max-content" }} // ✅ Enables horizontal scroll on mobile
+  return (
+    <Card bodyStyle={{ padding: "16px" }} style={{ width: "100%", overflowX: "auto" }}>
+      <div
         style={{
-          minWidth: "100%",
-          whiteSpace: "nowrap",
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 12,
+          marginBottom: 16,
         }}
-      />
-    </div>
+      >
+        <Title level={4} style={{ margin: 0 }}>
+          🗂 Quotation Approval Desk
+        </Title>
+        <Button onClick={loadAllData} type="default" style={{ minWidth: 120 }} loading={loading}>
+          Refresh
+        </Button>
+      </div>
 
-    {/* Preview Modal */}
-    {previewVisible && selectedQuotation && (
-      <QuotationPreview
-        visible={previewVisible}
-        onClose={() => setPreviewVisible(false)}
-        previewData={selectedQuotation}
-      />
-    )}
-  </Card>
-);
+      <div style={{ overflowX: "auto" }}>
+        <Table
+          columns={columns}
+          dataSource={quotationList}
+          rowKey="id"
+          bordered
+          loading={loading}
+          pagination={{ pageSize: 8, showSizeChanger: false, position: ["bottomCenter"] }}
+          size="small"
+          scroll={{ x: "max-content" }}
+          style={{ minWidth: "100%", whiteSpace: "nowrap" }}
+        />
+      </div>
 
+      {previewVisible && selectedQuotation && (
+        <QuotationPreview
+          visible={previewVisible}
+          onClose={() => setPreviewVisible(false)}
+          previewData={selectedQuotation}
+        />
+      )}
+    </Card>
+  );
 };
 
 export default QuotationApprovalDesk;

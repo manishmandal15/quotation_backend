@@ -1,5 +1,7 @@
 // src/pages/Forms/CurrencyMaster.tsx
 import React, { useEffect, useState } from "react";
+// import Api from "./api";
+
 import {
   Table,
   Button,
@@ -12,6 +14,7 @@ import {
 } from "antd";
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import axios from "axios";
+
 
 const { Option } = Select;
 
@@ -115,7 +118,13 @@ const CurrencyMaster: React.FC = () => {
 
   // ✅ Table columns
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id", width: "10%" },
+    {
+      title: "Sno",
+      key: "sno",
+      render: (_text, _record, index) => index + 1,
+      width: 60,
+    },
+    // { title: "ID", dataIndex: "id", key: "id", width: "10%" },
     { title: "Code", dataIndex: "code", key: "code" },
     { title: "Name", dataIndex: "name", key: "name" },
     { title: "Symbol", dataIndex: "symbol", key: "symbol" },

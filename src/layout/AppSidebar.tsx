@@ -48,8 +48,8 @@ const navItems: NavItem[] = [
     { name: " Quotation Desk", path: "/forms/new-quotation", pro: false },
     { name: "Quotation Approval", path: "/forms/quotation-approval", pro: false },
     { name: "Quotation Dispatch & Follow-up", path: "/quotation-tracking", pro: false },
-    { name: "Quotation Status Tracking", path: "/forms/quotation-status-tracking", pro: false },
-    { name: "Quotation Follow-Up & Reminders", path: "/forms/quotation-followup-reminders", pro: false },
+    { name: "Quotation Status Tracking", path: "/quotation-tracking-status", pro: false },
+    { name: "Quotation Follow-Up & Reminders", path: "/quotation-Followup-Reminder", pro: false },
   ],
 },
 
