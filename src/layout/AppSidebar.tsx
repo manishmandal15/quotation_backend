@@ -17,6 +17,14 @@ import {
 import { useSidebar } from "../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
 
+
+
+
+import { useNavigate } from "react-router";
+
+
+
+
 type NavItem = {
   name: string;
   icon: React.ReactNode;
@@ -36,12 +44,12 @@ const navItems: NavItem[] = [
   name: "Quotation-Module",
   icon: <ListIcon />,
   subItems: [
-    { name: "All Quotation", path: "/forms/quotation-all", pro: false },
+    { name: "New Quotation", path: "/forms/quotation-all", pro: false },
     { name: " Quotation Desk", path: "/forms/new-quotation", pro: false },
     { name: "Quotation Approval", path: "/forms/quotation-approval", pro: false },
     { name: "Quotation Dispatch & Follow-up", path: "/quotation-tracking", pro: false },
-    { name: "Quotation Status Tracking", path: "/forms/quotation-status-tracking", pro: false },
-    { name: "Quotation Follow-Up & Reminders", path: "/forms/quotation-followup-reminders", pro: false },
+    { name: "Quotation Status Tracking", path: "/quotation-tracking-status", pro: false },
+    { name: "Quotation Follow-Up & Reminders", path: "/quotation-Followup-Reminder", pro: false },
   ],
 },
 
@@ -176,7 +184,7 @@ const othersItems: NavItem[] = [
       { name: "Sign Up", path: "/signup", pro: false },
     ],
   },
-];
+]; 
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
@@ -193,6 +201,36 @@ const AppSidebar: React.FC = () => {
     (path: string) => location.pathname === path,
     [location.pathname]
   );
+
+
+
+  const navigate = useNavigate();
+
+  const [user, setUser] = useState<any>(null);
+  const [isOpen, setIsOpen] = useState(false);
+
+  // ✅ USER LOGIN VALIDATION
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+
+    if (!savedUser) {
+      alert("Please login first");
+      navigate("/signin");
+      return;
+    }
+
+    const parsed = JSON.parse(savedUser);
+
+    if (!parsed?.name || parsed.name.trim() === "") {
+      alert("Invalid session. Please login again.");
+      localStorage.removeItem("user");
+      navigate("/signin");
+      return;
+    }
+
+    setUser(parsed);
+  }, []);
+
 
   useEffect(() => {
     let submenuMatched = false;
@@ -211,6 +249,8 @@ const AppSidebar: React.FC = () => {
     });
     if (!submenuMatched) setOpenSubmenu(null);
   }, [location, isActive]);
+
+
 
   useEffect(() => {
     if (openSubmenu !== null) {

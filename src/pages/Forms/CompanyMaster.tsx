@@ -17,10 +17,10 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
-
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // ✅ API setup
 const API = axios.create({
-  baseURL: "http://localhost:5000/api/company_settings",
+  baseURL: `${BASE_URL}/company_settings`,
 });
 
 interface Company {
@@ -133,8 +133,14 @@ const CompanyMaster: React.FC = () => {
 
   // ✅ Table columns
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id", width: 60 },
-    { title: "Name", dataIndex: "company_name", key: "company_name" },
+    {
+      title: "Sno",
+      key: "sno",
+      render: (_text, _record, index) => index + 1,
+      width: 60,
+    },
+    // { title: "ID", dataIndex: "id", key: "id", width: 60 },
+    // { title: "Name", dataIndex: "company_name", key: "company_name" },
     { title: "Email", dataIndex: "email", key: "email" },
     { title: "Phone", dataIndex: "phone", key: "phone" },
     { title: "Website", dataIndex: "website", key: "website" },

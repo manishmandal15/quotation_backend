@@ -12,15 +12,17 @@ import {
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 // ✅ District API Instance
 const DistrictAPI = axios.create({
-  baseURL: "http://localhost:5000/api/districts",
+  baseURL: `${BASE_URL}/districts`,
   headers: { "Content-Type": "application/json" },
 });
 
 // ✅ States API Instance (For dropdown)
 const StatesAPI = axios.create({
-  baseURL: "http://localhost:5000/api/states",
+  baseURL: `${BASE_URL}/states`,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -108,7 +110,13 @@ const DistrictMaster: React.FC = () => {
 
   // ✅ Table columns
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id", width: 60 },
+    {
+      title: "Sno",
+      key: "sno",
+      render: (_text, _record, index) => index + 1,
+      width: 60,
+    },
+    // { title: "ID", dataIndex: "id", key: "id", width: 60 },
     { title: "District Name", dataIndex: "name", key: "name" },
     {
       title: "State",

@@ -3,36 +3,49 @@ const db = require("../config/db");
 // ✅ Get all quotation tracking data
 exports.getQuotationTracking = (req, res) => {
   const query = `
+   SELECT 
+  q.id AS id,
+  q.quotation_no,
+  DATE_FORMAT(q.created_at, '%d-%m-%Y') AS quotation_date,
+  q.net_amount,
+  c.name AS customer_name,
+
+  qa.status AS approval_status,
+  DATE_FORMAT(qa.approved_at, '%d-%m-%Y') AS approved_date,
+  u.name AS approved_by,
+
+  IF(qd.id IS NULL, 'No', 'Yes') AS is_dispatched,
+  DATE_FORMAT(qd.sent_at, '%d-%m-%Y') AS dispatched_date,
+  qd.method AS dispatched_through,
+
+  qf.latest_followup_date AS followup_date,
+  qf.latest_next_followup_date AS nextfollowup_date,
+  qf.latest_deal_status AS is_deal_finalised
+
+FROM quotations q
+LEFT JOIN customers c ON q.customer_id = c.id
+INNER JOIN quotation_approvals qa ON q.id = qa.quotation_id
+LEFT JOIN users u ON qa.approver_id = u.id
+LEFT JOIN quotation_dispatches qd ON q.id = qd.quotation_id
+
+LEFT JOIN (
     SELECT 
-      q.id AS id,
-      q.quotation_no,
-      DATE_FORMAT(q.created_at, '%d-%m-%Y' ) AS quotation_date,
-      q.net_amount,
-      c.name AS customer_name,
+        q1.quotation_id,
+        DATE_FORMAT(q1.followup_date, '%d-%m-%Y') AS latest_followup_date,
+        DATE_FORMAT(q1.next_followup_date, '%d-%m-%Y') AS latest_next_followup_date,
+        q1.is_deal_finalised AS latest_deal_status
+    FROM quotation_followups q1
+    INNER JOIN (
+        SELECT quotation_id, MAX(followup_date) AS max_followup
+        FROM quotation_followups
+        GROUP BY quotation_id
+    ) q2 ON q1.quotation_id = q2.quotation_id AND q1.followup_date = q2.max_followup
+) AS qf ON q.id = qf.quotation_id
 
-      -- Approval details
-      qa.status AS approval_status,
-      DATE_FORMAT(qa.approved_at, '%d-%m-%Y' ) AS approved_date,
-      u.name AS approved_by,
+WHERE qa.status = 'approved'
+ORDER BY q.id DESC;
+`;
 
-      -- Dispatch details
-      IF(qd.id IS NULL, 'No', 'Yes') AS is_dispatched,
-      DATE_FORMAT(qd.sent_at, '%d-%m-%Y' ) AS dispatched_date,
-      qd.method AS dispatched_through,
-
-      -- Followup details
-      DATE_FORMAT(qf.followup_date, '%d-%m-%Y' ) AS followup_date,
-      qf.notes AS followup_notes
-
-    FROM quotations q
-    LEFT JOIN customers c ON q.customer_id = c.id
-    inner JOIN quotation_approvals qa ON q.id = qa.quotation_id
-    LEFT JOIN users u ON qa.approver_id = u.id
-    LEFT JOIN quotation_dispatches qd ON q.id = qd.quotation_id
-    LEFT JOIN quotation_followups qf ON q.id = qf.quotation_id
-    where qa.status='approved'
-    ORDER BY q.id DESC
-  `;
 
   db.query(query, (err, results) => {
     if (err) {
@@ -58,12 +71,14 @@ exports.getQuotationTracking = (req, res) => {
       dispatched_date: row.dispatched_date || "-",
       dispatched_through: row.dispatched_through || "-",
       followup_date: row.followup_date || "-",
+      nextfollowup_date: row.nextfollowup_date || "-",
       deal_status:
         row.approval_status === "approved"
           ? "Approved"
           : row.approval_status === "rejected"
           ? "Rejected"
           : "Pending",
+          is_deal_finalised: row.is_deal_finalised || "No",
     }));
 
     res.json(formatted);

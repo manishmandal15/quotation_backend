@@ -161,10 +161,11 @@ const QuotationPreview: React.FC<Props> = ({ visible, onClose, previewData }) =>
         <div className="header">
           <img src={logo} alt="Company Logo" />
           <div className="company-info">
-            <h2 style={{ margin: 0 }}>D SONIK</h2>
-            <p>Andal, Durgapur, West Bengal - 713321</p>
-            <p>GSTIN: 19AOJPK7756E1Z3</p>
-            <p>Email: dsonik.info@gmail.com | Ph: +91-9832470834</p>
+            <h2 style={{ margin: 0 }}>DSONIK</h2>
+            <p>74, Anand industrial Estatee <br></br> Mohan Nagar, Gaziabad 201007</p>
+            <p>GSTIN: 09AOGPK1379A1ZA</p>
+            <p>Website: www.dsonik.com</p>
+            <p>Email: info@dsonik.com | Ph: +91-9810776728</p>
           </div>
         </div>
 

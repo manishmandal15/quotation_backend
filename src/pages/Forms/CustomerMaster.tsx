@@ -288,11 +288,11 @@ interface Customer {
   shipping_country?: string;
   is_active?: 1 | 0;
 }
-
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // API instances
-const customerAPI = axios.create({ baseURL: "http://localhost:5000/api/customers" });
-const stateAPI = axios.create({ baseURL: "http://localhost:5000/api/states" });
-const districtAPI = axios.create({ baseURL: "http://localhost:5000/api/districts" });
+export const customerAPI = axios.create({ baseURL: `${BASE_URL}/customers` });
+export const stateAPI = axios.create({ baseURL: `${BASE_URL}/states` });
+export const districtAPI = axios.create({ baseURL: `${BASE_URL}/districts` });
 
 const CustomerMaster: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -446,11 +446,17 @@ const CustomerMaster: React.FC = () => {
   pagination={{ pageSize: 5 }}
   columns={[
     {
-      title: "ID",
-      dataIndex: "id",
+      title: "Sno",
+      key: "sno",
+      render: (_text, _record, index) => index + 1,
       width: 60,
-      fixed: "left",
     },
+    // {
+    //   title: "ID",
+    //   dataIndex: "id",
+    //   width: 60,
+    //   fixed: "left",
+    // },
     {
       title: "Customer Name",
       dataIndex: "name",
@@ -475,10 +481,10 @@ const CustomerMaster: React.FC = () => {
       title: "PAN No",
       dataIndex: "pan_no",
     },
-    {
-      title: "Billing City",
-      dataIndex: "city",
-    },
+    // {
+    //   title: "Billing City",
+    //   dataIndex: "city",
+    // },
     {
       title: "Billing State",
       dataIndex: "state_id",
@@ -491,10 +497,10 @@ const CustomerMaster: React.FC = () => {
       render: (id: number) =>
         districts.find((d) => d.id === id)?.name || "-",
     },
-    {
-      title: "Shipping City",
-      dataIndex: "shipping_city",
-    },
+    // {
+    //   title: "Shipping City",
+    //   dataIndex: "shipping_city",
+    // },
     {
       title: "Shipping State",
       dataIndex: "shipping_state",
