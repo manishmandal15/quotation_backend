@@ -1,0 +1,5 @@
+.highlight-red {
+  background-color: #ffcccc !important; /* हल्का लाल बैकग्राउंड */
+  color: #000 !important;               /* टेक्स्ट readable रहे */
+  transition: background-color 0.3s ease;
+}

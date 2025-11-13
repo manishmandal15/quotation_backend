@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from "react";
+
 import {
   Table,
   Button,
@@ -517,11 +518,11 @@ const handleFollowupSave = async (values: any) => {
   title: "Deal Finalised",
   dataIndex: "is_deal_finalised",
   key: "is_deal_finalised",
-  render: (v: any) => (v === "Yes" ? "✅ Yes" : "❌ No"),
+  render: (v: any) => (v === "Yes" ? " Yes" : " No"),   // ✅ 
 },
 
     { title: "Follow Up Date", dataIndex: "followup_date", key: "followup_date" },
-     { title: "Next Up Date", dataIndex: "nextfollowup_date", key: "nextfollowup_date" },
+     { title: "Next Followup", dataIndex: "nextfollowup_date", key: "nextfollowup_date" },
     {
       title: "Action",
       key: "actions",
@@ -589,11 +590,11 @@ const handleFollowupSave = async (values: any) => {
     type="default"
     icon={<ClockCircleOutlined />}
     onClick={() => openFollowupModal(record)}
-   disabled={
-  !record.followup_date || 
-  record.followup_date === "-" ||
-  record.followup_date.trim() === ""
-}
+//    disabled={
+//   !record.followup_date || 
+//   record.followup_date === "-" ||
+//   record.followup_date.trim() === ""
+// }
     style={{
       borderRadius: 4,
       opacity:
@@ -622,7 +623,7 @@ const handleFollowupSave = async (values: any) => {
         </Button>
       </div>
 
-      <Table
+      {/* <Table
         columns={columns}
         dataSource={quotations}
         rowKey={(r) => r.id ?? r.quotation_id ?? 0}
@@ -630,7 +631,61 @@ const handleFollowupSave = async (values: any) => {
         bordered
         pagination={{ pageSize: 8 }}
         scroll={{ x: 1200 }}
-      />
+      /> */}
+
+     <Table
+  columns={columns}
+  dataSource={quotations}
+  rowKey="id"
+  pagination={{ pageSize: 10 }}
+  onRow={(record) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // ✅ Parse nextfollowup_date safely
+    const nextDate = record.nextfollowup_date
+      ? (() => {
+          const parts = record.nextfollowup_date.split("-");
+          if (parts.length === 3) {
+            const [day, month, year] = parts;
+            return new Date(`${year}-${month}-${day}`);
+          }
+          return new Date(record.nextfollowup_date);
+        })()
+      : null;
+
+    let style = {};
+
+    if (record.is_deal_finalised === "Yes" ) {
+      
+        // 🟢 Date is in past
+        style = {
+          backgroundColor: "#ccffcc", // light green
+          color: "#000",
+          transition: "background-color 0.3s ease",
+        };
+    }
+    
+
+
+     if (record.is_deal_finalised === "No" && nextDate) {
+      if (nextDate.getTime() <= today.getTime()) {
+        // 🔴 Date is today or in future
+        style = {
+          backgroundColor: "#ffcccc", // light red
+          color: "#000",
+          transition: "background-color 0.3s ease",
+        };
+      } 
+    }
+
+    return { style };
+  }}
+/>
+
+
+
+
 
       {/* Dispatch Modal */}
       <Modal

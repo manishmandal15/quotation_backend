@@ -38,7 +38,7 @@ export default function SignInForm() {
         // ✅ Store logged-in user
         localStorage.setItem("user", JSON.stringify(res.data.user));
 
-        alert("Login successful!1111");
+        alert("Login successful!");
 
         navigate("/home"); // redirect to dashboard
       }

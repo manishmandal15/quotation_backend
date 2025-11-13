@@ -61,6 +61,7 @@ nextfollowup_date?: string | null;
 
   dispatched_by?: number;          // ← add this
    has_followup?: boolean;
+   is_deal_finalised?: string | null;
 
 };
 
@@ -168,6 +169,7 @@ const fetchQuotations = async () => {
   has_followup: t.has_followup ?? false,
   net_amount: t.net_amount??"0",
   customer_name: t.customer_name??"-",
+  is_deal_finalised: t.is_deal_finalised ?? "No",
 }));
     console.log("TRACKING DATA SAMPLE:", tracking[0]);
     console.log("🔹 Quotations fetched (merged):", merged);
@@ -513,7 +515,13 @@ const handleFollowupSave = async (values: any) => {
     },
     { title: "Dispatched Date", dataIndex: "dispatched_date", key: "dispatched_date" },
     { title: "Dispatched Through", dataIndex: "dispatched_through", key: "dispatched_through" },
-    { title: "Deal Status", dataIndex: "deal_status", key: "deal_status" },
+    // { title: "Deal Status", dataIndex: "deal_status", key: "deal_status" },
+    {
+  title: "Deal Finalised",
+  dataIndex: "is_deal_finalised",
+  key: "is_deal_finalised",
+  render: (v: any) => (v === "Yes" ? " Yes" : " No"),   // ✅ 
+},
     { title: "Follow Up Date", dataIndex: "followup_date", key: "followup_date" },
      { title: "Next Followup", dataIndex: "nextfollowup_date", key: "nextfollowup_date" },
 //     {
@@ -636,7 +644,7 @@ const handleFollowupSave = async (values: any) => {
       
       
 
-      <Table
+      {/* <Table
         columns={columns}
         // dataSource={quotations}
         dataSource={filteredData}
@@ -645,7 +653,66 @@ const handleFollowupSave = async (values: any) => {
         bordered
         pagination={{ pageSize: 8 }}
         scroll={{ x: 1200 }}
-      />
+      /> */}
+
+
+     <Table
+  columns={columns}
+  dataSource={filteredData}
+  rowKey={(r) => r.id ?? r.quotation_id ?? 0}
+  loading={loading}
+  bordered
+  pagination={{ pageSize: 8 }}
+  scroll={{ x: 1200 }}
+  onRow={(record) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // ✅ Parse nextfollowup_date safely (support dd-mm-yyyy and yyyy-mm-dd)
+    const nextDate = record.nextfollowup_date
+      ? (() => {
+          const val = record.nextfollowup_date;
+          if (typeof val === "string" && val.includes("-")) {
+            const parts = val.split("-");
+            if (parts.length === 3) {
+              const [year, month, day] =
+                parts[0].length === 4 ? parts : [parts[2], parts[1], parts[0]];
+              return new Date(`${year}-${month}-${day}`);
+            }
+          }
+          return new Date(val);
+        })()
+      : null;
+
+    let style: React.CSSProperties = {};
+
+    // 🟢 Deal Finalised
+    if (record.is_deal_finalised === "Yes") {
+      style = {
+        backgroundColor: "#ccffcc", // light green
+        color: "#000",
+        fontWeight: 500,
+        transition: "background-color 0.3s ease",
+      };
+    }
+
+    // 🔴 Not Finalised and next followup due or past
+    else if (record.is_deal_finalised === "No" && nextDate) {
+      if (nextDate.getTime() <= today.getTime()) {
+        style = {
+          backgroundColor: "#ffcccc", // light red
+          color: "#000",
+          fontWeight: 500,
+          transition: "background-color 0.3s ease",
+        };
+      }
+    }
+
+    return { style };
+  }}
+/>
+
+
 
       {/* Dispatch Modal */}
       <Modal

@@ -10,19 +10,17 @@ exports.getQuotationTracking = (req, res) => {
   q.net_amount,
   c.name AS customer_name,
 
-  -- Approval details
   qa.status AS approval_status,
   DATE_FORMAT(qa.approved_at, '%d-%m-%Y') AS approved_date,
   u.name AS approved_by,
 
-  -- Dispatch details
   IF(qd.id IS NULL, 'No', 'Yes') AS is_dispatched,
   DATE_FORMAT(qd.sent_at, '%d-%m-%Y') AS dispatched_date,
   qd.method AS dispatched_through,
 
-  -- Latest followup values
   qf.latest_followup_date AS followup_date,
-  qf.latest_next_followup_date AS nextfollowup_date
+  qf.latest_next_followup_date AS nextfollowup_date,
+  qf.latest_deal_status AS is_deal_finalised
 
 FROM quotations q
 LEFT JOIN customers c ON q.customer_id = c.id
@@ -30,20 +28,24 @@ INNER JOIN quotation_approvals qa ON q.id = qa.quotation_id
 LEFT JOIN users u ON qa.approver_id = u.id
 LEFT JOIN quotation_dispatches qd ON q.id = qd.quotation_id
 
--- ✅ Correct single subquery for latest followup + latest next followup
 LEFT JOIN (
     SELECT 
-        quotation_id,
-        DATE_FORMAT(MAX(followup_date), '%d-%m-%Y') AS latest_followup_date,
-        DATE_FORMAT(MAX(next_followup_date), '%d-%m-%Y') AS latest_next_followup_date
-    FROM quotation_followups
-    GROUP BY quotation_id
+        q1.quotation_id,
+        DATE_FORMAT(q1.followup_date, '%d-%m-%Y') AS latest_followup_date,
+        DATE_FORMAT(q1.next_followup_date, '%d-%m-%Y') AS latest_next_followup_date,
+        q1.is_deal_finalised AS latest_deal_status
+    FROM quotation_followups q1
+    INNER JOIN (
+        SELECT quotation_id, MAX(followup_date) AS max_followup
+        FROM quotation_followups
+        GROUP BY quotation_id
+    ) q2 ON q1.quotation_id = q2.quotation_id AND q1.followup_date = q2.max_followup
 ) AS qf ON q.id = qf.quotation_id
 
 WHERE qa.status = 'approved'
 ORDER BY q.id DESC;
+`;
 
-  `;
 
   db.query(query, (err, results) => {
     if (err) {
@@ -76,6 +78,7 @@ ORDER BY q.id DESC;
           : row.approval_status === "rejected"
           ? "Rejected"
           : "Pending",
+          is_deal_finalised: row.is_deal_finalised || "No",
     }));
 
     res.json(formatted);
