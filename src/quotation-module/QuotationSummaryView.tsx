@@ -1,0 +1,291 @@
+import React, { useRef, useEffect } from "react";
+import { Modal, Button } from "antd";
+import { PrinterOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
+import logo from "/images/logo/dsonik.png";
+
+type Props = {
+  visible: boolean;
+  onClose: () => void;
+  viewData: any[]; // Array of quotation summary records
+};
+
+const QuotationSummaryView: React.FC<Props> = ({
+  visible,
+  onClose,
+  viewData = [],
+}) => {
+  const printRef = useRef<HTMLDivElement>(null);
+
+  // 🖨️ Print handler
+  const handlePrint = () => {
+    const content = printRef.current?.innerHTML;
+    if (!content) return;
+    const win = window.open("", "_blank");
+    if (!win) return;
+
+    win.document.write(`
+      <html>
+        <head>
+          <title>Quotation Summary Report</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 10mm;
+              color: #000;
+              font-size: 11px;
+            }
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-bottom: 2px solid #000;
+              padding-bottom: 8px;
+              margin-bottom: 10px;
+            }
+            .header img { height: 60px; }
+            .company-info { text-align: right; font-size: 11px; }
+            .info-section {
+              display: flex;
+              justify-content: space-between;
+              margin-top: 10px;
+              border-bottom: 1px solid #ccc;
+              padding-bottom: 6px;
+            }
+            .info-box, .info-box-1 { width: 48%; line-height: 1.5; }
+            .info-box-1 { text-align: right; }
+            h3.title {
+              text-align: center;
+              margin-top: 10px;
+              text-transform: uppercase;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 12px;
+            }
+            th, td {
+              border: 1px solid #ccc;
+              padding: 6px 4px;
+              text-align: center;
+              font-size: 10.5px;
+            }
+            th { background: #f5f5f5; font-weight: bold; }
+            tfoot td {
+              font-weight: bold;
+              background: #fafafa;
+            }
+            .terms {
+              margin-top: 15px;
+              font-size: 10.5px;
+              line-height: 1.5;
+            }
+            .bottom-section {
+              margin-top: 20px;
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+            }
+            .signature { line-height: 1.4; font-size: 11px; }
+            .bank { text-align: right; font-size: 10.5px; line-height: 1.5; }
+            .footer {
+              text-align: center;
+              margin-top: 15px;
+              font-weight: bold;
+              font-size: 11px;
+            }
+            @media print { body { margin: 8mm; } }
+          </style>
+        </head>
+        <body>${content}</body>
+      </html>
+    `);
+    win.document.close();
+    win.print();
+  };
+
+  // 🧮 Compute total of all quotations
+  const totalSum = viewData.reduce(
+    (sum, item) => sum + Number(item.net_amount || 0),
+    0
+  );
+
+  // 🧾 Optional summary info
+  const summaryDate = dayjs().format("DD-MM-YYYY");
+  const totalCount = viewData.length;
+
+  // 🖨️ Auto print when modal opens (optional)
+  useEffect(() => {
+    if (visible) {
+      // Auto print delay for proper render
+      setTimeout(() => {
+        onClose();
+        handlePrint();
+      }, 600);
+    }
+  }, [visible]);
+
+  return (
+    <Modal
+      open={visible}
+      onCancel={onClose}
+      width={950}
+      footer={[
+        <Button
+          key="print"
+          type="primary"
+          icon={<PrinterOutlined />}
+          onClick={handlePrint}
+        >
+          Print
+        </Button>,
+        <Button key="close" onClick={onClose}>
+          Close
+        </Button>,
+      ]}
+    >
+      <div ref={printRef}>
+        {/* Header */}
+        <div className="header">
+          <img src={logo} alt="Company Logo" />
+          <div className="company-info">
+            <h2 style={{ margin: 0 }}>DSONIK</h2>
+             <p>74, Anand industrial Estatee <br></br> Mohan Nagar, Gaziabad 201007</p>
+            <p>GSTIN: 09AOGPK1379A1ZA</p>
+            <p>Website: www.dsonik.com</p>
+            <p>Email: info@dsonik.com | Ph: +91-9810776728</p>
+          </div>
+        </div>
+
+        {/* Info Section */}
+        <div className="info-section">
+          <div className="info-box">
+            <h4>Summary Details</h4>
+            <p><b>Total Quotations:</b> {totalCount}</p>
+            <p><b>Total Value:</b> ₹
+              {totalSum.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            </p>
+          </div>
+          <div className="info-box-1">
+            <h4>Report Info</h4>
+            <p><b>Date:</b> {summaryDate}</p>
+            <p><b>Generated By:</b> System User</p>
+          </div>
+        </div>
+
+        {/* Title */}
+        <h3 className="title">Quotation Summary Report</h3>
+
+        {/* Table */}
+        <table>
+          <thead>
+            <tr>
+              <th>S.No</th>
+              <th>Quotation No</th>
+              <th>Customer Name</th>
+              <th>Net Amount (₹)</th>
+              <th>Approver Name</th>
+              <th>Status</th>
+              <th>Approved Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {viewData.length ? (
+              viewData.map((row, i) => (
+                <tr key={row.id || i}>
+                  <td>{i + 1}</td>
+                  <td>{row.quotation_no || "N/A"}</td>
+                  <td>{row.customer_name || "N/A"}</td>
+                  <td style={{ textAlign: "right" }}>
+                    {Number(row.net_amount || 0).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </td>
+                  <td>{row.approver_name || "-"}</td>
+                  <td
+                    style={{
+                      color:
+                        row.status === "approved"
+                          ? "green"
+                          : row.status === "rejected"
+                          ? "red"
+                          : "orange",
+                      fontWeight: 500,
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {row.status || "-"}
+                  </td>
+                  <td>
+                    {row.approved_at
+                      ? dayjs(row.approved_at).format("DD-MM-YYYY")
+                      : "Not Approved"}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={7}>No records found</td>
+              </tr>
+            )}
+          </tbody>
+
+          {viewData.length > 0 && (
+            <tfoot>
+              <tr>
+                <td colSpan={3}>Total</td>
+                <td style={{ textAlign: "right" }}>
+                  ₹{totalSum.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
+                </td>
+                <td colSpan={3}></td>
+              </tr>
+            </tfoot>
+          )}
+        </table>
+
+        {/* Terms */}
+        <div className="terms">
+          <h4>Terms & Conditions</h4>
+          <ol>
+            <li>Price: Ex works</li>
+            <li>GST: 18% Extra</li>
+            <li>Payment: 50% advance, 50% before dispatch</li>
+            <li>Delivery: Within 10 working days after order</li>
+            <li>Warranty: 1 year except consumables</li>
+            <li>Cancellation: 10% + GST applicable</li>
+            <li>Subject to Ghaziabad Jurisdiction</li>
+          </ol>
+        </div>
+
+        {/* Footer Signatures */}
+        <div className="bottom-section">
+          <div className="signature">
+            <p>
+              <b>Devender Kumar</b>
+              <br />Director
+              <br />9810776728
+            </p>
+            <p>
+              <b>Sanjay</b>
+              <br />Business Partner
+              <br />9220480010
+            </p>
+          </div>
+          <div className="bank">
+            <h4>Bank Details</h4>
+            <p>Bank: HDFC Bank</p>
+            <p>Account No: 50200058580458</p>
+            <p>IFSC: HDFC0000527</p>
+            <p>Branch: ANDAL</p>
+          </div>
+        </div>
+
+        <p className="footer">Thank You For Your Business!</p>
+      </div>
+    </Modal>
+  );
+};
+
+export default QuotationSummaryView;

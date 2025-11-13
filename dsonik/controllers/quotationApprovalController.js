@@ -6,7 +6,7 @@ const QuotationApprovalController = {
     const sql = `
       SELECT qa.*, 
              q.quotation_no, 
-             u.name AS approver_name 
+             u.name AS approver_name,q.created_at As created_at 
       FROM quotation_approvals qa
       JOIN quotations q ON qa.quotation_id = q.id
       JOIN users u ON qa.approver_id = u.id

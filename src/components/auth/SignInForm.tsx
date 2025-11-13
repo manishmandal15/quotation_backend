@@ -16,38 +16,41 @@ export default function SignInForm() {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-  const handleLogin = async (e: any) => {
-    e.preventDefault();
+ const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
 
-    if (!email || !password) {
-      alert("Please enter email and password");
-      return;
+  if (!email || !password) {
+    alert("Please enter email and password");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    // ✅ Use dynamic base URL
+    const res = await axios.post(`${BASE_URL}/auth/login`, {
+      email,
+      password,
+    });
+
+    if (res.data.success) {
+      // ✅ Store logged-in user
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+
+      alert("Login successful!");
+
+      navigate("/home"); // redirect to dashboard
+    } else {
+      alert(res.data.message || "Login failed");
     }
-
-    try {
-      setLoading(true);
-
-      // ✅ Correct API endpoint
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
-        email,
-        password,
-      });
-
-      if (res.data.success) {
-        // ✅ Store logged-in user
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-
-        alert("Login successful!");
-
-        navigate("/home"); // redirect to dashboard
-      }
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (err: any) {
+    alert(err.response?.data?.message || "Login failed");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="flex flex-col flex-1">

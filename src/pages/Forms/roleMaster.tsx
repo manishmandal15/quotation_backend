@@ -12,9 +12,12 @@ import {
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
 
-// Roles API Instance
+// ✅ Load Base URL from .env
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+
+// ✅ Roles API Instance
 const RolesAPI = axios.create({
-  baseURL: "http://localhost:5000/api/roles",
+  baseURL: `${BASE_URL}/roles`,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -33,7 +36,7 @@ const RolesMaster: React.FC = () => {
   const [form] = Form.useForm();
   const [editId, setEditId] = useState<number | null>(null);
 
-  // Fetch all roles
+  // ✅ Fetch all roles
   const fetchRoles = async () => {
     try {
       const res = await RolesAPI.get("/");
@@ -48,7 +51,7 @@ const RolesMaster: React.FC = () => {
     fetchRoles();
   }, []);
 
-  // Add / Edit role
+  // ✅ Add / Edit role
   const handleSave = async (values: any) => {
     try {
       if (editId) {
@@ -63,22 +66,21 @@ const RolesMaster: React.FC = () => {
       setOpen(false);
       form.resetFields();
       setEditId(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      // Attempt to surface backend validation error if available
       const errMsg = err?.response?.data?.message || "❌ Error saving role";
       message.error(errMsg);
     }
   };
 
-  // Edit
+  // ✅ Edit handler
   const handleEdit = (record: RoleItem) => {
     form.setFieldsValue(record);
     setEditId(record.id);
     setOpen(true);
   };
 
-  // Delete
+  // ✅ Delete handler
   const handleDelete = async (id: number) => {
     try {
       await RolesAPI.delete(`/${id}`);
@@ -90,6 +92,7 @@ const RolesMaster: React.FC = () => {
     }
   };
 
+  // ✅ Table columns
   const columns = [
      {
       title: "Sno",
@@ -170,7 +173,13 @@ const RolesMaster: React.FC = () => {
       </div>
 
       {/* Table */}
-      <Table dataSource={roles} columns={columns} rowKey="id" bordered pagination={{ pageSize: 8 }} />
+      <Table
+        dataSource={roles}
+        columns={columns}
+        rowKey="id"
+        bordered
+        pagination={{ pageSize: 8 }}
+      />
 
       {/* Modal Form */}
       <Modal
@@ -182,7 +191,11 @@ const RolesMaster: React.FC = () => {
         width={700}
       >
         <Form layout="vertical" form={form} onFinish={handleSave}>
-          <Form.Item name="name" label="Role Name" rules={[{ required: true, message: "Please enter role name" }]}>
+          <Form.Item
+            name="name"
+            label="Role Name"
+            rules={[{ required: true, message: "Please enter role name" }]}
+          >
             <Input placeholder="Enter role name" />
           </Form.Item>
 
@@ -190,8 +203,18 @@ const RolesMaster: React.FC = () => {
             <Input.TextArea placeholder="Optional description" rows={3} />
           </Form.Item>
 
-          <Form.Item name="is_active" label="Status" initialValue={1} rules={[{ required: true }]}>
-            <Select options={[{ value: 1, label: "Active" }, { value: 0, label: "Inactive" }]} />
+          <Form.Item
+            name="is_active"
+            label="Status"
+            initialValue={1}
+            rules={[{ required: true }]}
+          >
+            <Select
+              options={[
+                { value: 1, label: "Active" },
+                { value: 0, label: "Inactive" },
+              ]}
+            />
           </Form.Item>
 
           <div className="flex justify-end mt-4">

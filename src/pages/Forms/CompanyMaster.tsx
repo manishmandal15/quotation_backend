@@ -17,10 +17,10 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
-
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // ✅ API setup
 const API = axios.create({
-  baseURL: "http://localhost:5000/api/company_settings",
+  baseURL: `${BASE_URL}/company_settings`,
 });
 
 interface Company {
