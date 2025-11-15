@@ -33,11 +33,19 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  {
+  // {
+  //   icon: <GridIcon />,
+  //   name: "Dashboard",
+  //   subItems: [{ name: "E-commerce", path: "/", pro: false }],
+  // },
+
+   {
     icon: <GridIcon />,
     name: "Dashboard",
-    subItems: [{ name: "E-commerce", path: "/", pro: false }],
+    path: "/home",
   },
+
+  
   
 
   {
@@ -68,6 +76,9 @@ const navItems: NavItem[] = [
       { name: "User Master", path: "/forms/users", pro: false },
       { name: "Customers", path: "/forms/customers", pro: false },
       { name: "Product Master", path: "/forms/products", pro: false },
+      { name: "Menu Master", path: "/forms/menu-master", pro: false },
+      { name: "Role Menu Master", path: "/forms/Role-menu-master", pro: false },
+
     ],
   },
 {

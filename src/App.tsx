@@ -31,6 +31,8 @@ import QuotationTracking from "./pages/Forms/QuotationTracking";
 import QuotationTrackingStatus from "./pages/Forms/QuotationTrackingStatus";
 import QuotationFollowupReminder from "./pages/Forms/QuotationFollowupReminder";
 import QuotationApproval from "./quotation-module/QuotationApproval";
+import MenuMaster from "./pages/Forms/MenuMaster.tsx";
+import RoleMenuMapping from "./pages/Forms/RoleMenuMapping";
 
 export default function App() {
   return (
@@ -62,6 +64,9 @@ export default function App() {
         <Route path="/quotation-tracking-status" element={<QuotationTrackingStatus />} />
         <Route path="/quotation-Followup-Reminder" element={<QuotationFollowupReminder />} />
         <Route path="/forms/quotation-approval" element={<QuotationApproval />} />
+        <Route path="/forms/menu-master" element={<MenuMaster />} />
+        <Route path="/forms/Role-menu-master" element={<RoleMenuMapping />} />
+
           {/* Tables */}
           <Route path="/basic-tables" element={<BasicTables />} />
 

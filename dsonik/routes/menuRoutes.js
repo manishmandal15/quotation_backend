@@ -1,9 +1,12 @@
+
+
+
 // routes/menuRoutes.js
 const express = require("express");
 const router = express.Router();
 const menuController = require("../controllers/menuController");
 
-// Routes
+// CRUD Routes
 router.get("/", menuController.getAll);
 router.get("/:id", menuController.getById);
 router.post("/", menuController.create);
