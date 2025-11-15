@@ -299,6 +299,16 @@ const QuotationTracking: React.FC = () => {
     },
   ];
 
+  // 👉 Count Deal Finalised
+const dealFinalisedYes = quotations.filter(
+  (q) => q.is_deal_finalised === "Yes"
+).length;
+
+const dealFinalisedNo = quotations.filter(
+  (q) => q.is_deal_finalised === "No"
+).length;
+
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
