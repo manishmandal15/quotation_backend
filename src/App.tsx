@@ -31,18 +31,24 @@ import QuotationTracking from "./pages/Forms/QuotationTracking";
 import QuotationTrackingStatus from "./pages/Forms/QuotationTrackingStatus";
 import QuotationFollowupReminder from "./pages/Forms/QuotationFollowupReminder";
 import QuotationApproval from "./quotation-module/QuotationApproval";
+import LinkGenerator from "./quotation-module/LinkGenerator";
+import PrintPage from "./quotation-module/PrintPage";
 
 export default function App() {
   return (
     <Router>
       <ScrollToTop />
       <Routes>
-        
-       <Route index path="/" element={<SignIn />} />
+        {/* Auth Pages */}
+        <Route index path="/" element={<SignIn />} />
+        <Route path="/signin" element={<SignIn />} />
+        <Route path="/signup" element={<SignUp />} />
 
-        {/* Dashboard Layout */}
+        {/* 👇👇 PUBLIC PRINT PAGE (BINA LOGIN KE OPEN HOGA) */}
+        <Route path="/printpage" element={<PrintPage />} />
+
+        {/* Dashboard Layout (Private Routes) */}
         <Route element={<AppLayout />}>
-          
           <Route path="/home" element={<Home />} />
           <Route path="/profile" element={<UserProfiles />} />
           <Route path="/calendar" element={<Calendar />} />
@@ -57,13 +63,17 @@ export default function App() {
           <Route path="/forms/customers" element={<CustomerMaster />} />
           <Route path="/forms/users" element={<UserMaster />} />
           <Route path="/forms/quotation-all" element={<QuotationAll />} />
-        <Route path="/forms/new-quotation" element={<NewQuotation />} />
-        <Route path="/quotation-tracking" element={<QuotationTracking />} />
-        <Route path="/quotation-tracking-status" element={<QuotationTrackingStatus />} />
-        <Route path="/quotation-Followup-Reminder" element={<QuotationFollowupReminder />} />
-        <Route path="/forms/quotation-approval" element={<QuotationApproval />} />
+          <Route path="/forms/new-quotation" element={<NewQuotation />} />
+          <Route path="/quotation-tracking" element={<QuotationTracking />} />
+          <Route path="/quotation-tracking-status" element={<QuotationTrackingStatus />} />
+          <Route path="/quotation-followup-reminder" element={<QuotationFollowupReminder />} />
+          <Route path="/forms/quotation-approval" element={<QuotationApproval />} />
+
           {/* Tables */}
           <Route path="/basic-tables" element={<BasicTables />} />
+
+          {/* Link Generator */}
+          <Route path="/link-generator" element={<LinkGenerator />} />
 
           {/* UI Elements */}
           <Route path="/alerts" element={<Alerts />} />
@@ -80,10 +90,6 @@ export default function App() {
           {/* Other */}
           <Route path="/blank" element={<Blank />} />
         </Route>
-
-        {/* Auth Pages */}
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/signup" element={<SignUp />} />
 
         {/* Fallback */}
         <Route path="*" element={<NotFound />} />

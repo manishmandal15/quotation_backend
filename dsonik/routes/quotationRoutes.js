@@ -3,11 +3,14 @@ const router = express.Router();
 const QuotationController = require("../controllers/quotationController"); // Controller import
 const controller = new QuotationController(); 
 
-// Routes
+// Standard CRUD routes
 router.get("/", controller.getAll.bind(controller));
 router.get("/:id", controller.getById.bind(controller));
 router.post("/", controller.create.bind(controller));
 router.put("/:id", controller.update.bind(controller));
 router.delete("/:id", controller.delete.bind(controller));
+
+// ✅ New route: get quotation by number
+router.get("/get-by-number/:quotationNo", controller.getByNumber.bind(controller));
 
 module.exports = router;

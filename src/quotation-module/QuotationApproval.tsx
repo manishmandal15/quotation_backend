@@ -275,6 +275,7 @@ const QuotationApprovalDesk: React.FC = () => {
         />
       )}
     </Card>
+    
   );
 };
 
