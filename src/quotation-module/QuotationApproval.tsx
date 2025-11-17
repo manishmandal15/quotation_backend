@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Table,
-  Button,
-  Space,
-  message,
-  Typography,
-  Card,
-  Popconfirm,
-} from "antd";
+import { Table, Button, Space, message, Typography, Card } from "antd";
 import { EyeOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import axios from "axios";
 import dayjs from "dayjs";
@@ -20,7 +12,6 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const APPROVAL_API = axios.create({ baseURL: `${BASE_URL}/quotation-approvals` });
 const QUOTATION_API = axios.create({ baseURL: `${BASE_URL}/quotations` });
 const CUSTOMER_API = axios.create({ baseURL: `${BASE_URL}/customers` });
-// Optional: define PRODUCT_API if needed
 const PRODUCT_API = axios.create({ baseURL: `${BASE_URL}/products` });
 
 const QuotationApprovalDesk: React.FC = () => {
@@ -30,7 +21,7 @@ const QuotationApprovalDesk: React.FC = () => {
   const [selectedQuotation, setSelectedQuotation] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
 
-  // Fetch products (optional)
+  // Fetch products
   const fetchProducts = async () => {
     try {
       const res = await PRODUCT_API.get("/");
@@ -40,7 +31,7 @@ const QuotationApprovalDesk: React.FC = () => {
     }
   };
 
-  // Load quotations + customers + approvals
+  // Load all data
   const loadAllData = async () => {
     try {
       setLoading(true);
@@ -55,20 +46,15 @@ const QuotationApprovalDesk: React.FC = () => {
       const approvals = Array.isArray(approvalRes.data) ? approvalRes.data : [];
 
       const mapped = quotations.map((q: any) => {
-        const customer = customers.find(
-          (c) => String(c.id) === String(q.customer_id)
-        ) || {};
-
-        const approval = approvals.find(
-          (a) => String(a.quotation_id) === String(q.id)
-        );
+        const customer = customers.find(c => String(c.id) === String(q.customer_id)) || {};
+        const approval = approvals.find(a => String(a.quotation_id) === String(q.id));
 
         const net_amount =
           Number(q.net_amount) ||
           (Array.isArray(q.items)
             ? q.items.reduce((sum: number, item: any) => {
-                const price = Number(item.price || item.unit_price || 0);
-                const qty = Number(item.quantity || item.qty || 0);
+                const price = Number(item.unit_price || 0);
+                const qty = Number(item.quantity || 0);
                 return sum + price * qty;
               }, 0)
             : 0);
@@ -76,11 +62,11 @@ const QuotationApprovalDesk: React.FC = () => {
         return {
           ...q,
           customer,
-          customer_name: q.customer_name || customer.name || "N/A",
+          customer_name: customer.name || "N/A",
           approval_id: approval?.id || null,
           created_at: q.created_at,
           approver_name: approval?.approver_name || "-",
-          status: approval?.status ,//g",,
+          status: approval?.status || "pending",
           approved_at: approval?.approved_at || null,
           net_amount,
         };
@@ -88,7 +74,7 @@ const QuotationApprovalDesk: React.FC = () => {
 
       setQuotationList(mapped);
     } catch (err) {
-      console.error("❌ Error loading data:", err);
+      console.error("Error loading data:", err);
       message.error("Failed to load quotation data");
     } finally {
       setLoading(false);
@@ -100,19 +86,21 @@ const QuotationApprovalDesk: React.FC = () => {
     loadAllData();
   }, []);
 
-  // Approve quotation
-  const handleApprove = async (record: any) => {
+  // Approve or reject
+  const handleApproval = async (record: any, status: "approved" | "rejected") => {
+    if (!record.id) return message.error("Quotation ID missing");
+
     try {
-      const approverId = Number(localStorage.getItem("user_id") || 1);
-      const approvedAt = dayjs().format("YYYY-MM-DD HH:mm:ss");
+      const approverId = Number(localStorage.getItem("user_id"));
 
       const payload = {
         quotation_id: record.id,
         approver_id: approverId,
-        status: "approved",
-        approved_at: approvedAt,
-        comments: "Approved successfully",
+        status,
+        comments: status === "approved" ? "Approved successfully" : "Rejected by approver",
       };
+
+      console.log("Approval Payload:", payload);
 
       if (record.approval_id) {
         await APPROVAL_API.put(`/${record.approval_id}`, payload);
@@ -120,39 +108,11 @@ const QuotationApprovalDesk: React.FC = () => {
         await APPROVAL_API.post("/", payload);
       }
 
-      message.success("Quotation approved successfully!");
+      message.success(`Quotation ${status} successfully!`);
       loadAllData();
     } catch (err) {
-      console.error("Approval failed:", err);
-      message.error("Approval failed — check console");
-    }
-  };
-
-  // Reject quotation
-  const handleReject = async (record: any) => {
-    try {
-      const approverId = Number(localStorage.getItem("user_id") || 1);
-      const rejectedAt = dayjs().format("YYYY-MM-DD HH:mm:ss");
-
-      const payload = {
-        quotation_id: record.id,
-        approver_id: approverId,
-        status: "rejected",
-        approved_at: rejectedAt,
-        comments: "Rejected by approver",
-      };
-
-      if (record.approval_id) {
-        await APPROVAL_API.put(`/${record.approval_id}`, payload);
-      } else {
-        await APPROVAL_API.post("/", payload);
-      }
-
-      message.success("Quotation rejected!");
-      loadAllData();
-    } catch (err) {
-      console.error("Rejection failed:", err);
-      message.error("Rejection failed — check console");
+      console.error(`${status} failed:`, err);
+      message.error(`${status} failed — check console`);
     }
   };
 
@@ -181,15 +141,25 @@ const QuotationApprovalDesk: React.FC = () => {
     { title: "S.No", render: (_: any, __: any, i: number) => i + 1, width: 60 },
     { title: "Quotation No", dataIndex: "quotation_no", key: "quotation_no" },
     { title: "Customer Name", dataIndex: "customer_name", key: "customer_name" },
-    { title: "Created At", dataIndex: "created_at", key: "created_at",
+    {
+      title: "Created At",
+      dataIndex: "created_at",
+      key: "created_at",
       render: (v: string | null) => (v ? dayjs(v).format("DD-MM-YYYY") : "-"),
     },
-    { title: "Net Amount (₹)", dataIndex: "net_amount", key: "net_amount",
+    {
+      title: "Net Amount (₹)",
+      dataIndex: "net_amount",
+      key: "net_amount",
       align: "right" as const,
-      render: (v: number) => v.toLocaleString("en-IN", { minimumFractionDigits: 2 }),
+      render: (v: number) =>
+        v.toLocaleString("en-IN", { minimumFractionDigits: 2 }),
     },
     { title: "Approver Name", dataIndex: "approver_name", key: "approver_name" },
-    { title: "Status", dataIndex: "status", key: "status",
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
       render: (v: string) => (
         <span
           style={{
@@ -202,7 +172,10 @@ const QuotationApprovalDesk: React.FC = () => {
         </span>
       ),
     },
-    { title: "Approved Date", dataIndex: "approved_at", key: "approved_at",
+    {
+      title: "Approved Date",
+      dataIndex: "approved_at",
+      key: "approved_at",
       render: (v: string | null) => (v ? dayjs(v).format("DD-MM-YYYY") : "-"),
     },
     {
@@ -211,21 +184,19 @@ const QuotationApprovalDesk: React.FC = () => {
       render: (_: any, record: any) => (
         <Space>
           <Button icon={<EyeOutlined />} shape="circle" onClick={() => handlePreview(record)} />
-
           <Button
             icon={<CheckOutlined />}
             type="primary"
             shape="circle"
-            onClick={() => handleApprove(record)}
+            onClick={() => handleApproval(record, "approved")}
             disabled={record.status === "approved"}
             style={{ background: "#52c41a", borderColor: "#52c41a" }}
           />
-
           <Button
             icon={<CloseOutlined />}
             danger
             shape="circle"
-            onClick={() => handleReject(record)}
+            onClick={() => handleApproval(record, "rejected")}
             disabled={record.status === "rejected"}
           />
         </Space>
@@ -275,7 +246,6 @@ const QuotationApprovalDesk: React.FC = () => {
         />
       )}
     </Card>
-    
   );
 };
 

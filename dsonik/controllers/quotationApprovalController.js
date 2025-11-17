@@ -51,16 +51,23 @@ const QuotationApprovalController = {
       (quotation_id, approver_id, status, comments, approved_at)
       VALUES (?, ?, ?, ?, ?)
     `;
+
+    // ✅ approved_at अब backend handle करेगा
+    const approvedAt = status === "approved" ? new Date() : null;
+
     const values = [
       quotation_id,
       approver_id,
       status || "pending",
       comments || null,
-      status === "approved" ? new Date() : null,
+      approvedAt,
     ];
 
     db.query(sql, values, (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
+      if (err) {
+        console.error("DB Create Error:", err); // ❗ debugging
+        return res.status(500).json({ error: err.message });
+      }
       res.status(201).json({
         id: result.insertId,
         message: "Approval created successfully",
@@ -78,15 +85,16 @@ const QuotationApprovalController = {
       WHERE id = ?
     `;
 
-    const values = [
-      status,
-      comments || null,
-      status === "approved" ? new Date() : null,
-      req.params.id,
-    ];
+    // ✅ approved_at backend handle करे
+    const approvedAt = status === "approved" ? new Date() : null;
+
+    const values = [status, comments || null, approvedAt, req.params.id];
 
     db.query(sql, values, (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
+      if (err) {
+        console.error("DB Update Error:", err); // ❗ debugging
+        return res.status(500).json({ error: err.message });
+      }
 
       if (result.affectedRows === 0)
         return res.status(404).json({ message: "Approval not found" });

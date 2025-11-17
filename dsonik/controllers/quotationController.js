@@ -47,6 +47,7 @@ class QuotationController {
       validityDate,
       paymentTerms,
       deliveryTerms,
+      terms_conditions,   // ⭐ Added
       totalAmount,
       discountAmount,
       taxAmount,
@@ -58,9 +59,9 @@ class QuotationController {
     const quotationInsert = `
       INSERT INTO quotations
       (quotation_no, customer_id, currency_id, validity_date, payment_terms,
-       delivery_terms, status, total_amount, discount_amount, tax_amount,
-       net_amount, created_by)
-      VALUES (?, ?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?)
+       delivery_terms, terms_conditions, status, total_amount, discount_amount,
+       tax_amount, net_amount, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?)
     `;
 
     db.query(
@@ -72,6 +73,7 @@ class QuotationController {
         validityDate,
         paymentTerms,
         deliveryTerms,
+        terms_conditions || "",    // ⭐ Added
         totalAmount || 0,
         discountAmount || 0,
         taxAmount || 0,
@@ -122,6 +124,7 @@ class QuotationController {
       validityDate,
       paymentTerms,
       deliveryTerms,
+      terms_conditions,   // ⭐ Added
       status,
       totalAmount,
       discountAmount,
@@ -133,8 +136,9 @@ class QuotationController {
     const updateQuery = `
       UPDATE quotations SET
         quotation_no=?, customer_id=?, currency_id=?, validity_date=?,
-        payment_terms=?, delivery_terms=?, status=?, total_amount=?,
-        discount_amount=?, tax_amount=?, net_amount=? WHERE id=?
+        payment_terms=?, delivery_terms=?, terms_conditions=?, status=?,
+        total_amount=?, discount_amount=?, tax_amount=?, net_amount=?
+      WHERE id=?
     `;
 
     db.query(
@@ -146,6 +150,7 @@ class QuotationController {
         validityDate,
         paymentTerms,
         deliveryTerms,
+        terms_conditions || "",  // ⭐ Added
         status,
         totalAmount,
         discountAmount,

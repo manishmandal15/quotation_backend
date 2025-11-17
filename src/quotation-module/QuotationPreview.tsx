@@ -235,19 +235,14 @@ const QuotationPreview: React.FC<Props> = ({ visible, onClose, previewData }) =>
           <h3>Grand Total: ₹{total.toFixed(2)}</h3>
         </div>
 
-        {/* Terms */}
-        <div className="terms">
-          <h4>Terms & Conditions</h4>
-          <ol>
-            <li>Price: Ex works</li>
-            <li>GST: 18% Extra</li>
-            <li>Payment: 50% advance, 50% before dispatch</li>
-            <li>Delivery: Within 10 working days after order</li>
-            <li>Warranty: 1 year except consumables</li>
-            <li>Cancellation: 10% + GST applicable</li>
-            <li>Subject to Ghaziabad Jurisdiction</li>
-          </ol>
-        </div>
+{/* ---------------- Terms & Conditions ---------------- */}
+<div style={{ marginTop: 20 }}>
+  <h3>Terms & Conditions</h3>
+  <p style={{ whiteSpace: "pre-line" }}>
+    {previewData?.terms_conditions || "—"}
+  </p>
+</div>
+
 
         {/* Footer */}
         <div className="bottom-section">

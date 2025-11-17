@@ -1,7 +1,8 @@
+// src/quotation-module/PrintPageClone.tsx
 import React, { useEffect, useRef, useState } from "react";
 import dayjs from "dayjs";
 import { getQuotationByNumber } from "./quotationApi";
-import logo from "/images/logo/dsonik.png"; // adjust path if needed
+import logo from "/images/logo/dsonik.png";
 
 type Item = {
   product_name?: string;
@@ -11,10 +12,9 @@ type Item = {
   line_total?: number;
 };
 
-export default function PrintPage() {
+export default function PrintPageClone() {
   const printRef = useRef<HTMLDivElement | null>(null);
 
-  // Read URL parameters safely inside useEffect
   const [quotationNo, setQuotationNo] = useState("");
   const [autoPrint, setAutoPrint] = useState(false);
 
@@ -51,25 +51,77 @@ export default function PrintPage() {
     }
   };
 
-  const items: Item[] = Array.isArray(data?.products) ? data.products : [];
-  const subtotal = items.reduce(
-    (sum, it) =>
-      sum +
-      Number(
-        it.line_total ??
-          (Number(it.quantity || 0) * Number(it.unit_price || 0))
-      ),
-    0
-  );
+  const customer = {
+    name:
+      data?.customer?.name ||
+      data?.customer?.customerName ||
+      data?.customer_name ||
+      "N/A",
+
+    gst_no:
+      data?.customer?.gst_no ||
+      data?.customer?.gstNumber ||
+      data?.customer_gst ||
+      "",
+
+    cstate:
+      data?.customer?.cstate ||
+      data?.customer?.state ||
+      data?.customer_state ||
+      "",
+
+    district:
+      data?.customer?.district ||
+      data?.customer_district ||
+      "",
+
+    address:
+      data?.customer?.address ||
+      data?.customer?.location ||
+      data?.customer_address ||
+      "Address not available",
+
+    phone:
+      data?.customer?.phone ||
+      data?.customer?.mobile ||
+      data?.customer_phone ||
+      "-",
+
+    email:
+      data?.customer?.email ||
+      data?.customer_email ||
+      ""
+  };
+
+
+  // ⭐ PRODUCTS FIX
+  const items = Array.isArray(data?.products)
+    ? data.products.map((item: any) => ({
+      product_name:
+        item?.product_name ||
+        item?.product?.name ||
+        item?.name ||
+        "Unnamed Product",
+      description: item?.description || "-",
+      quantity: Number(item?.quantity || 0),
+      unit_price: Number(item?.unit_price || 0),
+      discount: Number(item?.discount || 0),
+      tax_rate: Number(item?.tax_rate || 0),
+      line_total:
+        Number(item?.line_total) ||
+        Number(item?.quantity || 0) * Number(item?.unit_price || 0),
+    }))
+    : [];
+
+  // ⭐ TOTALS FIX
+  const subtotal = items.reduce((sum: number, i: any) => sum + (i.line_total || 0), 0);
   const discount = Number(data?.discount_amount || 0);
   const tax = Number(data?.tax_amount || 0);
   const total = subtotal - discount + tax;
 
   return (
     <div style={{ padding: 20, fontFamily: "Arial, sans-serif" }}>
-      {/* PRINT CSS FIX */}
-      <style>
-        {`
+      <style>{`
         @media print {
           body * {
             visibility: hidden !important;
@@ -84,10 +136,9 @@ export default function PrintPage() {
             width: 100%;
           }
         }
-      `}
-      </style>
+      `}</style>
 
-      {/* Input Section */}
+      {/* Input Box */}
       <div
         style={{
           maxWidth: 720,
@@ -140,20 +191,16 @@ export default function PrintPage() {
         </div>
 
         <div style={{ marginTop: 8, color: "#666", fontSize: 13 }}>
-          Tip: you can append{" "}
-          <code>?quotationNo=QTN-...&autoPrint=true</code> to auto-print.
+          Tip: add <code>?quotationNo=QTN-...&autoPrint=true</code> to auto print.
         </div>
       </div>
 
-      {/* Status */}
+      {/* Load / Errors */}
       <div style={{ maxWidth: 900, margin: "8px auto" }}>
-        {loading && (
-          <div style={{ textAlign: "center" }}>⏳ Loading quotation…</div>
-        )}
+        {loading && <div style={{ textAlign: "center" }}>⏳ Loading…</div>}
         {error && <div style={{ color: "red", textAlign: "center" }}>{error}</div>}
       </div>
 
-      {/* PRINT AREA */}
       {data && (
         <div
           id="print-area"
@@ -167,11 +214,11 @@ export default function PrintPage() {
             boxShadow: "0 6px 20px rgba(0,0,0,0.04)",
           }}
         >
+          {/* Header */}
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center",
               borderBottom: "2px solid #000",
               paddingBottom: 10,
             }}
@@ -180,12 +227,13 @@ export default function PrintPage() {
               src={logo}
               alt="logo"
               style={{ height: 60 }}
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
+              onError={(e) =>
+                ((e.target as HTMLImageElement).style.display = "none")
+              }
             />
+
             <div style={{ textAlign: "right" }}>
-              <h2 style={{ margin: 0 }}>DSONIK</h2>
+              <h2>DSONIK</h2>
               <div style={{ fontSize: 13 }}>
                 74, Anand Industrial Estate, Mohan Nagar, Ghaziabad - 201007
               </div>
@@ -196,27 +244,29 @@ export default function PrintPage() {
             </div>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}>
+          {/* Customer Info */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginTop: 12,
+            }}
+          >
             <div style={{ width: "48%" }}>
-              <h4 style={{ marginBottom: 6 }}>Customer Details</h4>
-              <div>
-                <strong>{data.customer?.name || "N/A"}</strong>
-              </div>
-              <div style={{ fontSize: 13 }}>{data.customer?.address || "-"}</div>
-              <div style={{ fontSize: 13 }}>
-                Phone: {data.customer?.phone || "-"}
-              </div>
-              <div style={{ fontSize: 13 }}>
-                Email: {data.customer?.email || "-"}
-              </div>
+              <h4>Customer Details</h4>
+              <strong>{customer.name}</strong>
+              {customer.gst_no && <p>GSTIN: {customer.gst_no}</p>}
+              {customer.cstate && <p>State: {customer.cstate}</p>}
+              {customer.district && <p>District: {customer.district}</p>}
+              <p>{customer.address}</p>
+              <p>Phone: {customer.phone}</p>
+              {customer.email && <p>Email: {customer.email}</p>}
             </div>
 
+
             <div style={{ width: "48%", textAlign: "right" }}>
-              <h4 style={{ marginBottom: 6 }}>Quotation Info</h4>
-              <div>
-                <b>No:</b>{" "}
-                {data.quotation_no || data.quotationNo || quotationNo}
-              </div>
+              <h4>Quotation Info</h4>
+              <div><b>No:</b> {data.quotation_no || quotationNo}</div>
               <div>
                 <b>Date:</b>{" "}
                 {data.created_at
@@ -229,15 +279,17 @@ export default function PrintPage() {
                   ? dayjs(data.validity_date).format("DD-MM-YYYY")
                   : "-"}
               </div>
-              <div>
-                <b>Payment:</b> {data.payment_terms || "-"}
-              </div>
+              <div><b>Payment:</b> {data.payment_terms || "-"}</div>
             </div>
           </div>
 
           {/* Table */}
           <table
-            style={{ width: "100%", borderCollapse: "collapse", marginTop: 12 }}
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              marginTop: 12,
+            }}
           >
             <thead>
               <tr style={{ background: "#f5f5f5" }}>
@@ -251,22 +303,14 @@ export default function PrintPage() {
             </thead>
             <tbody>
               {items.length ? (
-                items.map((it, idx) => (
+                items.map((it: Item, idx: number) => (
                   <tr key={idx}>
                     <td style={td}>{idx + 1}</td>
                     <td style={td}>{it.product_name}</td>
                     <td style={td}>{it.description}</td>
                     <td style={td}>{it.quantity}</td>
-                    <td style={td}>
-                      {Number(it.unit_price || 0).toFixed(2)}
-                    </td>
-                    <td style={td}>
-                      {Number(
-                        it.line_total ??
-                          (Number(it.quantity || 0) *
-                            Number(it.unit_price || 0))
-                      ).toFixed(2)}
-                    </td>
+                    <td style={td}>{Number(it.unit_price).toFixed(2)}</td>
+                    <td style={td}>{Number(it.line_total).toFixed(2)}</td>
                   </tr>
                 ))
               ) : (
@@ -287,20 +331,13 @@ export default function PrintPage() {
             <h3>Grand Total: ₹{total.toFixed(2)}</h3>
           </div>
 
-          
-        {/* Terms */}
-        <div className="terms">
-          <h4>Terms & Conditions</h4>
-          <ol>
-            <li>Price: Ex works</li>
-            <li>GST: 18% Extra</li>
-            <li>Payment: 50% advance, 50% before dispatch</li>
-            <li>Delivery: Within 10 working days after order</li>
-            <li>Warranty: 1 year except consumables</li>
-            <li>Cancellation: 10% + GST applicable</li>
-            <li>Subject to Ghaziabad Jurisdiction</li>
-          </ol>
-        </div>
+          {/* Terms */}
+          <div style={{ marginTop: 20 }}>
+            <h3>Terms & Conditions</h3>
+            <p style={{ whiteSpace: "pre-line" }}>
+              {data?.terms_conditions || "—"}
+            </p>
+          </div>
 
           {/* Footer */}
           <div
@@ -311,8 +348,20 @@ export default function PrintPage() {
             }}
           >
             <div>
-              <p><b>Devender Kumar</b><br />Director<br />9810776728</p>
-            <p><b>Sanjay</b><br />Business Partner<br />9220480010</p>
+              <p>
+                <b>Devender Kumar</b>
+                <br />
+                Director
+                <br />
+                9810776728
+              </p>
+              <p>
+                <b>Sanjay</b>
+                <br />
+                Business Partner
+                <br />
+                9220480010
+              </p>
             </div>
 
             <div style={{ textAlign: "right" }}>
