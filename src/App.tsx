@@ -35,6 +35,8 @@ import LinkGenerator from "./quotation-module/LinkGenerator";
 import PrintPage from "./quotation-module/PrintPage";
 import MenuMaster from "./pages/Forms/MenuMaster.tsx";
 import RoleMenuMapping from "./pages/Forms/RoleMenuMapping";
+import ModuleMenuMaster from "./pages/Forms/ModuleMenuMaster";
+
 
 export default function App() {
   return (
@@ -77,6 +79,7 @@ export default function App() {
         <Route path="/forms/quotation-approval" element={<QuotationApproval />} />
         <Route path="/forms/menu-master" element={<MenuMaster />} />
         <Route path="/forms/Role-menu-master" element={<RoleMenuMapping />} />
+        <Route path="/forms/module-menu-master" element={<ModuleMenuMaster />} />
 
           {/* Tables */}
           <Route path="/basic-tables" element={<BasicTables />} />
