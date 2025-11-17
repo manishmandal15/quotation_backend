@@ -78,7 +78,9 @@ const navItems: NavItem[] = [
       { name: "Product Master", path: "/forms/products", pro: false },
       { name: "Menu Master", path: "/forms/menu-master", pro: false },
       { name: "Role Menu Master", path: "/forms/Role-menu-master", pro: false },
-
+      { name: "module Menu Master", path: "/forms/module-menu-master", pro: false },
+      
+      
     ],
   },
 {
