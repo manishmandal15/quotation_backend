@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom"; // ✅ FIXED IMPORT
+import axios from "axios";
 
 // Assume these icons are imported from an icon library
 import {
@@ -46,7 +47,15 @@ const navItems: NavItem[] = [
   },
 
   
-  
+    // {user ? user.name : "Guest User"}
+
+//    const res = await axios.get("http://localhost:5000/api/test-manish?value=1");
+// console.log(res.data[0].name);// "manish"
+
+
+   
+
+
 
   {
   name: "Quotation-Module",
@@ -83,16 +92,16 @@ const navItems: NavItem[] = [
       
     ],
   },
-{
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
-  },
+// {
+//     icon: <CalenderIcon />,
+//     name: "Calendar",
+//     path: "/calendar",
+//   },
+  // {
+  //   icon: <UserCircleIcon />,
+  //   name: "User Profile",
+  //   path: "/profile",
+  // },
 /*
 
   {
@@ -189,14 +198,14 @@ const othersItems: NavItem[] = [
   //     { name: "Videos", path: "/videos", pro: false },
   //   ],
   // },
-  {
-    icon: <PlugInIcon />,
-    name: "Authentication",
-    subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
-    ],
-  },
+  // {
+  //   icon: <PlugInIcon />,
+  //   name: "Authentication",
+  //   subItems: [
+  //     { name: "Sign In", path: "/signin", pro: false },
+  //     { name: "Sign Up", path: "/signup", pro: false },
+  //   ],
+  // },
 ]; 
 
 const AppSidebar: React.FC = () => {
