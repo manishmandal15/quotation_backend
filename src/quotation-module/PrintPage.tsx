@@ -41,9 +41,18 @@ export default function PrintPage() {
     setError(null);
     try {
       const res = await getQuotationByNumber(q);
-      const payload = res?.data ?? res;
+      console.log("API Response:", res); // ✅ Debug
+
+      // Check API response structure
+      const payload = res?.data ?? res; 
+      if (!payload) {
+        setError("Quotation not found");
+        return;
+      }
+
       setData(payload);
 
+      // Auto-print if requested
       if (autoPrint) setTimeout(() => handlePrint(), 500);
     } catch (err) {
       console.error(err);
@@ -84,7 +93,7 @@ export default function PrintPage() {
   if (!data)
     return <h3 style={{ textAlign: "center", marginTop: 40 }}>No Data</h3>;
 
-  // Customer mapping
+  // ✅ Customer mapping with safe fallbacks
   const customer = {
     name:
       data?.customer?.name ||
@@ -121,9 +130,9 @@ export default function PrintPage() {
       "",
   };
 
-  // Items mapping
-  const items: Item[] = Array.isArray(data?.products)
-    ? data.products.map((item: any): Item => ({
+  // ✅ Items mapping
+  const items: Item[] = Array.isArray(data?.products || data?.items)
+    ? (data?.products || data?.items).map((item: any): Item => ({
         product_name:
           item?.product_name ||
           item?.product?.name ||
@@ -131,29 +140,38 @@ export default function PrintPage() {
           "Unnamed Product",
         description: item?.description || "-",
         quantity: Number(item?.quantity || 0),
-        unit_price: Number(item?.unit_price || 0),
+        unit_price: Number(item?.unit_price || item?.rate || 0),
         discount: Number(item?.discount || 0),
         tax_rate: Number(item?.tax_rate || 0),
         line_total:
           Number(item?.line_total) ||
-          Number(item?.quantity || 0) * Number(item?.unit_price || 0),
+          Number(item?.quantity || 0) * Number(item?.unit_price || item?.rate || 0),
       }))
     : [];
 
-  // Totals
+  // ✅ Totals
   const subtotal = items.reduce((sum: number, i: Item) => sum + (i.line_total || 0), 0);
-  const discount = Number(data?.discount_amount || 0);
-  const tax = Number(data?.tax_amount || 0);
+  const discount = Number(data?.discount_amount || data?.discount || 0);
+  const tax = Number(data?.tax_amount || data?.tax || 0);
   const total = subtotal - discount + tax;
 
   return (
     <div style={{ padding: 20, fontFamily: "Arial, sans-serif" }}>
       {/* Buttons */}
       <div style={{ marginBottom: 12, textAlign: "right" }}>
-        <Button type="primary" icon={<PrinterOutlined />} onClick={handlePrint} style={{ marginRight: 6 }}>
+        <Button
+          type="primary"
+          icon={<PrinterOutlined />}
+          onClick={handlePrint}
+          style={{ marginRight: 6 }}
+        >
           Print
         </Button>
-        <Button type="default" icon={<CloseOutlined />} onClick={() => window.close()}>
+        <Button
+          type="default"
+          icon={<CloseOutlined />}
+          onClick={() => window.close()}
+        >
           Close
         </Button>
       </div>
