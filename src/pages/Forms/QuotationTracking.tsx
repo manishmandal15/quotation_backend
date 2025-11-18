@@ -248,59 +248,59 @@ const QuotationTracking: React.FC = () => {
     { title: "Dispatched Date", dataIndex: "dispatched_date", key: "dispatched_date" },
     { title: "Through", dataIndex: "dispatched_through", key: "dispatched_through" },
     {
-  title: "Deal Finalised",
-  dataIndex: "is_deal_finalised",
-  key: "is_deal_finalised",
-  render: (v: any) => (v === "Yes" ? " Yes" : " No"),   // ✅ 
-},
+      title: "Deal Finalised",
+      dataIndex: "is_deal_finalised",
+      key: "is_deal_finalised",
+      render: (v: any) => (v === "Yes" ? " Yes" : " No"),   // ✅ 
+    },
 
     { title: "Follow Up Date", dataIndex: "followup_date", key: "followup_date" },
     //  { title: "Next Followup", dataIndex: "nextfollowup_date", key: "nextfollowup_date" },
- {
-  title: "Next Followup",
-  dataIndex: "nextfollowup_date",
-  key: "nextfollowup_date",
-  defaultSortOrder: "ascend",
-  sorter: (a, b) => {
-    const parseDate = (d: any): number => {
-      if (!d || d === "-" || typeof d !== "string") return 0;
-      const parts = d.split("-");
-      if (parts.length === 3) {
-        const [day, month, year] = parts;
-        return new Date(`${year}-${month}-${day}`).getTime();
-      }
-      return new Date(d).getTime();
-    };
-    return parseDate(a.nextfollowup_date) - parseDate(b.nextfollowup_date);
-  },
-  onCell: (record: Quotation) => {
-    // compute nextDate same as you did before
-    let style: React.CSSProperties = {};
-    const nf = record.nextfollowup_date;
-    const parse = (d?: string | null) => {
-      if (!d || d === "-" || typeof d !== "string") return null;
-      const parts = d.split("-");
-      if (parts.length === 3) {
-        const [day, month, year] = parts;
-        return new Date(`${year}-${month}-${day}`);
-      }
-      const dt = new Date(d);
-      return isNaN(dt.getTime()) ? null : dt;
-    };
-    const nextDate = parse(nf);
-    const today = new Date(); today.setHours(0,0,0,0);
+    {
+      title: "Next Followup",
+      dataIndex: "nextfollowup_date",
+      key: "nextfollowup_date",
+      defaultSortOrder: "ascend",
+      sorter: (a, b) => {
+        const parseDate = (d: any): number => {
+          if (!d || d === "-" || typeof d !== "string") return 0;
+          const parts = d.split("-");
+          if (parts.length === 3) {
+            const [day, month, year] = parts;
+            return new Date(`${year}-${month}-${day}`).getTime();
+          }
+          return new Date(d).getTime();
+        };
+        return parseDate(a.nextfollowup_date) - parseDate(b.nextfollowup_date);
+      },
+      onCell: (record: Quotation) => {
+        // compute nextDate same as you did before
+        let style: React.CSSProperties = {};
+        const nf = record.nextfollowup_date;
+        const parse = (d?: string | null) => {
+          if (!d || d === "-" || typeof d !== "string") return null;
+          const parts = d.split("-");
+          if (parts.length === 3) {
+            const [day, month, year] = parts;
+            return new Date(`${year}-${month}-${day}`);
+          }
+          const dt = new Date(d);
+          return isNaN(dt.getTime()) ? null : dt;
+        };
+        const nextDate = parse(nf);
+        const today = new Date(); today.setHours(0, 0, 0, 0);
 
-    if (record.is_deal_finalised === "Yes") {
-      style = { backgroundColor: "#ccffcc", color: "#000", transition: "background-color 0.3s ease" };
-    } else if (record.is_deal_finalised === "No" && nextDate) {
-      if (nextDate.getTime() <= today.getTime()) {
-        style = { backgroundColor: "#ffcccc", color: "#000", transition: "background-color 0.3s ease" };
-      }
-    }
+        if (record.is_deal_finalised === "Yes") {
+          style = { backgroundColor: "#ccffcc", color: "#000", transition: "background-color 0.3s ease" };
+        } else if (record.is_deal_finalised === "No" && nextDate) {
+          if (nextDate.getTime() <= today.getTime()) {
+            style = { backgroundColor: "#ffcccc", color: "#000", transition: "background-color 0.3s ease" };
+          }
+        }
 
-    return { style };
-  },
-},
+        return { style };
+      },
+    },
 
 
 
@@ -308,53 +308,75 @@ const QuotationTracking: React.FC = () => {
       title: "Action",
       key: "actions",
       fixed: "right",
-      width: 150,
-      render: (_text, record) => (
-        <Space>
-          <Tooltip title="View">
-            <Button icon={<EyeOutlined />} onClick={() => openViewModal(record)} />
-          </Tooltip>
+      width: 180,
+      render: (_text, record) => {
+        const link = `${window.location.origin}/printpage?quotationNo=${encodeURIComponent(
+          record.quotation_no
+        )}&autoPrint=true`;
 
-          <Tooltip title="Dispatch">
-            <Button
-              type="primary"
-              icon={<SendOutlined />}
-              onClick={() => openDispatchModal(record)}
-              disabled={!record.approved_by || record.approved_by === "-"}
-            />
-          </Tooltip>
+        return (
+          <Space>
+            {/* View */}
+            <Tooltip title="View">
+              <Button icon={<EyeOutlined />} onClick={() => openViewModal(record)} />
+            </Tooltip>
 
-          {/* ✅ Follow-Up button visible but disabled when dispatch is "No" */}
-          <Tooltip
-            title={
-              record.is_dispatched && record.is_dispatched !== "No"
-                ? "Add Follow-Up"
-                : "Follow-Up disabled until dispatched"
-            }
-          >
-            <Button
-              icon={<ClockCircleOutlined />}
-              onClick={() => openFollowupModal(record)}
-              disabled={
-                !record.is_dispatched ||
-                record.is_dispatched === "No" ||
-                record.is_dispatched === "-"
+            {/* Dispatch */}
+            <Tooltip title="Dispatch">
+              <Button
+                type="primary"
+                icon={<SendOutlined />}
+                onClick={() => openDispatchModal(record)}
+                disabled={!record.approved_by || record.approved_by === "-"}
+              />
+            </Tooltip>
+
+            {/* Follow-Up */}
+            <Tooltip
+              title={
+                record.is_dispatched && record.is_dispatched !== "No"
+                  ? "Add Follow-Up"
+                  : "Follow-Up disabled until dispatched"
               }
-            />
-          </Tooltip>
-        </Space>
-      ),
+            >
+              <Button
+                icon={<ClockCircleOutlined />}
+                onClick={() => openFollowupModal(record)}
+                disabled={
+                  !record.is_dispatched ||
+                  record.is_dispatched === "No" ||
+                  record.is_dispatched === "-"
+                }
+              />
+            </Tooltip>
+
+
+
+            {/* Copy */}
+            <Tooltip title="Copy Link">
+              <Button
+                shape="circle"
+                icon={<img src="https://img.icons8.com/ios-glyphs/20/copy.png" />}
+                onClick={async () => {
+                  await navigator.clipboard.writeText(link);
+                  message.success("Link Copied!");
+                }}
+              />
+            </Tooltip>
+          </Space>
+        );
+      },
     },
   ];
 
   // 👉 Count Deal Finalised
-const dealFinalisedYes = quotations.filter(
-  (q) => q.is_deal_finalised === "Yes"
-).length;
+  const dealFinalisedYes = quotations.filter(
+    (q) => q.is_deal_finalised === "Yes"
+  ).length;
 
-const dealFinalisedNo = quotations.filter(
-  (q) => q.is_deal_finalised === "No"
-).length;
+  const dealFinalisedNo = quotations.filter(
+    (q) => q.is_deal_finalised === "No"
+  ).length;
 
 
   return (
@@ -376,55 +398,55 @@ const dealFinalisedNo = quotations.filter(
         scroll={{ x: 1200 }}
       /> */}
 
-     <Table
-  columns={columns}
-  dataSource={quotations}
-  rowKey="id"
-  pagination={{ pageSize: 10 }}
-  onRow={(record) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+      <Table
+        columns={columns}
+        dataSource={quotations}
+        rowKey="id"
+        pagination={{ pageSize: 10 }}
+        onRow={(record) => {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
 
-    // ✅ Parse nextfollowup_date safely
-    const nextDate = record.nextfollowup_date
-      ? (() => {
-          const parts = record.nextfollowup_date.split("-");
-          if (parts.length === 3) {
-            const [day, month, year] = parts;
-            return new Date(`${year}-${month}-${day}`);
+          // ✅ Parse nextfollowup_date safely
+          const nextDate = record.nextfollowup_date
+            ? (() => {
+              const parts = record.nextfollowup_date.split("-");
+              if (parts.length === 3) {
+                const [day, month, year] = parts;
+                return new Date(`${year}-${month}-${day}`);
+              }
+              return new Date(record.nextfollowup_date);
+            })()
+            : null;
+
+          let style = {};
+
+          if (record.is_deal_finalised === "Yes") {
+
+            // 🟢 Date is in past
+            style = {
+              backgroundColor: "#ccffcc", // light green
+              color: "#000",
+              transition: "background-color 0.3s ease",
+            };
           }
-          return new Date(record.nextfollowup_date);
-        })()
-      : null;
-
-    let style = {};
-
-    if (record.is_deal_finalised === "Yes" ) {
-      
-        // 🟢 Date is in past
-        style = {
-          backgroundColor: "#ccffcc", // light green
-          color: "#000",
-          transition: "background-color 0.3s ease",
-        };
-    }
-    
 
 
-     if (record.is_deal_finalised === "No" && nextDate) {
-      if (nextDate.getTime() <= today.getTime()) {
-        // 🔴 Date is today or in future
-        style = {
-          backgroundColor: "#ffcccc", // light red
-          color: "#000",
-          transition: "background-color 0.3s ease",
-        };
-      } 
-    }
 
-    return { style };
-  }}
-/>
+          if (record.is_deal_finalised === "No" && nextDate) {
+            if (nextDate.getTime() <= today.getTime()) {
+              // 🔴 Date is today or in future
+              style = {
+                backgroundColor: "#ffcccc", // light red
+                color: "#000",
+                transition: "background-color 0.3s ease",
+              };
+            }
+          }
+
+          return { style };
+        }}
+      />
 
 
 

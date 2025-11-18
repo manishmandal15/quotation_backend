@@ -326,17 +326,77 @@ const NewQuotation: React.FC = () => {
     { title: "Status", dataIndex: "status" },
     {
       title: "Action",
-      render: (_: any, rec: any) => (
-        <Space wrap>
-          <Button icon={<EyeOutlined />} onClick={() => onView(rec)} />
-          <Button icon={<PrinterOutlined />} onClick={() => onView(rec)} />
-          <Button icon={<EditOutlined />} onClick={() => onEdit(rec)} />
-          <Popconfirm title="Delete quotation?" onConfirm={() => onDelete(rec)}>
-            <Button danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      ),
-    },
+      render: (_: any, rec: any) => {
+        const link = `${window.location.origin}/printpage?quotationNo=${encodeURIComponent(
+          rec.quotation_no
+        )}&autoPrint=true`;
+
+        return (
+          <Space>
+            {/* View */}
+            <Button icon={<EyeOutlined />} onClick={() => onView(rec)} />
+
+            {/* Print */}
+            <Button
+              icon={<PrinterOutlined />}
+              onClick={() => window.open(link, "_blank")}
+            />
+
+            {/* Edit */}
+            <Button icon={<EditOutlined />} onClick={() => onEdit(rec)} />
+
+            {/* Delete */}
+            <Popconfirm
+              title="Delete quotation?"
+              onConfirm={() => onDelete(rec)}
+            >
+              <Button danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+
+            {/* WhatsApp Icon Button */}
+            <Button
+              shape="circle"
+              icon={<img src="https://img.icons8.com/color/20/whatsapp.png" />}
+              style={{ background: "#25D366", border: "none" }}
+              onClick={() => {
+                const waURL = `https://wa.me/?text=${encodeURIComponent(
+                  `Quotation Link: ${link}`
+                )}`;
+                window.open(waURL, "_blank");
+              }}
+            />
+
+            {/* Email Icon Button */}
+            <Button
+              shape="circle"
+              icon={<img src="https://img.icons8.com/fluency/20/mail.png" />}
+              style={{ background: "#1677ff", border: "none" }}
+              onClick={() => {
+                const subject = "Quotation Link";
+                const body = `Dear Customer,\n\nPlease find your quotation link:\n\n${link}\n\nRegards,\nDsonik Group`;
+
+                const mailURL = `mailto:?subject=${encodeURIComponent(
+                  subject
+                )}&body=${encodeURIComponent(body)}`;
+
+                window.location.href = mailURL;
+              }}
+            />
+
+            {/* Copy Icon Button */}
+            <Button
+              shape="circle"
+              icon={<img src="https://img.icons8.com/ios-glyphs/20/copy.png" />}
+              onClick={async () => {
+                await navigator.clipboard.writeText(link);
+                message.success("Link Copied!");
+              }}
+            />
+
+          </Space>
+        );
+      },
+    }
   ];
 
   const itemColumns = [
@@ -525,13 +585,6 @@ const NewQuotation: React.FC = () => {
               <Input.TextArea rows={2} placeholder="Enter delivery terms" />
             </Form.Item>
 
-
-            <Form.Item label="Status" name="status">
-              <Select>
-                <Option value="Draft">Draft</Option>
-                <Option value="Final">Final</Option>
-              </Select>
-            </Form.Item>
 
             <Button type="primary" htmlType="submit" loading={loading} style={{ marginTop: 10 }}>
               {editId ? "Update Quotation" : "Create Quotation"}
