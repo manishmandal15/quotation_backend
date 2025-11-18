@@ -242,6 +242,7 @@
 
 
 
+// src/pages/MenuMaster.tsx
 import React, { useEffect, useState } from "react";
 import {
   Table,
@@ -267,11 +268,13 @@ const API = axios.create({
 
 const MenuMaster: React.FC = () => {
   const [menus, setMenus] = useState<any[]>([]);
+  const [moduleMenus, setModuleMenus] = useState<any[]>([]); // 👈 NEW (Dropdown Data)
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingMenu, setEditingMenu] = useState<any>(null);
   const [form] = Form.useForm();
 
+  // ================== FETCH MENUS ==================
   const fetchMenus = async () => {
     setLoading(true);
     try {
@@ -285,21 +288,35 @@ const MenuMaster: React.FC = () => {
     }
   };
 
+  // ================== FETCH MODULE-MENU (DROPDOWN) ==================
+  const fetchModuleMenu = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/module-menu`);
+      setModuleMenus(res.data); // [{module_menu_id, module_menu_name}]
+    } catch (err) {
+      console.log(err);
+      message.error("Failed to load module menu list");
+    }
+  };
+
   useEffect(() => {
     fetchMenus();
+    fetchModuleMenu(); // 👈 load dropdown on page open
   }, []);
 
+  // ================== ADD ==================
   const handleAdd = () => {
     setEditingMenu(null);
     form.resetFields();
     setIsModalVisible(true);
   };
 
+  // ================== EDIT ==================
   const handleEdit = (record: any) => {
     setEditingMenu(record);
 
     form.setFieldsValue({
-      menu_type: Number(record.menu_type), // 👈 number ensure
+      menu_type: Number(record.menu_type),
       menu_name: record.menu_name,
       url: record.url,
     });
@@ -307,6 +324,7 @@ const MenuMaster: React.FC = () => {
     setIsModalVisible(true);
   };
 
+  // ================== DELETE ==================
   const handleDelete = async (id: number) => {
     try {
       await API.delete(`/${id}`);
@@ -318,12 +336,13 @@ const MenuMaster: React.FC = () => {
     }
   };
 
+  // ================== SAVE ==================
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
 
       const payload = {
-        menu_type: Number(values.menu_type), // 👈 backend ko number
+        menu_type: Number(values.menu_type), // 👈 module_menu_id
         menu_name: values.menu_name.trim(),
         url: values.url.trim(),
       };
@@ -346,12 +365,7 @@ const MenuMaster: React.FC = () => {
     }
   };
 
-  const menuTypeName = {
-    1: "Main Menu",
-    2: "Sub Menu",
-    3: "Other",
-  };
-
+  // ================== COLUMNS ==================
   const columns = [
     {
       title: "Sno",
@@ -360,10 +374,13 @@ const MenuMaster: React.FC = () => {
       width: 60,
     },
     {
-      title: "Menu Type",
+      title: "Module Name",
       dataIndex: "menu_type",
       key: "menu_type",
-      render: (val: number) => menuTypeName[val] || "Unknown", // 👈 name show
+      render: (val: number) => {
+        const found = moduleMenus.find((m) => m.module_menu_id === val);
+        return found ? found.module_menu_name : "Unknown";
+      },
     },
     {
       title: "Menu Name",
@@ -385,13 +402,6 @@ const MenuMaster: React.FC = () => {
             type="default"
             icon={<EditOutlined style={{ color: "#1677ff" }} />}
             onClick={() => handleEdit(record)}
-            style={{
-              borderColor: "#1677ff",
-              borderRadius: 4,
-              padding: "4px 8px",
-              minWidth: 36,
-              height: 36,
-            }}
           />
 
           <Popconfirm
@@ -401,13 +411,6 @@ const MenuMaster: React.FC = () => {
             <Button
               type="default"
               icon={<DeleteOutlined style={{ color: "red" }} />}
-              style={{
-                borderColor: "red",
-                borderRadius: 4,
-                padding: "4px 8px",
-                minWidth: 36,
-                height: 36,
-              }}
             />
           </Popconfirm>
         </div>
@@ -417,34 +420,34 @@ const MenuMaster: React.FC = () => {
 
   return (
     <div style={{ padding: 20 }}>
+      {/* HEADER */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
           marginBottom: 16,
         }}
       >
-        <h2 style={{ margin: 0 }}>Menu Master</h2>
+        <h2>Menu Master</h2>
         <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={handleAdd}
-          style={{ borderRadius: 4 }}
         >
           Add Menu
         </Button>
       </div>
 
+      {/* TABLE */}
       <Table
         dataSource={menus}
         columns={columns}
         rowKey="menu_id"
         loading={loading}
         bordered
-        pagination={{ pageSize: 6 }}
       />
 
+      {/* MODAL */}
       <Modal
         title={editingMenu ? "Edit Menu" : "Add Menu"}
         open={isModalVisible}
@@ -455,15 +458,18 @@ const MenuMaster: React.FC = () => {
         width={600}
       >
         <Form form={form} layout="vertical">
+          {/* MODULE MENU DROPDOWN */}
           <Form.Item
             name="menu_type"
-            label="Menu Type"
-            rules={[{ required: true, message: "Please select menu type" }]}
+            label="Module Name"
+            rules={[{ required: true, message: "Please select module" }]}
           >
-            <Select placeholder="Select menu type">
-              <Option value={1}>Main Menu</Option>
-              <Option value={2}>Sub Menu</Option>
-              <Option value={3}>Other</Option>
+            <Select placeholder="Select module name">
+              {moduleMenus.map((m) => (
+                <Option key={m.module_menu_id} value={m.module_menu_id}>
+                  {m.module_menu_name}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
 
@@ -489,4 +495,5 @@ const MenuMaster: React.FC = () => {
 };
 
 export default MenuMaster;
+
 

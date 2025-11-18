@@ -34,6 +34,7 @@ const moduleMenuRoutes = require("./routes/moduleMenuRoutes");
 const urlRoutes = require("./routes/urlRoutes");
 // const moduleMenuRoutes = require("./routes/moduleMenuRoutes");
 // app.use("/api/module-menu", moduleMenuRoutes);
+const testRoutes = require("./routes/testRoutes");
 
 
 
@@ -80,6 +81,8 @@ app.use("/api/menus", menuRoutes);
 app.use("/api/role-menus", roleMenuRoutes);
 app.use("/api/module-menu", moduleMenuRoutes);
 app.use("/api/url", urlRoutes);
+app.use("/api", testRoutes);
+
 
 
 
