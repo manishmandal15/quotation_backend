@@ -1272,7 +1272,51 @@ const handleFollowupSave = async (values: any) => {
   render: (v: any) => (v === "Yes" ? " Yes" : " No"),   // ✅ 
 },
     { title: "Follow Up Date", dataIndex: "followup_date", key: "followup_date" },
-     { title: "Next Followup", dataIndex: "nextfollowup_date", key: "nextfollowup_date" },
+     {
+       title: "Next Followup",
+       dataIndex: "nextfollowup_date",
+       key: "nextfollowup_date",
+       defaultSortOrder: "ascend",
+       sorter: (a, b) => {
+         const parseDate = (d: any): number => {
+           if (!d || d === "-" || typeof d !== "string") return 0;
+           const parts = d.split("-");
+           if (parts.length === 3) {
+             const [day, month, year] = parts;
+             return new Date(`${year}-${month}-${day}`).getTime();
+           }
+           return new Date(d).getTime();
+         };
+         return parseDate(a.nextfollowup_date) - parseDate(b.nextfollowup_date);
+       },
+       onCell: (record: Quotation) => {
+         // compute nextDate same as you did before
+         let style: React.CSSProperties = {};
+         const nf = record.nextfollowup_date;
+         const parse = (d?: string | null) => {
+           if (!d || d === "-" || typeof d !== "string") return null;
+           const parts = d.split("-");
+           if (parts.length === 3) {
+             const [day, month, year] = parts;
+             return new Date(`${year}-${month}-${day}`);
+           }
+           const dt = new Date(d);
+           return isNaN(dt.getTime()) ? null : dt;
+         };
+         const nextDate = parse(nf);
+         const today = new Date(); today.setHours(0,0,0,0);
+     
+         if (record.is_deal_finalised === "Yes") {
+           style = { backgroundColor: "#ccffcc", color: "#000", transition: "background-color 0.3s ease" };
+         } else if (record.is_deal_finalised === "No" && nextDate) {
+           if (nextDate.getTime() <= today.getTime()) {
+             style = { backgroundColor: "#ffcccc", color: "#000", transition: "background-color 0.3s ease" };
+           }
+         }
+     
+         return { style };
+       },
+     },
 //     {
 //       title: "Action",
 //       key: "actions",

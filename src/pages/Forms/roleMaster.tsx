@@ -13,7 +13,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
 
 // ✅ Load Base URL from .env
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ;
 
 // ✅ Roles API Instance
 const RolesAPI = axios.create({

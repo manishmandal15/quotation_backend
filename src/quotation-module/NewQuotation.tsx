@@ -175,7 +175,7 @@ const NewQuotation: React.FC = () => {
       quotationNo: values.quotation_no,
       customerId: values.customer_id,
       currencyId: values.currency_id,
-      created_at:values.created_at,
+      created_at: values.created_at,
       validityDate: values.validity_date
         ? dayjs(values.validity_date).format("YYYY-MM-DD")
         : null,
@@ -239,15 +239,15 @@ const NewQuotation: React.FC = () => {
       const itemsFromServer = data.products ?? [];
       const mappedItems = Array.isArray(itemsFromServer)
         ? itemsFromServer.map((it: any, idx: number) => ({
-            key: it.id || Date.now() + idx,
-            product_id: it.product_id,
-            description: it.description || "",
-            quantity: it.quantity || 1,
-            unit_price: it.unit_price || 0,
-            discount: it.discount || 0,
-            tax_rate: it.tax_rate || 0,
-            line_total: it.line_total || 0,
-          }))
+          key: it.id || Date.now() + idx,
+          product_id: it.product_id,
+          description: it.description || "",
+          quantity: it.quantity || 1,
+          unit_price: it.unit_price || 0,
+          discount: it.discount || 0,
+          tax_rate: it.tax_rate || 0,
+          line_total: it.line_total || 0,
+        }))
         : [];
       setItems(mappedItems);
     } catch (err) {
@@ -266,7 +266,6 @@ const NewQuotation: React.FC = () => {
       message.error("Failed to delete quotation");
     }
   };
-
   const onView = async (record: any) => {
     try {
       const { data: quotationData } = await QUOTATION_API.get(`/${record.id}`);
@@ -283,16 +282,24 @@ const NewQuotation: React.FC = () => {
       });
 
       // Map customer object for preview
-      const customerObj = customers.find((c) => c.id === quotationData.customer_id) || {
-        name: quotationData.customer_name || "N/A",
-        phone: quotationData.phone || "",
-        gst_no: quotationData.gst_no || "",
-        address: quotationData.address || "",
-        cstate: quotationData.cstate || "",
-        district: quotationData.district || "",
-      };
+      const customerObj =
+        customers.find((c) => c.id === quotationData.customer_id) || {
+          name: quotationData.customer_name || "N/A",
+          phone: quotationData.phone || "",
+          gst_no: quotationData.gst_no || "",
+          address: quotationData.address || "",
+          cstate: quotationData.cstate || "",
+          district: quotationData.district || "",
+        };
 
-      setSelectedPreview({ ...quotationData, products: productsMapped, customer: customerObj });
+      // ⭐⭐ ADD THIS — Terms & Conditions Preview Me Bej Rhe ⭐⭐
+      setSelectedPreview({
+        ...quotationData,
+        products: productsMapped,
+        customer: customerObj,
+        terms_conditions: quotationData.terms_conditions || ""   // ⭐ Add Here
+      });
+
       setPreviewVisible(true);
     } catch (err) {
       console.error("Failed to load quotation preview:", err);
@@ -300,33 +307,96 @@ const NewQuotation: React.FC = () => {
     }
   };
 
+
   const listColumns = [
     { title: "S.No", render: (_: any, __: any, i: number) => i + 1 },
     { title: "Quotation No", dataIndex: "quotation_no" },
     { title: "Customer", dataIndex: "customer_name" },
-    { title: "Created At", dataIndex: "created_at" ,
+    {
+      title: "Created At", dataIndex: "created_at",
       render: (v: string | null) => (v ? dayjs(v).format("DD-MM-YYYY ") : "-"),
     },
-   
-    { title: "Validity", dataIndex: "validity_date",
+
+    {
+      title: "Validity", dataIndex: "validity_date",
       render: (v: string | null) => (v ? dayjs(v).format("DD-MM-YYYY ") : "-"),
 
-     },
+    },
     { title: "Net Amount", dataIndex: "net_amount" },
     { title: "Status", dataIndex: "status" },
     {
       title: "Action",
-      render: (_: any, rec: any) => (
-        <Space wrap>
-          <Button icon={<EyeOutlined />} onClick={() => onView(rec)} />
-          <Button icon={<PrinterOutlined />} onClick={() => onView(rec)} />
-          <Button icon={<EditOutlined />} onClick={() => onEdit(rec)} />
-          <Popconfirm title="Delete quotation?" onConfirm={() => onDelete(rec)}>
-            <Button danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      ),
-    },
+      render: (_: any, rec: any) => {
+        const link = `${window.location.origin}/printpage?quotationNo=${encodeURIComponent(
+          rec.quotation_no
+        )}&autoPrint=true`;
+
+        return (
+          <Space>
+            {/* View */}
+            <Button icon={<EyeOutlined />} onClick={() => onView(rec)} />
+
+            {/* Print */}
+            <Button
+              icon={<PrinterOutlined />}
+              onClick={() => window.open(link, "_blank")}
+            />
+
+            {/* Edit */}
+            <Button icon={<EditOutlined />} onClick={() => onEdit(rec)} />
+
+            {/* Delete */}
+            <Popconfirm
+              title="Delete quotation?"
+              onConfirm={() => onDelete(rec)}
+            >
+              <Button danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+
+            {/* WhatsApp Icon Button */}
+            <Button
+              shape="circle"
+              icon={<img src="https://img.icons8.com/color/20/whatsapp.png" />}
+              style={{ background: "#25D366", border: "none" }}
+              onClick={() => {
+                const waURL = `https://wa.me/?text=${encodeURIComponent(
+                  `Quotation Link: ${link}`
+                )}`;
+                window.open(waURL, "_blank");
+              }}
+            />
+
+            {/* Email Icon Button */}
+            <Button
+              shape="circle"
+              icon={<img src="https://img.icons8.com/fluency/20/mail.png" />}
+              style={{ background: "#1677ff", border: "none" }}
+              onClick={() => {
+                const subject = "Quotation Link";
+                const body = `Dear Customer,\n\nPlease find your quotation link:\n\n${link}\n\nRegards,\nDsonik Group`;
+
+                const mailURL = `mailto:?subject=${encodeURIComponent(
+                  subject
+                )}&body=${encodeURIComponent(body)}`;
+
+                window.location.href = mailURL;
+              }}
+            />
+
+            {/* Copy Icon Button */}
+            <Button
+              shape="circle"
+              icon={<img src="https://img.icons8.com/ios-glyphs/20/copy.png" />}
+              onClick={async () => {
+                await navigator.clipboard.writeText(link);
+                message.success("Link Copied!");
+              }}
+            />
+
+          </Space>
+        );
+      },
+    }
   ];
 
   const itemColumns = [
@@ -504,15 +574,17 @@ const NewQuotation: React.FC = () => {
             </Row>
 
             <Form.Item label="Terms & Conditions" name="terms_conditions">
-              <Input.TextArea rows={3} placeholder="Enter terms & conditions" />
+              <Input.TextArea rows={4} placeholder="Enter terms & conditions" />
             </Form.Item>
 
-            <Form.Item label="Status" name="status">
-              <Select>
-                <Option value="Draft">Draft</Option>
-                <Option value="Final">Final</Option>
-              </Select>
+            <Form.Item label="Payment Terms" name="payment_terms">
+              <Input.TextArea rows={2} placeholder="Enter payment terms" />
             </Form.Item>
+
+            <Form.Item label="Delivery Terms" name="delivery_terms">
+              <Input.TextArea rows={2} placeholder="Enter delivery terms" />
+            </Form.Item>
+
 
             <Button type="primary" htmlType="submit" loading={loading} style={{ marginTop: 10 }}>
               {editId ? "Update Quotation" : "Create Quotation"}

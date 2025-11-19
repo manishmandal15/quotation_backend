@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom"; // ✅ FIXED IMPORT
+import axios from "axios";
 
 // Assume these icons are imported from an icon library
 import {
@@ -33,12 +34,28 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  {
+  // {
+  //   icon: <GridIcon />,
+  //   name: "Dashboard",
+  //   subItems: [{ name: "E-commerce", path: "/", pro: false }],
+  // },
+
+   {
     icon: <GridIcon />,
     name: "Dashboard",
-    subItems: [{ name: "E-commerce", path: "/", pro: false }],
+    path: "/home",
   },
+
   
+    // {user ? user.name : "Guest User"}
+
+//    const res = await axios.get("http://localhost:5000/api/test-manish?value=1");
+// console.log(res.data[0].name);// "manish"
+
+
+   
+
+
 
   {
   name: "Quotation-Module",
@@ -68,18 +85,23 @@ const navItems: NavItem[] = [
       { name: "User Master", path: "/forms/users", pro: false },
       { name: "Customers", path: "/forms/customers", pro: false },
       { name: "Product Master", path: "/forms/products", pro: false },
+      { name: "Menu Master", path: "/forms/menu-master", pro: false },
+      { name: "Role Menu Master", path: "/forms/Role-menu-master", pro: false },
+      { name: "module Menu Master", path: "/forms/module-menu-master", pro: false },
+      
+      
     ],
   },
-{
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
-  },
+// {
+//     icon: <CalenderIcon />,
+//     name: "Calendar",
+//     path: "/calendar",
+//   },
+  // {
+  //   icon: <UserCircleIcon />,
+  //   name: "User Profile",
+  //   path: "/profile",
+  // },
 /*
 
   {
@@ -176,14 +198,14 @@ const othersItems: NavItem[] = [
   //     { name: "Videos", path: "/videos", pro: false },
   //   ],
   // },
-  {
-    icon: <PlugInIcon />,
-    name: "Authentication",
-    subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
-    ],
-  },
+  // {
+  //   icon: <PlugInIcon />,
+  //   name: "Authentication",
+  //   subItems: [
+  //     { name: "Sign In", path: "/signin", pro: false },
+  //     { name: "Sign Up", path: "/signup", pro: false },
+  //   ],
+  // },
 ]; 
 
 const AppSidebar: React.FC = () => {

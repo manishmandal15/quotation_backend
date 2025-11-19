@@ -14,7 +14,6 @@ class QuotationController {
       LEFT JOIN users a ON a.id = q.approved_by
       ORDER BY q.id DESC
     `;
-
     db.query(query, (err, results) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json(results);
@@ -40,100 +39,80 @@ class QuotationController {
   }
 
   // 3️⃣ Create quotation
-
-  
- create(req, res) {
-  const {
-    quotationNo,
-    customerId,
-    currencyId,
-    validityDate,
-    paymentTerms,
-    deliveryTerms,
-    status,
-    totalAmount,
-    discountAmount,
-    taxAmount,
-    netAmount,
-    createdBy,
-    products,
-  } = req.body;
-
-  console.log("📥 Incoming payload:", req.body);
-
-  const quotationInsert = `
-    INSERT INTO quotations
-    (quotation_no, customer_id, currency_id, validity_date, payment_terms,
-     delivery_terms, status, total_amount, discount_amount, tax_amount,
-     net_amount, created_by)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-
-  db.query(
-    quotationInsert,
-    [
+  create(req, res) {
+    const {
       quotationNo,
       customerId,
       currencyId,
       validityDate,
       paymentTerms,
       deliveryTerms,
-      "new",             
-      totalAmount || 0,
-      discountAmount || 0,
-      taxAmount || 0,
-      netAmount || 0,
-      createdBy || 1,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error("❌ Quotation Insert Error:", err);
-        return res.status(500).json({ error: err.message });
-      }
+      terms_conditions,   // ⭐ Added
+      totalAmount,
+      discountAmount,
+      taxAmount,
+      netAmount,
+      createdBy,
+      products,
+    } = req.body;
 
-      const quotationId = result.insertId;
-      console.log("✅ Quotation inserted, ID:", quotationId);
+    const quotationInsert = `
+      INSERT INTO quotations
+      (quotation_no, customer_id, currency_id, validity_date, payment_terms,
+       delivery_terms, terms_conditions, status, total_amount, discount_amount,
+       tax_amount, net_amount, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?)
+    `;
 
-      if (!products || !products.length) {
-        return res.json({ message: "Quotation created", id: quotationId });
-      }
+    db.query(
+      quotationInsert,
+      [
+        quotationNo,
+        customerId,
+        currencyId,
+        validityDate,
+        paymentTerms,
+        deliveryTerms,
+        terms_conditions || "",    // ⭐ Added
+        totalAmount || 0,
+        discountAmount || 0,
+        taxAmount || 0,
+        netAmount || 0,
+        createdBy || 1,
+      ],
+      (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
 
-      const itemValues = products.map((p) => [
-        quotationId,
-        p.product_id || null,
-        p.description || "",
-        p.quantity || 0,
-        p.unit_price || 0,
-        p.discount || 0,
-        p.tax_rate || 0,
-        p.line_total || 0,
-      ]);
+        const quotationId = result.insertId;
 
-      console.log("🧾 Items to insert:", itemValues);
+        if (!products || !products.length)
+          return res.json({ message: "Quotation created", id: quotationId });
 
-      const itemsInsert = `
-        INSERT INTO quotation_items
-        (quotation_id, product_id, description, quantity, unit_price,
-         discount, tax_rate, line_total)
-        VALUES ?
-      `;
+        const itemValues = products.map((p) => [
+          quotationId,
+          p.product_id || null,
+          p.description || "",
+          p.quantity || 0,
+          p.unit_price || 0,
+          p.discount || 0,
+          p.tax_rate || 0,
+          p.line_total || 0,
+        ]);
 
-      db.query(itemsInsert, [itemValues], (err2, result2) => {
-        if (err2) {
-          console.error("❌ Quotation Item Insert Error:", err2);
-          return res.status(500).json({ error: err2.message });
-        }
+        const itemsInsert = `
+          INSERT INTO quotation_items
+          (quotation_id, product_id, description, quantity, unit_price,
+           discount, tax_rate, line_total)
+          VALUES ?
+        `;
 
-        console.log("✅ Items inserted:", result2.affectedRows);
-        res.json({
-          message: "Quotation created with items",
-          id: quotationId,
+        db.query(itemsInsert, [itemValues], (err2) => {
+          if (err2) return res.status(500).json({ error: err2.message });
+          res.json({ message: "Quotation created with items", id: quotationId });
         });
-      });
-    }
-  );
-}
-
+      }
+    );
+  }
 
   // 4️⃣ Update quotation
   update(req, res) {
@@ -145,6 +124,7 @@ class QuotationController {
       validityDate,
       paymentTerms,
       deliveryTerms,
+      terms_conditions,   // ⭐ Added
       status,
       totalAmount,
       discountAmount,
@@ -156,8 +136,9 @@ class QuotationController {
     const updateQuery = `
       UPDATE quotations SET
         quotation_no=?, customer_id=?, currency_id=?, validity_date=?,
-        payment_terms=?, delivery_terms=?, status=?, total_amount=?,
-        discount_amount=?, tax_amount=?, net_amount=? WHERE id=?
+        payment_terms=?, delivery_terms=?, terms_conditions=?, status=?,
+        total_amount=?, discount_amount=?, tax_amount=?, net_amount=?
+      WHERE id=?
     `;
 
     db.query(
@@ -169,6 +150,7 @@ class QuotationController {
         validityDate,
         paymentTerms,
         deliveryTerms,
+        terms_conditions || "",  // ⭐ Added
         status,
         totalAmount,
         discountAmount,
@@ -218,6 +200,27 @@ class QuotationController {
     db.query(`DELETE FROM quotations WHERE id=?`, [id], (err) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ message: "Quotation deleted successfully" });
+    });
+  }
+
+  // 6️⃣ Get quotation by number
+  getByNumber(req, res) {
+    const { quotationNo } = req.params;
+
+    const quotationQuery = `SELECT * FROM quotations WHERE quotation_no = ?`;
+    const itemsQuery = `SELECT * FROM quotation_items WHERE quotation_id = (
+      SELECT id FROM quotations WHERE quotation_no = ?
+    )`;
+
+    db.query(quotationQuery, [quotationNo], (err, quotation) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!quotation.length)
+        return res.status(404).json({ error: "Quotation not found" });
+
+      db.query(itemsQuery, [quotationNo], (err2, items) => {
+        if (err2) return res.status(500).json({ error: err2.message });
+        res.json({ ...quotation[0], products: items });
+      });
     });
   }
 }
