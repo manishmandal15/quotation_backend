@@ -155,9 +155,9 @@ const ModuleMenuMaster: React.FC = () => {
           </Popconfirm>
 
           {/* ✅ Copy URL Button */}
-          <Button type="primary" onClick={handleCopy}>
+          {/* <Button type="primary" onClick={handleCopy}>
       Copy URL
-    </Button>
+    </Button> */}
         </div>
       ),
     },
