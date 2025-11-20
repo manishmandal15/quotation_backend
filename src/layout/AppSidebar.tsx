@@ -526,6 +526,308 @@
 
 
 
+// import { useCallback, useEffect, useRef, useState } from "react";
+// import { Link, useLocation, useNavigate } from "react-router-dom";
+// import axios from "axios";
+
+// // Icons
+// import {
+//   CalenderIcon,
+//   ChevronDownIcon,
+//   GridIcon,
+//   HorizontaLDots,
+//   ListIcon,
+//   PlugInIcon,
+//   UserCircleIcon,
+// } from "../icons";
+
+// import { useSidebar } from "../context/SidebarContext";
+// import SidebarWidget from "./SidebarWidget";
+
+// // ---------------------------
+// // NAV ITEMS
+// // ---------------------------
+
+// type NavItem = {
+//   name: string;
+//   icon: React.ReactNode;
+//   path?: string;
+//   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+// };
+
+// const [user, setUser] = useState<any>(null);
+
+// let navItems: NavItem[] = [];
+
+// if (user.id == 2) {
+//   navItems = [
+//     {
+//       icon: <GridIcon />,
+//       name: "Dashboard",
+//       path: "/home",
+//     },
+
+//     {
+//       name: "Quotation-Module",
+//       icon: <ListIcon />,
+//       subItems: [
+//         { name: "New Quotation", path: "/forms/quotation-all" },
+//         { name: "Quotation Desk", path: "/forms/new-quotation" },
+//         { name: "Quotation Approval", path: "/forms/quotation-approval" },
+//         { name: "Quotation Dispatch & Follow-up", path: "/quotation-tracking" },
+//         { name: "Quotation Status Tracking", path: "/quotation-tracking-status" },
+//         { name: "Quotation Follow-Up & Reminders", path: "/quotation-Followup-Reminder" },
+//       ],
+//     },
+
+//     {
+//       name: "Masters",
+//       icon: <ListIcon />,
+//       subItems: [
+//         { name: "Company_setting", path: "/forms/company-master" },
+//         { name: "Roles", path: "/forms/role-master" },
+//         { name: "State", path: "/forms/state-master" },
+//         { name: "District", path: "/forms/district-master" },
+//         { name: "Currency", path: "/forms/currency" },
+//         { name: "User Master", path: "/forms/users" },
+//         { name: "Customers", path: "/forms/customers" },
+//         { name: "Product Master", path: "/forms/products" },
+//         { name: "Menu Master", path: "/forms/menu-master" },
+//         { name: "Role Menu Master", path: "/forms/Role-menu-master" },
+//         { name: "module Menu Master", path: "/forms/module-menu-master" },
+//       ],
+//     },
+//   ];
+// } else {
+//   navItems = [];
+// }
+
+// // export default navItems;
+
+
+// // const othersItems: NavItem[] = [];
+
+
+// // ------------------------------------------------
+// // MAIN SIDEBAR COMPONENT
+// // ------------------------------------------------
+// const AppSidebar: React.FC = () => {
+//   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+//   const location = useLocation();
+//   const navigate = useNavigate();
+
+//   // ---------------------------
+//   // USER LOGIN VALIDATION
+//   // ---------------------------
+//   const [user, setUser] = useState<any>(null);
+
+//   useEffect(() => {
+//     const savedUser = localStorage.getItem("user");
+
+//     if (!savedUser) {
+//       alert("Please login first");
+//       navigate("/signin");
+//       return;
+//     }
+
+//     const parsed = JSON.parse(savedUser);
+
+//     if (!parsed?.name) {
+//       alert("Invalid session. Please login again.");
+//       localStorage.removeItem("user");
+//       navigate("/signin");
+//       return;
+//     }
+
+//     setUser(parsed);
+//   }, []);
+
+
+//   // ---------------------------
+//   // API CALL (Name Fetch)
+//   // ---------------------------
+
+//   const [name, setName] = useState("");
+
+//   useEffect(() => {
+//     axios
+//       .get("http://localhost:5000/api/test-manish?value=1")
+//       .then((res) => {
+//         if (res.data && res.data.length > 0) {
+//           setName(res.data[0].name);
+//         }
+//       })
+//       .catch((err) => {
+//         console.log("Axios Error:", err);
+//       });
+//   }, []);
+
+
+//   // ---------------------------
+//   // Menu Active Logic
+//   // ---------------------------
+
+//   const isActive = useCallback(
+//     (path: string) => location.pathname === path,
+//     [location.pathname]
+//   );
+
+//   const [openSubmenu, setOpenSubmenu] = useState<{
+//     type: "main" | "others";
+//     index: number;
+//   } | null>(null);
+
+//   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
+//   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+//   useEffect(() => {
+//     let found = false;
+
+//     ["main", "others"].forEach((menuType) => {
+//       const items = menuType === "main" ? navItems : othersItems;
+
+//       items.forEach((nav, index) => {
+//         nav.subItems?.forEach((sub) => {
+//           if (isActive(sub.path)) {
+//             setOpenSubmenu({ type: menuType as any, index });
+//             found = true;
+//           }
+//         });
+//       });
+//     });
+
+//     if (!found) setOpenSubmenu(null);
+//   }, [location.pathname]);
+
+
+//   const handleSubmenuToggle = (index: number, type: "main" | "others") => {
+//     setOpenSubmenu((prev) =>
+//       prev?.index === index && prev?.type === type ? null : { type, index }
+//     );
+//   };
+
+
+//   // ---------------------------
+//   // Render menu items
+//   // ---------------------------
+//   const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
+//     <ul className="flex flex-col gap-4">
+//       {items.map((nav, index) => (
+//         <li key={nav.name}>
+//           {nav.subItems ? (
+//             <button
+//               onClick={() => handleSubmenuToggle(index, menuType)}
+//               className="menu-item group cursor-pointer"
+//             >
+//               <span className="menu-item-icon-size">{nav.icon}</span>
+//               {(isExpanded || isHovered || isMobileOpen) && (
+//                 <span className="menu-item-text">{nav.name}</span>
+//               )}
+
+//               {(isExpanded || isHovered || isMobileOpen) && (
+//                 <ChevronDownIcon
+//                   className={`ml-auto w-5 h-5 transition-transform ${
+//                     openSubmenu?.index === index && openSubmenu?.type === menuType
+//                       ? "rotate-180 text-brand-500"
+//                       : ""
+//                   }`}
+//                 />
+//               )}
+//             </button>
+//           ) : (
+//             nav.path && (
+//               <Link
+//                 to={nav.path}
+//                 className={`menu-item group ${
+//                   isActive(nav.path) ? "menu-item-active" : ""
+//                 }`}
+//               >
+//                 <span className="menu-item-icon-size">{nav.icon}</span>
+//                 {(isExpanded || isHovered || isMobileOpen) && (
+//                   <span className="menu-item-text">{nav.name}</span>
+//                 )}
+//               </Link>
+//             )
+//           )}
+
+//           {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
+//             <div
+//               ref={(el) => (subMenuRefs.current[`${menuType}-${index}`] = el)}
+//               className="overflow-hidden transition-all duration-300"
+//               style={{
+//                 height:
+//                   openSubmenu?.index === index && openSubmenu?.type === menuType
+//                     ? `${subMenuRefs.current[`${menuType}-${index}`]?.scrollHeight}px`
+//                     : "0px",
+//               }}
+//             >
+//               <ul className="mt-2 space-y-1 ml-9">
+//                 {nav.subItems.map((sub) => (
+//                   <li key={sub.name}>
+//                     <Link
+//                       to={sub.path}
+//                       className={`menu-dropdown-item ${
+//                         isActive(sub.path) ? "menu-dropdown-item-active" : ""
+//                       }`}
+//                     >
+//                       {sub.name}
+//                     </Link>
+//                   </li>
+//                 ))}
+//               </ul>
+//             </div>
+//           )}
+//         </li>
+//       ))}
+//     </ul>
+//   );
+
+
+//   return (
+//     <aside
+//       className={`fixed mt-16 flex flex-col top-0 px-5 bg-white h-screen border-r transition-all z-50 
+//       ${isExpanded || isMobileOpen || isHovered ? "w-[290px]" : "w-[90px]"}`}
+//       onMouseEnter={() => !isExpanded && setIsHovered(true)}
+//       onMouseLeave={() => setIsHovered(false)}
+//     >
+//       {/* LOGO */}
+//       <div className="py-8">
+//         <Link to="/">
+//           {isExpanded || isHovered || isMobileOpen ? (
+//             <img src="/images/logo/dsonik.png" width={150} />
+//           ) : (
+//             <img src="/images/logo/dsonik.png" width={32} />
+//           )}
+//         </Link>
+//       </div>
+
+//       {/* MENU */}
+//       <div className="flex flex-col overflow-y-auto no-scrollbar">
+//         <nav className="mb-6">
+//           <h2 className="text-xs uppercase text-gray-400 mb-3">Menu</h2>
+//           {renderMenuItems(navItems, "main")}
+
+//           <h2 className="text-xs uppercase text-gray-400 my-4">Others</h2>
+//           {renderMenuItems(othersItems, "others")}
+//         </nav>
+
+//         {/* Widget */}
+//         {(isExpanded || isHovered || isMobileOpen) && <SidebarWidget />}
+
+//         {/* API OUTPUT */}
+//         <div className="p-4">
+//           <h3 className="text-sm font-semibold">API Output {name}</h3>
+//         </div>
+//       </div>
+//     </aside>
+//   );
+// };
+
+// export default AppSidebar;
+
+
+
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -545,57 +847,14 @@ import { useSidebar } from "../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
 
 // ---------------------------
-// NAV ITEMS
+// NAV ITEM TYPE
 // ---------------------------
-
 type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  subItems?: { name: string; path: string }[];
 };
-
-const navItems: NavItem[] = [
-  {
-    icon: <GridIcon />,
-    name: "Dashboard",
-    path: "/home",
-  },
-
-  {
-    name: "Quotation-Module",
-    icon: <ListIcon />,
-    subItems: [
-      { name: "New Quotation", path: "/forms/quotation-all" },
-      { name: "Quotation Desk", path: "/forms/new-quotation" },
-      { name: "Quotation Approval", path: "/forms/quotation-approval" },
-      { name: "Quotation Dispatch & Follow-up", path: "/quotation-tracking" },
-      { name: "Quotation Status Tracking", path: "/quotation-tracking-status" },
-      { name: "Quotation Follow-Up & Reminders", path: "/quotation-Followup-Reminder" },
-    ],
-  },
-
-  {
-    name: "Masters",
-    icon: <ListIcon />,
-    subItems: [
-      { name: "Company_setting", path: "/forms/company-master" },
-      { name: "Roles", path: "/forms/role-master" },
-      { name: "State", path: "/forms/state-master" },
-      { name: "District", path: "/forms/district-master" },
-      { name: "Currency", path: "/forms/currency" },
-      { name: "User Master", path: "/forms/users" },
-      { name: "Customers", path: "/forms/customers" },
-      { name: "Product Master", path: "/forms/products" },
-      { name: "Menu Master", path: "/forms/menu-master" },
-      { name: "Role Menu Master", path: "/forms/Role-menu-master" },
-      { name: "module Menu Master", path: "/forms/module-menu-master" },
-    ],
-  },
-];
-
-const othersItems: NavItem[] = [];
-
 
 // ------------------------------------------------
 // MAIN SIDEBAR COMPONENT
@@ -631,11 +890,59 @@ const AppSidebar: React.FC = () => {
     setUser(parsed);
   }, []);
 
+  // ---------------------------
+  // NAV ITEMS (dynamic by user.id)
+  // ---------------------------
+
+  let navItems: NavItem[] = [];
+  
+  if (true) {
+    navItems = [
+      {
+        icon: <GridIcon />,
+        name: "Dashboard",
+        path: "/home",
+      },
+
+      {
+        name: "Quotation-Module",
+        icon: <ListIcon />,
+        subItems: [
+          { name: "New Quotation", path: "/forms/quotation-all" },
+          { name: "Quotation Desk", path: "/forms/new-quotation" },
+          { name: "Quotation Approval", path: "/forms/quotation-approval" },
+          { name: "Quotation Dispatch & Follow-up", path: "/quotation-tracking" },
+          { name: "Quotation Status Tracking", path: "/quotation-tracking-status" },
+          { name: "Quotation Follow-Up & Reminders", path: "/quotation-Followup-Reminder" },
+        ],
+      },
+
+      {
+        name: "Masters",
+        icon: <ListIcon />,
+        subItems: [
+          { name: "Company_setting", path: "/forms/company-master" },
+          { name: "Roles", path: "/forms/role-master" },
+          { name: "State", path: "/forms/state-master" },
+          { name: "District", path: "/forms/district-master" },
+          { name: "Currency", path: "/forms/currency" },
+          { name: "User Master", path: "/forms/users" },
+          { name: "Customers", path: "/forms/customers" },
+          { name: "Product Master", path: "/forms/products" },
+          { name: "Menu Master", path: "/forms/menu-master" },
+          { name: "Role Menu Master", path: "/forms/Role-menu-master" },
+          { name: "module Menu Master", path: "/forms/module-menu-master" },
+        ],
+      },
+    ];
+  }
+
+  // Empty other menu
+  const othersItems: NavItem[] = [];
 
   // ---------------------------
-  // API CALL (Name Fetch)
+  // API OUTPUT
   // ---------------------------
-
   const [name, setName] = useState("");
 
   useEffect(() => {
@@ -646,16 +953,12 @@ const AppSidebar: React.FC = () => {
           setName(res.data[0].name);
         }
       })
-      .catch((err) => {
-        console.log("Axios Error:", err);
-      });
+      .catch((err) => console.log("Axios Error:", err));
   }, []);
-
 
   // ---------------------------
   // Menu Active Logic
   // ---------------------------
-
   const isActive = useCallback(
     (path: string) => location.pathname === path,
     [location.pathname]
@@ -666,28 +969,7 @@ const AppSidebar: React.FC = () => {
     index: number;
   } | null>(null);
 
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
-  useEffect(() => {
-    let found = false;
-
-    ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
-
-      items.forEach((nav, index) => {
-        nav.subItems?.forEach((sub) => {
-          if (isActive(sub.path)) {
-            setOpenSubmenu({ type: menuType as any, index });
-            found = true;
-          }
-        });
-      });
-    });
-
-    if (!found) setOpenSubmenu(null);
-  }, [location.pathname]);
-
 
   const handleSubmenuToggle = (index: number, type: "main" | "others") => {
     setOpenSubmenu((prev) =>
@@ -695,10 +977,6 @@ const AppSidebar: React.FC = () => {
     );
   };
 
-
-  // ---------------------------
-  // Render menu items
-  // ---------------------------
   const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
     <ul className="flex flex-col gap-4">
       {items.map((nav, index) => (
@@ -712,7 +990,6 @@ const AppSidebar: React.FC = () => {
               {(isExpanded || isHovered || isMobileOpen) && (
                 <span className="menu-item-text">{nav.name}</span>
               )}
-
               {(isExpanded || isHovered || isMobileOpen) && (
                 <ChevronDownIcon
                   className={`ml-auto w-5 h-5 transition-transform ${
@@ -771,7 +1048,6 @@ const AppSidebar: React.FC = () => {
     </ul>
   );
 
-
   return (
     <aside
       className={`fixed mt-16 flex flex-col top-0 px-5 bg-white h-screen border-r transition-all z-50 
@@ -779,18 +1055,12 @@ const AppSidebar: React.FC = () => {
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* LOGO */}
       <div className="py-8">
         <Link to="/">
-          {isExpanded || isHovered || isMobileOpen ? (
-            <img src="/images/logo/dsonik.png" width={150} />
-          ) : (
-            <img src="/images/logo/dsonik.png" width={32} />
-          )}
+          <img src="/images/logo/dsonik.png" width={150} />
         </Link>
       </div>
 
-      {/* MENU */}
       <div className="flex flex-col overflow-y-auto no-scrollbar">
         <nav className="mb-6">
           <h2 className="text-xs uppercase text-gray-400 mb-3">Menu</h2>
@@ -800,18 +1070,10 @@ const AppSidebar: React.FC = () => {
           {renderMenuItems(othersItems, "others")}
         </nav>
 
-        {/* Widget */}
         {(isExpanded || isHovered || isMobileOpen) && <SidebarWidget />}
 
-        {/* API OUTPUT */}
         <div className="p-4">
           <h3 className="text-sm font-semibold">API Output {name}</h3>
-          <input
-            type="text"
-            value={name}
-            readOnly
-            className="border w-full p-1 mt-1 rounded"
-          />
         </div>
       </div>
     </aside>
@@ -819,3 +1081,4 @@ const AppSidebar: React.FC = () => {
 };
 
 export default AppSidebar;
+
