@@ -184,10 +184,9 @@ const QuotationPreview: React.FC<Props> = ({ visible, onClose, previewData }) =>
 
           <div className="info-box-1">
             <h4>Quotation Info</h4>
-            <p><b>No:</b> {quotationNo}</p>
+            <p><b>QTN-No:</b> {quotationNo}</p>
             <p><b>Date:</b> {dayjs(previewData?.created_at || new Date()).format("DD-MM-YYYY")}</p>
             <p><b>Validity:</b> {validity}</p>
-            <p><b>Currency:</b> {currency}</p>
             <p><b>Payment:</b> {previewData?.payment_terms || "50% Advance"}</p>
             <p><b>Delivery:</b> {previewData?.delivery_terms || "As discussed"}</p>
           </div>
