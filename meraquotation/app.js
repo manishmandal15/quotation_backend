@@ -63,44 +63,42 @@
 // });
 
 
-const express = require("express");
-const cors = require("cors");
-const app = express();
+// const express = require("express");
+// const cors = require("cors");
+// const app = express();
 
-app.use(cors());
-app.use(express.json());
+// app.use(cors());
+// app.use(express.json());
 
-// Routes
-const districtRoutes = require("./routes/districts");
-const stateRoutes = require("./routes/states");
-const companySettingRoutes = require("./routes/company_setting");
-const currencyRoutes = require("./routes/currencies");
-const roleRoutes = require("./routes/roles");
-const quotationRoutes = require("./routes/quotations");
-const quotationItemRoutes = require("./routes/quotation_items");
-const quotationApprovalRoutes = require("./routes/quotation_approvals");
-const quotationAttachmentRoutes = require("./routes/quotation_attachments");
-const quotationCommentRoutes = require("./routes/quotation_comments");
-
-
-
-app.use("/api/districts", districtRoutes);
-app.use("/api/states", stateRoutes);
-app.use("/api/company_settings", companySettingRoutes);
-app.use("/api/currencies", currencyRoutes);
-app.use("/api/roles", roleRoutes);
-app.use("/api/quotations", quotationRoutes);
-app.use("/api/quotation_items", quotationItemRoutes);
-app.use("/api/quotation_approvals", quotationApprovalRoutes);
-app.use("/api/quotation_attachments", quotationAttachmentRoutes);
-app.use("/api/quotation_comments", quotationCommentRoutes);
+// // Routes
+// const districtRoutes = require("./routes/districts");
+// const stateRoutes = require("./routes/states");
+// const companySettingRoutes = require("./routes/company_setting");
+// const currencyRoutes = require("./routes/currencies");
+// const roleRoutes = require("./routes/roles");
+// const quotationRoutes = require("./routes/quotations");
+// const quotationItemRoutes = require("./routes/quotation_items");
+// const quotationApprovalRoutes = require("./routes/quotation_approvals");
+// const quotationAttachmentRoutes = require("./routes/quotation_attachments");
+// const quotationCommentRoutes = require("./routes/quotation_comments");
 
 
-app.listen(3000, () => {
-  console.log("✅ Server running on port 3000");
-});
+
+// app.use("/api/districts", districtRoutes);
+// app.use("/api/states", stateRoutes);
+// app.use("/api/company_settings", companySettingRoutes);
+// app.use("/api/currencies", currencyRoutes);
+// app.use("/api/roles", roleRoutes);
+// app.use("/api/quotations", quotationRoutes);
+// app.use("/api/quotation_items", quotationItemRoutes);
+// app.use("/api/quotation_approvals", quotationApprovalRoutes);
+// app.use("/api/quotation_attachments", quotationAttachmentRoutes);
+// app.use("/api/quotation_comments", quotationCommentRoutes);
 
 
+// app.listen(3000, () => {
+//   console.log("✅ Server running on port 3000");
+// });
 
 
 
@@ -111,3 +109,33 @@ app.listen(3000, () => {
 
 
 
+
+
+import React, { useState } from "react";
+import Sidebar from "./Sidebar";
+
+export default function App() {
+  const [selectedRole, setSelectedRole] = useState("admin");
+
+  return (
+    <div style={{ display: "flex" }}>
+      
+      {/* Role Selector */}
+      <div style={{ padding: 20 }}>
+        <h3>Select Role</h3>
+        <select
+          value={selectedRole}
+          onChange={(e) => setSelectedRole(e.target.value)}
+        >
+          <option value="admin">Admin</option>
+          <option value="teacher">Teacher</option>
+          <option value="sales">Sales</option>
+        </select>
+      </div>
+
+      {/* Dynamic Sidebar */}
+      <Sidebar role={selectedRole} />
+
+    </div>
+  );
+}
