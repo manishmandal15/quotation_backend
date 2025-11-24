@@ -1,7 +1,7 @@
 const db = require("../config/db"); // Database connection import
 
 class QuotationController {
-
+ 
   // 1️⃣ Sabhi quotations le aana
   getAll(req, res) {
     const query = `

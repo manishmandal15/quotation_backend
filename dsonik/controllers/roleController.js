@@ -43,7 +43,7 @@ class RoleController {
         });
       }
     );
-  }
+  } 
 
   // ✅ Update role
   update(req, res) {
