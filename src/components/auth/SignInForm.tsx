@@ -54,14 +54,7 @@ export default function SignInForm() {
 
   return (
     <div className="flex flex-col flex-1">
-      <div className="w-full max-w-md pt-10 mx-auto">
-        <Link
-          to="/"
-          className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
-        >
-          <ChevronLeftIcon className="size-5" /> Back to dashboard
-        </Link>
-      </div>
+   
 
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <form onSubmit={handleLogin}>
