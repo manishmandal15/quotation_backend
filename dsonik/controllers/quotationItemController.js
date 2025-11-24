@@ -18,7 +18,7 @@ class QuotationController {
       LEFT JOIN users a ON a.id = q.approved_by
       ORDER BY q.id DESC
     `;
-
+  
     db.query(query, (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json(rows);
