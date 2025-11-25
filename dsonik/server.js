@@ -102,7 +102,7 @@ app.use("/api", testRoutes);
 
 // ✅ Root route for quick testing
 app.get("/", (req, res) => {
-  res.send("Backend API working ✅");
+  res.send("Backend API working Production✅");
 });
 
 // ✅ Use environment variable or fallback
