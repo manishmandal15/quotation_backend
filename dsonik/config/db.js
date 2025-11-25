@@ -9,20 +9,22 @@ const db = mysql.createPool({
   database: process.env.DB_NAME,
   port: process.env.DB_PORT || 3306,
   waitForConnections: true,
-  connectionLimit: 10,       // Max connections
+  connectionLimit: 10,       // Maximum connections
   queueLimit: 0              // Unlimited queue
 });
 
-db.connect((err) => {
+// Test pool connection
+db.getConnection((err, connection) => {
   if (err) {
-    console.error("Error connecting to MySQL:", err);
-    return;
+    console.error("❌ Error connecting to MySQL:", err);
+  } else {
+    console.log("✅ Connected to MySQL database");
+    connection.release(); // Release connection back to pool
   }
-  console.log("Connected to MySQL database");
 });
 
-
 module.exports = db;
+
 
 // const mysql = require("mysql2");
 
