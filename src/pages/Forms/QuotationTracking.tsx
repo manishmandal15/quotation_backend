@@ -22,7 +22,7 @@ import axios from "axios";
 import type { ColumnsType } from "antd/es/table";
 
 // ✅ Get base URL from .env (Vite)
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 // ✅ Centralized API instances
 const API = axios.create({
@@ -39,7 +39,7 @@ type Quotation = {
   quotation_no: string;
   customer_name: string;
   quotation_date?: string;
-  net_amount?: number;
+  net_amount?: number | string;
   approved_by?: string;
   approved_date?: string;
   is_dispatched?: boolean | string;
@@ -49,9 +49,10 @@ type Quotation = {
   followup_date?: string | null;
   follow_up_date?: string | null;
   nextfollowup_date?: string | null;
-  dispatched_by?: number;
+  dispatched_by?: number | null;
   has_followup?: boolean;
   is_deal_finalised?: string | null;
+  customer_email?: string | null;
 };
 
 type User = {
@@ -81,12 +82,18 @@ const QuotationTracking: React.FC = () => {
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Search state (missing earlier) ✅
+  const [searchText, setSearchText] = useState("");
+
   const [isDispatchOpen, setIsDispatchOpen] = useState(false);
   const [dispatchForm] = Form.useForm();
   const [currentDispatchRow, setCurrentDispatchRow] = useState<Quotation | null>(null);
+
   const [isFollowupOpen, setIsFollowupOpen] = useState(false);
   const [followupForm] = Form.useForm();
   const [currentFollowupRow, setCurrentFollowupRow] = useState<Quotation | null>(null);
+
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [viewRow, setViewRow] = useState<Quotation | null>(null);
 
@@ -98,7 +105,7 @@ const QuotationTracking: React.FC = () => {
         axios.get(`${BASE_URL}/quotation-tracking`),
       ]);
 
-      const quotations = (quotRes.data || []).map((q: any) => ({
+      const quotationsFromMaster = (quotRes.data || []).map((q: any) => ({
         ...q,
         id: q.id ?? q.quotation_id ?? q.sno,
       }));
@@ -122,8 +129,10 @@ const QuotationTracking: React.FC = () => {
         net_amount: t.net_amount ?? "0",
         customer_name: t.customer_name ?? "-",
         is_deal_finalised: t.is_deal_finalised ?? "No",
+        customer_email: t.customer_email ?? null,
       }));
 
+      // Optionally merge master and tracking by quotation_no if needed (kept minimal)
       setQuotations(merged);
     } catch (err) {
       console.error(err);
@@ -153,9 +162,10 @@ const QuotationTracking: React.FC = () => {
     setIsDispatchOpen(true);
     dispatchForm.resetFields();
 
+    // set sensible defaults: if users present set first user's id else fallback to loggedInUser
     setTimeout(() => {
       dispatchForm.setFieldsValue({
-        [DispatchFormFields.DISPATCHED_BY]: loggedInUser,
+        [DispatchFormFields.DISPATCHED_BY]: users?.[0]?.id ?? loggedInUser,
         [DispatchFormFields.DISPATCH_THROUGH]: "Email",
       });
     }, 0);
@@ -168,10 +178,14 @@ const QuotationTracking: React.FC = () => {
         values[DispatchFormFields.DISPATCH_DATE]?.format?.("YYYY-MM-DD HH:mm:ss") ??
         values[DispatchFormFields.DISPATCH_DATE];
 
+      // convert dispatched_by to number if possible, else send as-is
+      const sentByRaw = values[DispatchFormFields.DISPATCHED_BY];
+      const sentBy = Number.isNaN(Number(sentByRaw)) ? sentByRaw : Number(sentByRaw);
+
       const payload = {
         quotation_id: currentDispatchRow.id,
-        sent_by: Number(values[DispatchFormFields.DISPATCHED_BY]),
-        method: String(values[DispatchFormFields.DISPATCH_THROUGH]).toLowerCase(),
+        sent_by: sentBy,
+        method: String(values[DispatchFormFields.DISPATCH_THROUGH] ?? "email").toLowerCase(),
         sent_at: dispatchedDate || new Date().toISOString().slice(0, 19).replace("T", " "),
         sent_to_email: currentDispatchRow.customer_email ?? "customer@example.com",
       };
@@ -202,7 +216,7 @@ const QuotationTracking: React.FC = () => {
 
       const actualFollowupDate = new Date().toISOString().slice(0, 19).replace("T", " ");
       const payload = {
-        quotation_id: currentFollowupRow.quotation_id,
+        quotation_id: currentFollowupRow.quotation_id ?? currentFollowupRow.id,
         user_id: values.user_id,
         notes: values.notes || "",
         followup_date: actualFollowupDate,
@@ -244,6 +258,12 @@ const QuotationTracking: React.FC = () => {
       title: "Dispatched",
       dataIndex: "is_dispatched",
       key: "is_dispatched",
+      render: (v: any) => {
+        // handle boolean/string
+        if (v === true || v === "Yes" || v === "yes") return "Yes";
+        if (v === false || v === "No" || v === "no") return "No";
+        return String(v ?? "-");
+      },
     },
     { title: "Dispatched Date", dataIndex: "dispatched_date", key: "dispatched_date" },
     { title: "Through", dataIndex: "dispatched_through", key: "dispatched_through" },
@@ -251,11 +271,10 @@ const QuotationTracking: React.FC = () => {
       title: "Deal Finalised",
       dataIndex: "is_deal_finalised",
       key: "is_deal_finalised",
-      render: (v: any) => (v === "Yes" ? " Yes" : " No"),   // ✅ 
+      render: (v: any) => (v === "Yes" ? "Yes" : "No"),
     },
 
     { title: "Follow Up Date", dataIndex: "followup_date", key: "followup_date" },
-    //  { title: "Next Followup", dataIndex: "nextfollowup_date", key: "nextfollowup_date" },
     {
       title: "Next Followup",
       dataIndex: "nextfollowup_date",
@@ -267,14 +286,16 @@ const QuotationTracking: React.FC = () => {
           const parts = d.split("-");
           if (parts.length === 3) {
             const [day, month, year] = parts;
-            return new Date(`${year}-${month}-${day}`).getTime();
+            const dt = new Date(`${year}-${month}-${day}`).getTime();
+            return Number.isNaN(dt) ? 0 : dt;
           }
-          return new Date(d).getTime();
+          const dt = new Date(d).getTime();
+          return Number.isNaN(dt) ? 0 : dt;
         };
         return parseDate(a.nextfollowup_date) - parseDate(b.nextfollowup_date);
       },
       onCell: (record: Quotation) => {
-        // compute nextDate same as you did before
+        // compute nextDate safely
         let style: React.CSSProperties = {};
         const nf = record.nextfollowup_date;
         const parse = (d?: string | null) => {
@@ -282,13 +303,15 @@ const QuotationTracking: React.FC = () => {
           const parts = d.split("-");
           if (parts.length === 3) {
             const [day, month, year] = parts;
-            return new Date(`${year}-${month}-${day}`);
+            const dt = new Date(`${year}-${month}-${day}`);
+            return isNaN(dt.getTime()) ? null : dt;
           }
           const dt = new Date(d);
           return isNaN(dt.getTime()) ? null : dt;
         };
         const nextDate = parse(nf);
-        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
         if (record.is_deal_finalised === "Yes") {
           style = { backgroundColor: "#ccffcc", color: "#000", transition: "background-color 0.3s ease" };
@@ -302,13 +325,11 @@ const QuotationTracking: React.FC = () => {
       },
     },
 
-
-
     {
       title: "Action",
       key: "actions",
       fixed: "right",
-      width: 180,
+      width: 240,
       render: (_text, record) => {
         const link = `${window.location.origin}/printpage?quotationNo=${encodeURIComponent(
           record.quotation_no
@@ -350,16 +371,65 @@ const QuotationTracking: React.FC = () => {
               />
             </Tooltip>
 
+            {/* WhatsApp */}
+            <Tooltip title="Share via WhatsApp">
+              <Button
+                shape="circle"
+                icon={<img src="https://img.icons8.com/color/20/whatsapp.png" />}
+                style={{ background: "#25D366", border: "none" }}
+                onClick={() => {
+                  const waMsg =
+                    `*Quotation Details*%0A%0A` +
+                    `Quotation No: ${record.quotation_no}%0A` +
+                    `Customer: ${record.customer_name}%0A` +
+                    `Amount: ₹${record.net_amount}%0A%0A` +
+                    `Quotation Link:%0A${link}`;
+                  const waURL = `https://wa.me/?text=${encodeURIComponent(waMsg)}`;
+                  window.open(waURL, "_blank");
+                }}
+              />
+            </Tooltip>
 
+            {/* Email */}
+            <Tooltip title="Share via Email">
+              <Button
+                shape="circle"
+                icon={<img src="https://img.icons8.com/fluency/20/mail.png" />}
+                style={{ background: "#1677ff", border: "none" }}
+                onClick={() => {
+                  const subject = `Quotation - ${record.quotation_no}`;
+                  const body =
+                    `Dear ${record.customer_name},\n\n` +
+                    `Please find your quotation details below:\n\n` +
+                    `Quotation Number: ${record.quotation_no}\n` +
+                    `Net Amount: ₹${record.net_amount}\n\n` +
+                    `Click the link below to view your quotation:\n${link}\n\n` +
+                    `Regards,\nDsonik Group`;
+
+                  const mailURL = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                  window.location.href = mailURL;
+                }}
+              />
+            </Tooltip>
 
             {/* Copy */}
-            <Tooltip title="Copy Link">
+            <Tooltip title="Copy details">
               <Button
                 shape="circle"
                 icon={<img src="https://img.icons8.com/ios-glyphs/20/copy.png" />}
                 onClick={async () => {
-                  await navigator.clipboard.writeText(link);
-                  message.success("Link Copied!");
+                  const copyText =
+                    `Quotation No: ${record.quotation_no}\n` +
+                    `Customer: ${record.customer_name}\n` +
+                    `Amount: ₹${record.net_amount}\n` +
+                    `Link: ${link}`;
+                  try {
+                    await navigator.clipboard.writeText(copyText);
+                    message.success("Quotation details copied!");
+                  } catch (e) {
+                    console.error(e);
+                    message.error("Copy failed");
+                  }
                 }}
               />
             </Tooltip>
@@ -369,40 +439,53 @@ const QuotationTracking: React.FC = () => {
     },
   ];
 
-  // 👉 Count Deal Finalised
-  const dealFinalisedYes = quotations.filter(
-    (q) => q.is_deal_finalised === "Yes"
-  ).length;
+  
 
-  const dealFinalisedNo = quotations.filter(
-    (q) => q.is_deal_finalised === "No"
-  ).length;
-
+  // Filtered data from search box
+  const filteredData = quotations.filter((q) =>
+    (q.quotation_no ?? "").toString().toLowerCase().includes(searchText.toLowerCase()) ||
+    (q.customer_name ?? "").toString().toLowerCase().includes(searchText.toLowerCase()) ||
+    (q.deal_status ?? "").toString().toLowerCase().includes(searchText.toLowerCase())
+  );
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Quotation Dispatch & Follow-Up</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={fetchQuotations}>
-          Refresh
-        </Button>
+        
+        {/* Title */}
+        <h2 className="text-2xl font-semibold">
+          Quotation Dispatch & Follow-Up
+        </h2>
+    
+        {/* Right Side: Search + Refresh */}
+        <div className="flex items-center gap-3">
+    
+          {/* SEARCH INPUT */}
+          <Input
+            placeholder="Search quotation..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 320 }}
+            allowClear
+          />
+    
+          {/* REFRESH BUTTON */}
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => fetchQuotations()}
+          >
+            Refresh
+          </Button>
+    
+        </div>
       </div>
-
-      {/* <Table
-        columns={columns}
-        dataSource={quotations}
-        rowKey={(r) => r.id}
-        loading={loading}
-        bordered
-        pagination={{ pageSize: 8 }}
-        scroll={{ x: 1200 }}
-      /> */}
-
       <Table
         columns={columns}
-        dataSource={quotations}
+        dataSource={filteredData}
         rowKey="id"
         pagination={{ pageSize: 10 }}
+        loading={loading}
         onRow={(record) => {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
@@ -410,34 +493,29 @@ const QuotationTracking: React.FC = () => {
           // ✅ Parse nextfollowup_date safely
           const nextDate = record.nextfollowup_date
             ? (() => {
-              const parts = record.nextfollowup_date.split("-");
-              if (parts.length === 3) {
-                const [day, month, year] = parts;
-                return new Date(`${year}-${month}-${day}`);
-              }
-              return new Date(record.nextfollowup_date);
-            })()
+                const parts = (record.nextfollowup_date || "").split("-");
+                if (parts.length === 3) {
+                  const [day, month, year] = parts;
+                  const dt = new Date(`${year}-${month}-${day}`);
+                  return isNaN(dt.getTime()) ? null : dt;
+                }
+                const dt = new Date(record.nextfollowup_date || "");
+                return isNaN(dt.getTime()) ? null : dt;
+              })()
             : null;
 
-          let style = {};
+          let style: React.CSSProperties = {};
 
           if (record.is_deal_finalised === "Yes") {
-
-            // 🟢 Date is in past
             style = {
-              backgroundColor: "#ccffcc", // light green
+              backgroundColor: "#ccffcc",
               color: "#000",
               transition: "background-color 0.3s ease",
             };
-          }
-
-
-
-          if (record.is_deal_finalised === "No" && nextDate) {
+          } else if (record.is_deal_finalised === "No" && nextDate) {
             if (nextDate.getTime() <= today.getTime()) {
-              // 🔴 Date is today or in future
               style = {
-                backgroundColor: "#ffcccc", // light red
+                backgroundColor: "#ffcccc",
                 color: "#000",
                 transition: "background-color 0.3s ease",
               };
@@ -447,10 +525,6 @@ const QuotationTracking: React.FC = () => {
           return { style };
         }}
       />
-
-
-
-
 
       {/* Dispatch Modal */}
       <Modal
@@ -594,25 +668,22 @@ const QuotationTracking: React.FC = () => {
               <strong>Approved Date:</strong> {viewRow.approved_date}
             </p>
             <p>
-              <strong>Dispatched:</strong>{" "}
-              {viewRow.is_dispatched ? "Yes" : "No"}
+              <strong>Dispatched:</strong> {viewRow.is_dispatched ? "Yes" : "No"}
             </p>
             <p>
               <strong>Dispatched Date:</strong> {viewRow.dispatched_date}
             </p>
             <p>
-              <strong>Dispatched Through:</strong>{" "}
-              {viewRow.dispatched_through}
+              <strong>Dispatched Through:</strong> {viewRow.dispatched_through}
             </p>
             <p>
               <strong>Deal Status:</strong> {viewRow.deal_status}
             </p>
             <p>
-              <strong>Deal Finalised:</strong>{" "}
-              {viewRow.is_deal_finalised === "Yes" ? "Yes" : "No"}
+              <strong>Deal Finalised:</strong> {viewRow.is_deal_finalised === "Yes" ? "Yes" : "No"}
             </p>
             <p>
-              <strong>Follow Up Date:</strong> {viewRow.follow_up_date}
+              <strong>Follow Up Date:</strong> {viewRow.followup_date ?? viewRow.follow_up_date ?? "-"}
             </p>
           </div>
         )}

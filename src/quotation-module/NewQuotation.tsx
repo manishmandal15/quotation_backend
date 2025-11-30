@@ -40,6 +40,8 @@ const PRODUCT_API = axios.create({ baseURL: `${BASE_URL}/products` });
 const NewQuotation: React.FC = () => {
   const [form] = Form.useForm();
   const [quotations, setQuotations] = useState<any[]>([]);
+  const [filteredQuotations, setFilteredQuotations] = useState<any[]>([]); // for search
+  const [searchText, setSearchText] = useState(""); // search input
   const [customers, setCustomers] = useState<any[]>([]);
   const [currencies, setCurrencies] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
@@ -60,7 +62,9 @@ const NewQuotation: React.FC = () => {
   const fetchQuotations = async () => {
     try {
       const res = await QUOTATION_API.get("/");
-      setQuotations(Array.isArray(res.data) ? res.data : []);
+      const data = Array.isArray(res.data) ? res.data : [];
+      setQuotations(data);
+      setFilteredQuotations(data); // show all initially
     } catch (err) {
       console.error(err);
     }
@@ -91,6 +95,17 @@ const NewQuotation: React.FC = () => {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  // --- Search handler ---
+  const handleSearch = (value: string) => {
+    setSearchText(value);
+    const filtered = quotations.filter(
+      (q) =>
+        q.quotation_no?.toLowerCase().includes(value.toLowerCase()) ||
+        q.customer_name?.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredQuotations(filtered);
   };
 
   const addItem = () => {
@@ -239,15 +254,15 @@ const NewQuotation: React.FC = () => {
       const itemsFromServer = data.products ?? [];
       const mappedItems = Array.isArray(itemsFromServer)
         ? itemsFromServer.map((it: any, idx: number) => ({
-          key: it.id || Date.now() + idx,
-          product_id: it.product_id,
-          description: it.description || "",
-          quantity: it.quantity || 1,
-          unit_price: it.unit_price || 0,
-          discount: it.discount || 0,
-          tax_rate: it.tax_rate || 0,
-          line_total: it.line_total || 0,
-        }))
+            key: it.id || Date.now() + idx,
+            product_id: it.product_id,
+            description: it.description || "",
+            quantity: it.quantity || 1,
+            unit_price: it.unit_price || 0,
+            discount: it.discount || 0,
+            tax_rate: it.tax_rate || 0,
+            line_total: it.line_total || 0,
+          }))
         : [];
       setItems(mappedItems);
     } catch (err) {
@@ -266,11 +281,11 @@ const NewQuotation: React.FC = () => {
       message.error("Failed to delete quotation");
     }
   };
+
   const onView = async (record: any) => {
     try {
       const { data: quotationData } = await QUOTATION_API.get(`/${record.id}`);
 
-      // Map products for preview
       const productsMapped = (quotationData.products ?? []).map((item: any) => {
         const prod = products.find((p) => p.id === item.product_id);
         return {
@@ -281,7 +296,6 @@ const NewQuotation: React.FC = () => {
         };
       });
 
-      // Map customer object for preview
       const customerObj =
         customers.find((c) => c.id === quotationData.customer_id) || {
           name: quotationData.customer_name || "N/A",
@@ -292,12 +306,11 @@ const NewQuotation: React.FC = () => {
           district: quotationData.district || "",
         };
 
-      // ⭐⭐ ADD THIS — Terms & Conditions Preview Me Bej Rhe ⭐⭐
       setSelectedPreview({
         ...quotationData,
         products: productsMapped,
         customer: customerObj,
-        terms_conditions: quotationData.terms_conditions || ""   // ⭐ Add Here
+        terms_conditions: quotationData.terms_conditions || "",
       });
 
       setPreviewVisible(true);
@@ -307,20 +320,19 @@ const NewQuotation: React.FC = () => {
     }
   };
 
-
   const listColumns = [
     { title: "S.No", render: (_: any, __: any, i: number) => i + 1 },
     { title: "Quotation No", dataIndex: "quotation_no" },
     { title: "Customer", dataIndex: "customer_name" },
     {
-      title: "Created At", dataIndex: "created_at",
+      title: "Created At",
+      dataIndex: "created_at",
       render: (v: string | null) => (v ? dayjs(v).format("DD-MM-YYYY ") : "-"),
     },
-
     {
-      title: "Validity", dataIndex: "validity_date",
+      title: "Validity",
+      dataIndex: "validity_date",
       render: (v: string | null) => (v ? dayjs(v).format("DD-MM-YYYY ") : "-"),
-
     },
     { title: "Net Amount", dataIndex: "net_amount" },
     { title: "Status", dataIndex: "status" },
@@ -333,40 +345,23 @@ const NewQuotation: React.FC = () => {
 
         return (
           <Space>
-            {/* View */}
             <Button icon={<EyeOutlined />} onClick={() => onView(rec)} />
-
-            {/* Print */}
-            <Button
-              icon={<PrinterOutlined />}
-              onClick={() => window.open(link, "_blank")}
-            />
-
-            {/* Edit */}
+            <Button icon={<PrinterOutlined />} onClick={() => window.open(link, "_blank")} />
             <Button icon={<EditOutlined />} onClick={() => onEdit(rec)} />
-
-            {/* Delete */}
-            <Popconfirm
-              title="Delete quotation?"
-              onConfirm={() => onDelete(rec)}
-            >
+            <Popconfirm title="Delete quotation?" onConfirm={() => onDelete(rec)}>
               <Button danger icon={<DeleteOutlined />} />
             </Popconfirm>
 
-            {/* WhatsApp Icon Button */}
             <Button
               shape="circle"
               icon={<img src="https://img.icons8.com/color/20/whatsapp.png" />}
               style={{ background: "#25D366", border: "none" }}
               onClick={() => {
-                const waURL = `https://wa.me/?text=${encodeURIComponent(
-                  `Quotation Link: ${link}`
-                )}`;
+                const waURL = `https://wa.me/?text=${encodeURIComponent(`Quotation Link: ${link}`)}`;
                 window.open(waURL, "_blank");
               }}
             />
 
-            {/* Email Icon Button */}
             <Button
               shape="circle"
               icon={<img src="https://img.icons8.com/fluency/20/mail.png" />}
@@ -375,15 +370,11 @@ const NewQuotation: React.FC = () => {
                 const subject = "Quotation Link";
                 const body = `Dear Customer,\n\nPlease find your quotation link:\n\n${link}\n\nRegards,\nDsonik Group`;
 
-                const mailURL = `mailto:?subject=${encodeURIComponent(
-                  subject
-                )}&body=${encodeURIComponent(body)}`;
-
+                const mailURL = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                 window.location.href = mailURL;
               }}
             />
 
-            {/* Copy Icon Button */}
             <Button
               shape="circle"
               icon={<img src="https://img.icons8.com/ios-glyphs/20/copy.png" />}
@@ -392,11 +383,10 @@ const NewQuotation: React.FC = () => {
                 message.success("Link Copied!");
               }}
             />
-
           </Space>
         );
       },
-    }
+    },
   ];
 
   const itemColumns = [
@@ -428,9 +418,7 @@ const NewQuotation: React.FC = () => {
     {
       title: "Description",
       dataIndex: "description",
-      render: (_: any, r: any) => (
-        <Input value={r.description} onChange={(e) => updateItem(r.key, "description", e.target.value)} />
-      ),
+      render: (_: any, r: any) => <Input value={r.description} onChange={(e) => updateItem(r.key, "description", e.target.value)} />,
     },
     {
       title: "Qty",
@@ -475,12 +463,23 @@ const NewQuotation: React.FC = () => {
             <Title level={4} style={{ margin: 0 }}>
               🗂 Quotation Desk
             </Title>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsFormVisible(true)}>
-              Add Quotation
-            </Button>
+
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Search by quotation no or customer..."
+                value={searchText}
+                onChange={(e) => handleSearch(e.target.value)}
+                allowClear
+                style={{ width: 280 }}
+              />
+
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsFormVisible(true)}>
+                Add Quotation
+              </Button>
+            </div>
           </div>
 
-          <Table dataSource={quotations} columns={listColumns} rowKey="id" scroll={{ x: 800 }} />
+          <Table dataSource={filteredQuotations} columns={listColumns} rowKey="id" scroll={{ x: 800 }} />
         </>
       ) : (
         <>
@@ -491,6 +490,7 @@ const NewQuotation: React.FC = () => {
           </div>
 
           <Form form={form} layout="vertical" onFinish={onFinish}>
+            {/* --- Form content unchanged --- */}
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12} md={8} lg={6}>
                 <Form.Item label="Quotation No" name="quotation_no" rules={[{ required: true }]}>
@@ -585,7 +585,6 @@ const NewQuotation: React.FC = () => {
               <Input.TextArea rows={2} placeholder="Enter delivery terms" />
             </Form.Item>
 
-
             <Button type="primary" htmlType="submit" loading={loading} style={{ marginTop: 10 }}>
               {editId ? "Update Quotation" : "Create Quotation"}
             </Button>
@@ -594,11 +593,7 @@ const NewQuotation: React.FC = () => {
       )}
 
       {previewVisible && selectedPreview && (
-        <QuotationPreview
-          visible={previewVisible}
-          onClose={() => setPreviewVisible(false)}
-          previewData={selectedPreview}
-        />
+        <QuotationPreview visible={previewVisible} onClose={() => setPreviewVisible(false)} previewData={selectedPreview} />
       )}
     </Card>
   );

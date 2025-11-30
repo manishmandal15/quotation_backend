@@ -10,6 +10,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const QuotationsApproval: React.FC = () => {
   const [quotations, setQuotations] = useState<any[]>([]);
+  const [filteredQuotations, setFilteredQuotations] = useState<any[]>([]); // for search
   const [approvals, setApprovals] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
@@ -20,6 +21,7 @@ const QuotationsApproval: React.FC = () => {
   const [selectedQuotation, setSelectedQuotation] = useState<any>(null);
   const [form] = Form.useForm();
   const [actionType, setActionType] = useState<"approved" | "rejected">("approved");
+  const [searchText, setSearchText] = useState("");
 
   // Fetch all data
   const fetchData = async () => {
@@ -33,7 +35,9 @@ const QuotationsApproval: React.FC = () => {
         axios.get(`${BASE_URL}/products`),
       ]);
 
-      setQuotations(Array.isArray(qRes.data) ? qRes.data : []);
+      const qData = Array.isArray(qRes.data) ? qRes.data : [];
+      setQuotations(qData);
+      setFilteredQuotations(qData); // initially show all
       setApprovals(Array.isArray(aRes.data) ? aRes.data : []);
       setUsers(Array.isArray(uRes.data) ? uRes.data : []);
       setCustomers(Array.isArray(cRes.data) ? cRes.data : []);
@@ -54,7 +58,6 @@ const QuotationsApproval: React.FC = () => {
     return approvals.find(a => a.quotation_id === quotationId) || {};
   };
 
-  // Open approve/reject modal
   const openModal = (quotation: any, type: "approved" | "rejected") => {
     setSelectedQuotation(quotation);
     setActionType(type);
@@ -66,7 +69,6 @@ const QuotationsApproval: React.FC = () => {
     setIsModalVisible(true);
   };
 
-  // Approve / Reject save
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
@@ -94,46 +96,50 @@ const QuotationsApproval: React.FC = () => {
   };
 
   const handlePreview = async (quotation: any) => {
-  try {
-    // Fetch full quotation details from backend, including products
-    const { data } = await axios.get(`${BASE_URL}/quotations/${quotation.id}`);
+    try {
+      const { data } = await axios.get(`${BASE_URL}/quotations/${quotation.id}`);
+      const productsMapped = (data.products ?? []).map((item: any) => {
+        const product = products.find(p => p.id === item.product_id);
+        return {
+          ...item,
+          product_name: product?.name || "Unnamed Product",
+          description: item.description || product?.description || "",
+          unit_price: item.unit_price || product?.price || 0,
+        };
+      });
+      const customer = customers.find(c => c.id === data.customer_id) || {};
 
-    // Map products with master product info
-    const productsMapped = (data.products ?? []).map((item: any) => {
-      const product = products.find(p => p.id === item.product_id);
-      return {
-        ...item,
-        product_name: product?.name || "Unnamed Product",
-        description: item.description || product?.description || "",
-        unit_price: item.unit_price || product?.price || 0,
-      };
-    });
+      setSelectedQuotation({
+        ...data,
+        products: productsMapped,
+        customer,
+        terms_conditions: data.terms_conditions || "",
+      });
+      setPreviewVisible(true);
+    } catch (err) {
+      console.error("Failed to load quotation preview:", err);
+      message.error("Unable to load quotation preview");
+    }
+  };
 
-    // Map customer
-    const customer = customers.find(c => c.id === data.customer_id) || {};
-
-    setSelectedQuotation({
-      ...data,
-      products: productsMapped,
-      customer,
-      terms_conditions: data.terms_conditions || "",
-    });
-    setPreviewVisible(true);
-  } catch (err) {
-    console.error("Failed to load quotation preview:", err);
-    message.error("Unable to load quotation preview");
-  }
-};
-
+  // --- Search handler ---
+  const handleSearch = (value: string) => {
+    setSearchText(value);
+    const filtered = quotations.filter(
+      (q) =>
+        q.quotation_no?.toLowerCase().includes(value.toLowerCase()) ||
+        (customers.find(c => c.id === q.customer_id)?.name || "").toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredQuotations(filtered);
+  };
 
   const columns = [
     { title: "S.No", render: (_: any, __: any, i: number) => i + 1, width: 60 },
     { title: "Quotation No", dataIndex: "quotation_no", key: "quotation_no" },
-    { title: "Customer Name", key: "customer_name",
-      render: (_: any, record: any) => {
-        const customer = customers.find(c => c.id === record.customer_id);
-        return customer?.name || "-";
-      }
+    {
+      title: "Customer Name",
+      key: "customer_name",
+      render: (_: any, record: any) => customers.find(c => c.id === record.customer_id)?.name || "-"
     },
     { title: "Created At", dataIndex: "created_at", key: "created_at",
       render: (v: string) => v ? dayjs(v).format("DD-MM-YYYY") : "-" },
@@ -159,25 +165,10 @@ const QuotationsApproval: React.FC = () => {
         const status = getApproval(record.id).status || "pending";
         return (
           <Space>
-  <Button 
-    icon={<EyeOutlined />} 
-    type="default" 
-    onClick={() => handlePreview(record)} 
-  />
-  <Button 
-    icon={<CheckOutlined />} 
-    type="primary" 
-    disabled={status === "approved"} 
-    onClick={() => openModal(record, "approved")} 
-  />
-  <Button 
-    icon={<CloseOutlined />} 
-    type="default" 
-    danger 
-    disabled={status === "rejected"} 
-    onClick={() => openModal(record, "rejected")} 
-  />
-</Space>
+            <Button icon={<EyeOutlined />} type="default" onClick={() => handlePreview(record)} />
+            <Button icon={<CheckOutlined />} type="primary" disabled={status === "approved"} onClick={() => openModal(record, "approved")} />
+            <Button icon={<CloseOutlined />} type="default" danger disabled={status === "rejected"} onClick={() => openModal(record, "rejected")} />
+          </Space>
         );
       }
     }
@@ -186,8 +177,20 @@ const QuotationsApproval: React.FC = () => {
   return (
     <div style={{ padding: 20 }}>
       <h2>Quotations Approval</h2>
+
+      <div className="flex justify-end mb-4">
+  <Input.Search
+    placeholder="Search by quotation no or customer name"
+    allowClear
+    value={searchText}
+    onChange={(e) => handleSearch(e.target.value)}
+    style={{ width: 300 }}
+  />
+</div>
+
+
       <Table
-        dataSource={quotations}
+        dataSource={filteredQuotations}
         columns={columns}
         rowKey="id"
         loading={loading}
