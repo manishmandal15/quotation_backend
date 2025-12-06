@@ -74,7 +74,7 @@ app.use("/api/product-service-type", productServiceTypeRoutes);
 app.get("/", (req, res) => {
   res.send("Backend API working ✅ Production Ready");
 });
-
+ 
 // Server start
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, "0.0.0.0", () => {
