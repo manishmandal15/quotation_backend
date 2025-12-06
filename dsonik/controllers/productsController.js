@@ -1,4 +1,3 @@
-// controllers/productsController.js
 const db = require("../config/db");
 
 // ✅ Get all products
@@ -9,20 +8,17 @@ exports.getAllProducts = (req, res) => {
   });
 };
 
-// controllers/productsController.js
-
-// Get single product by ID
+// ✅ Get product by ID
 exports.getProductById = (req, res) => {
   const { id } = req.params;
   db.query("SELECT * FROM products WHERE id = ?", [id], (err, results) => {
     if (err) return res.status(500).json({ error: err });
-    if (results.length === 0) return res.status(404).json({ message: "Product not found" });
+    if (!results.length) return res.status(404).json({ message: "Product not found" });
     res.json(results[0]);
   });
 };
 
-
-// ✅ Add new product
+// ✅ Create product
 exports.createProduct = (req, res) => {
   const {
     product_code,
@@ -41,7 +37,7 @@ exports.createProduct = (req, res) => {
 
   const query = `
     INSERT INTO products
-      (product_code, name, description, unit, price, sale_price, hsn_no, specification, min_level, max_level, product_service_type, is_active, created_at, updated_at)
+    (product_code, name, description, unit, price, sale_price, hsn_no, specification, min_level, max_level, product_service_type, is_active, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
   `;
 
@@ -51,13 +47,13 @@ exports.createProduct = (req, res) => {
     description || null,
     unit || null,
     price || 0,
-    sale_price || 0,
+    sale_price || null,
     hsn_no || null,
     specification || null,
     min_level || null,
     max_level || null,
     product_service_type || null,
-    is_active ?? 1,
+    is_active || 1,
   ];
 
   db.query(query, params, (err, results) => {
@@ -96,13 +92,13 @@ exports.updateProduct = (req, res) => {
     description || null,
     unit || null,
     price || 0,
-    sale_price || 0,
+    sale_price || null,
     hsn_no || null,
     specification || null,
     min_level || null,
     max_level || null,
     product_service_type || null,
-    is_active ?? 1,
+    is_active || 1,
     id,
   ];
 
@@ -115,7 +111,7 @@ exports.updateProduct = (req, res) => {
 // ✅ Delete product
 exports.deleteProduct = (req, res) => {
   const { id } = req.params;
-  db.query("DELETE FROM products WHERE id = ?", [id], (err) => {
+  db.query("DELETE FROM products WHERE id=?", [id], (err) => {
     if (err) return res.status(500).json({ error: err });
     res.json({ message: "Product deleted successfully" });
   });

@@ -249,6 +249,7 @@ const ProductMaster = () => {
               <Select placeholder="Select type" allowClear>
                 <Option value={1}>Product</Option>
                 <Option value={2}>Service</Option>
+                <Option value={2}>warrenty</Option>
               </Select>
             </Form.Item>
 
