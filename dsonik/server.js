@@ -17,7 +17,7 @@ app.use("/uploads/products", express.static(uploadDir));
 // Import routes
 const customerRoutes = require("./routes/customerRoutes");
 const userRoutes = require("./routes/userRoutes");
-const productsRoutes = require("./routes/productsRoutes");
+const productRoutes = require("./routes/productsRoutes");
 const quotationFeedbackRouter = require("./routes/quotationFeedbackRouter");
 const quotationRemindersRoutes = require("./routes/quotationRemindersRoutes");
 const quotationStatusLogRoutes = require("./routes/quotationStatusLogRoutes");
@@ -45,7 +45,7 @@ const productServiceTypeRoutes = require("./routes/productServiceTypeRoutes");
 // Register routes
 
 app.use("/api/customers", customerRoutes);
-app.use("/api/products", productsRoutes);
+app.use("/api/products", productRoutes);
 app.use("/api/quotation_feedback", quotationFeedbackRouter);
 app.use("/api/quotation_reminders", quotationRemindersRoutes);
 app.use("/api/quotation_status_logs", quotationStatusLogRoutes);

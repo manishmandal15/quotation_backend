@@ -1,6 +1,5 @@
+// controllers/productsController.js
 const db = require("../config/db");
-const path = require("path");
-const fs = require("fs");
 
 // ✅ Get all products
 exports.getAllProducts = (req, res) => {
@@ -10,43 +9,106 @@ exports.getAllProducts = (req, res) => {
   });
 };
 
-// ✅ Get product by ID
+// controllers/productsController.js
+
+// Get single product by ID
 exports.getProductById = (req, res) => {
   const { id } = req.params;
   db.query("SELECT * FROM products WHERE id = ?", [id], (err, results) => {
     if (err) return res.status(500).json({ error: err });
-    if (!results.length) return res.status(404).json({ message: "Product not found" });
+    if (results.length === 0) return res.status(404).json({ message: "Product not found" });
     res.json(results[0]);
   });
 };
 
-// ✅ Create new product
+
+// ✅ Add new product
 exports.createProduct = (req, res) => {
-  const data = { ...req.body };
+  const {
+    product_code,
+    name,
+    description,
+    unit,
+    price,
+    sale_price,
+    hsn_no,
+    specification,
+    min_level,
+    max_level,
+    product_service_type,
+    is_active,
+  } = req.body;
 
-  if (req.file) {
-    data.img_url = req.file.filename;
-  }
+  const query = `
+    INSERT INTO products
+      (product_code, name, description, unit, price, sale_price, hsn_no, specification, min_level, max_level, product_service_type, is_active, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+  `;
 
-  db.query("INSERT INTO products SET ?", data, (err, result) => {
+  const params = [
+    product_code,
+    name,
+    description || null,
+    unit || null,
+    price || 0,
+    sale_price || 0,
+    hsn_no || null,
+    specification || null,
+    min_level || null,
+    max_level || null,
+    product_service_type || null,
+    is_active ?? 1,
+  ];
+
+  db.query(query, params, (err, results) => {
     if (err) return res.status(500).json({ error: err });
-    res.json({ message: "Product created", id: result.insertId });
+    res.status(201).json({ message: "Product added successfully", id: results.insertId });
   });
 };
 
 // ✅ Update product
 exports.updateProduct = (req, res) => {
   const { id } = req.params;
-  const data = { ...req.body };
+  const {
+    product_code,
+    name,
+    description,
+    unit,
+    price,
+    sale_price,
+    hsn_no,
+    specification,
+    min_level,
+    max_level,
+    product_service_type,
+    is_active,
+  } = req.body;
 
-  if (req.file) {
-    data.img_url = req.file.filename;
-    // optionally remove old image here
-  }
+  const query = `
+    UPDATE products
+    SET product_code=?, name=?, description=?, unit=?, price=?, sale_price=?, hsn_no=?, specification=?, min_level=?, max_level=?, product_service_type=?, is_active=?, updated_at=NOW()
+    WHERE id=?
+  `;
 
-  db.query("UPDATE products SET ? WHERE id = ?", [data, id], (err) => {
+  const params = [
+    product_code,
+    name,
+    description || null,
+    unit || null,
+    price || 0,
+    sale_price || 0,
+    hsn_no || null,
+    specification || null,
+    min_level || null,
+    max_level || null,
+    product_service_type || null,
+    is_active ?? 1,
+    id,
+  ];
+
+  db.query(query, params, (err) => {
     if (err) return res.status(500).json({ error: err });
-    res.json({ message: "Product updated" });
+    res.json({ message: "Product updated successfully" });
   });
 };
 
@@ -55,6 +117,6 @@ exports.deleteProduct = (req, res) => {
   const { id } = req.params;
   db.query("DELETE FROM products WHERE id = ?", [id], (err) => {
     if (err) return res.status(500).json({ error: err });
-    res.json({ message: "Product deleted" });
+    res.json({ message: "Product deleted successfully" });
   });
 };

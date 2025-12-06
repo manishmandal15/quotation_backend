@@ -1,21 +1,23 @@
+// routes/productsRoutes.js
 const express = require("express");
 const router = express.Router();
 const productsController = require("../controllers/productsController");
-const multer = require("multer");
-const path = require("path");
 
-// Multer setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
-});
-const upload = multer({ storage });
+// ✅ CRUD routes
 
-// Routes
+// Get all products
 router.get("/", productsController.getAllProducts);
+
+// Get single product by ID
 router.get("/:id", productsController.getProductById);
-router.post("/", upload.single("img_url"), productsController.createProduct);
-router.put("/:id", upload.single("img_url"), productsController.updateProduct);
+
+// Add new product
+router.post("/", productsController.createProduct);
+
+// Update product by ID
+router.put("/:id", productsController.updateProduct);
+
+// Delete product by ID
 router.delete("/:id", productsController.deleteProduct);
 
 module.exports = router;
