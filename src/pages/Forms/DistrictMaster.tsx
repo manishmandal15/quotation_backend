@@ -31,6 +31,8 @@
 //   name: string;
 //   state_id: number;
 //   is_active: number;
+
+
 // }
 
 // interface StateItem {
