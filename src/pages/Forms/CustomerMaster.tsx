@@ -9,6 +9,7 @@ import {
   message,
   Select,
   Popconfirm,
+  Checkbox,
 } from "antd";
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import axios from "axios";
@@ -29,12 +30,15 @@ interface Customer {
   pincode?: string;
   country?: string;
   contact_person?: string;
+
   shipping_address?: string;
   shipping_city?: string;
   shipping_district?: number;
   shipping_state?: number;
   shipping_pinocde?: string;
   shipping_country?: string;
+
+  sameAsBilling?: boolean;
   is_active?: 1 | 0;
 }
 
@@ -101,6 +105,7 @@ const CustomerMaster: React.FC = () => {
   const handleSave = async (values: Customer) => {
     try {
       const payload = { ...values, is_active: values.is_active ?? 1 };
+
       if (editId) {
         await customerAPI.put(`/${editId}`, payload);
         message.success("Customer updated successfully!");
@@ -108,6 +113,7 @@ const CustomerMaster: React.FC = () => {
         await customerAPI.post("/", payload);
         message.success("Customer added successfully!");
       }
+
       fetchCustomers();
       setOpen(false);
       form.resetFields();
@@ -132,6 +138,29 @@ const CustomerMaster: React.FC = () => {
       fetchCustomers();
     } catch {
       message.error("Failed to delete customer");
+    }
+  };
+
+  // ⭐ AUTO-FILL SHIPPING
+  const handleSameAsBilling = (checked: boolean) => {
+    const billing = form.getFieldsValue([
+      "address",
+      "city",
+      "district_id",
+      "state_id",
+      "pincode",
+      "country",
+    ]);
+
+    if (checked) {
+      form.setFieldsValue({
+        shipping_address: billing.address,
+        shipping_city: billing.city,
+        shipping_district: billing.district_id,
+        shipping_state: billing.state_id,
+        shipping_pinocde: billing.pincode,
+        shipping_country: billing.country,
+      });
     }
   };
 
@@ -169,61 +198,49 @@ const CustomerMaster: React.FC = () => {
         bordered
         pagination={{ pageSize: 5 }}
         columns={[
-          { title: "Sno", key: "sno", render: (_text, _record, index) => index + 1, width: 60 },
+          { title: "Sno", key: "sno", render: (_t, _r, i) => i + 1, width: 60 },
           { title: "Customer Name", dataIndex: "name" },
           { title: "Contact Person", dataIndex: "contact_person" },
           { title: "Email", dataIndex: "email" },
           { title: "Phone", dataIndex: "phone" },
           { title: "GST No", dataIndex: "gst_no" },
-          { title: "PAN No", dataIndex: "pan_no" },
-          {
-            title: "Billing State",
-            dataIndex: "state_id",
-            render: (value: any) => {
-              const id = Number(value);
-              const st = states.find((s) => Number(s.id) === id);
-              return st ? st.name : "-";
-            },
-          },
+          // { title: "PAN No", dataIndex: "pan_no" },
+
+          // {
+          //   title: "Billing State",
+          //   dataIndex: "state_id",
+          //   render: (val) => states.find((s) => s.id == val)?.name || "-",
+          // },
           {
             title: "Billing District",
             dataIndex: "district_id",
-            render: (value: any) => {
-              const id = Number(value);
-              const dist = districts.find((d) => Number(d.id) === id);
-              return dist ? dist.name : "-";
-            },
+            render: (val) => districts.find((d) => d.id == val)?.name || "-",
           },
-          {
-            title: "Shipping State",
-            dataIndex: "shipping_state",
-            render: (value: any) => {
-              const id = Number(value);
-              const st = states.find((s) => Number(s.id) === id);
-              return st ? st.name : "-";
-            },
-          },
-          {
-            title: "Shipping District",
-            dataIndex: "shipping_district",
-            render: (value: any) => {
-              const id = Number(value);
-              const dist = districts.find((d) => Number(d.id) === id);
-              return dist ? dist.name : "-";
-            },
-          },
+          // {
+          //   title: "Shipping State",
+          //   dataIndex: "shipping_state",
+          //   render: (val) => states.find((s) => s.id == val)?.name || "-",
+          // },
+          // {
+          //   title: "Shipping District",
+          //   dataIndex: "shipping_district",
+          //   render: (val) => districts.find((d) => d.id == val)?.name || "-",
+          // },
 
           { title: "Country", dataIndex: "country" },
           {
             title: "Status",
             dataIndex: "is_active",
-            render: (val: number) =>
-              val === 1 ? <span style={{ color: "green" }}>Active</span> : <span style={{ color: "red" }}>Inactive</span>,
+            render: (v) =>
+              v === 1 ? (
+                <span style={{ color: "green" }}>Active</span>
+              ) : (
+                <span style={{ color: "red" }}>Inactive</span>
+              ),
           },
           {
             title: "Actions",
             key: "actions",
-            fixed: "right",
             render: (_: any, record: Customer) => (
               <div style={{ display: "flex", gap: 8 }}>
                 <Button
@@ -235,7 +252,10 @@ const CustomerMaster: React.FC = () => {
                   title="Are you sure to delete this customer?"
                   onConfirm={() => handleDelete(record.id)}
                 >
-                  <Button type="default" icon={<DeleteOutlined style={{ color: "red" }} />} />
+                  <Button
+                    type="default"
+                    icon={<DeleteOutlined style={{ color: "red" }} />}
+                  />
                 </Popconfirm>
               </div>
             ),
@@ -249,82 +269,124 @@ const CustomerMaster: React.FC = () => {
         destroyOnClose
         onCancel={() => setOpen(false)}
         footer={null}
-        width={850}
+        width={1000}
       >
         <Form layout="vertical" form={form} onFinish={handleSave}>
           <h3 className="text-lg font-semibold mb-2">Billing Details</h3>
-          <div className="grid grid-cols-2 gap-4">
+
+          <div className="grid grid-cols-3 gap-4">
             <Form.Item name="name" label="Name" rules={[{ required: true }]}>
               <Input placeholder="Enter customer name" />
             </Form.Item>
+
             <Form.Item name="contact_person" label="Contact Person">
-              <Input placeholder="Enter contact person name" />
+              <Input placeholder="Enter contact person" />
             </Form.Item>
+
             <Form.Item name="email" label="Email">
               <Input placeholder="Enter email" />
             </Form.Item>
+
             <Form.Item name="phone" label="Phone">
               <Input placeholder="Enter phone number" />
             </Form.Item>
+
             <Form.Item name="gst_no" label="GST Number">
               <Input placeholder="Enter GST number" />
             </Form.Item>
+
             <Form.Item name="pan_no" label="PAN Number">
               <Input placeholder="Enter PAN number" />
             </Form.Item>
+
             <Form.Item name="address" label="Address">
-              <Input placeholder="Enter address" />
+              <Input />
             </Form.Item>
+
+            <Form.Item name="city" label="City">
+              <Input />
+            </Form.Item>
+
             <Form.Item name="district_id" label="District">
-              <Select placeholder="Select district" allowClear>
+              <Select allowClear>
                 {districts.map((d) => (
-                  <Option key={d.id} value={d.id}>{d.name}</Option>
+                  <Option key={d.id} value={d.id}>
+                    {d.name}
+                  </Option>
                 ))}
               </Select>
             </Form.Item>
+
             <Form.Item name="state_id" label="State">
-              <Select placeholder="Select state" allowClear>
+              <Select allowClear>
                 {states.map((s) => (
-                  <Option key={s.id} value={s.id}>{s.name}</Option>
+                  <Option key={s.id} value={s.id}>
+                    {s.name}
+                  </Option>
                 ))}
               </Select>
             </Form.Item>
+
             <Form.Item name="pincode" label="Pincode">
-              <Input placeholder="Enter pincode" />
+              <Input />
             </Form.Item>
+
             <Form.Item name="country" label="Country" initialValue="India">
-              <Input placeholder="Enter country" />
+              <Input />
             </Form.Item>
           </div>
 
           <h3 className="text-lg font-semibold mt-4 mb-2">Shipping Details</h3>
+
+          {/* ⭐ SAME AS BILLING CHECKBOX */}
+          <Checkbox
+            onChange={(e) => handleSameAsBilling(e.target.checked)}
+            className="mb-3"
+          >
+            Same as Billing
+          </Checkbox>
+
           <div className="grid grid-cols-2 gap-4">
             <Form.Item name="shipping_address" label="Shipping Address">
-              <Input placeholder="Enter shipping address" />
+              <Input />
             </Form.Item>
+
             <Form.Item name="shipping_city" label="Shipping City">
-              <Input placeholder="Enter shipping city" />
+              <Input />
             </Form.Item>
+
             <Form.Item name="shipping_district" label="Shipping District">
-              <Select placeholder="Select shipping district" allowClear>
+              <Select allowClear>
                 {districts.map((d) => (
-                  <Option key={d.id} value={d.id}>{d.name}</Option>
+                  <Option key={d.id} value={d.id}>
+                    {d.name}
+                  </Option>
                 ))}
               </Select>
             </Form.Item>
+
             <Form.Item name="shipping_state" label="Shipping State">
-              <Select placeholder="Select shipping state" allowClear>
+              <Select allowClear>
                 {states.map((s) => (
-                  <Option key={s.id} value={s.id}>{s.name}</Option>
+                  <Option key={s.id} value={s.id}>
+                    {s.name}
+                  </Option>
                 ))}
               </Select>
             </Form.Item>
+
             <Form.Item name="shipping_pinocde" label="Shipping Pincode">
-              <Input placeholder="Enter shipping pincode" />
+              <Input />
             </Form.Item>
-            <Form.Item name="shipping_country" label="Shipping Country" initialValue="India">
-              <Input placeholder="Enter shipping country" />
+
+            <Form.Item
+              name="shipping_country"
+              label="Shipping Country"
+              initialValue="India"
+            >
+              <Input />
             </Form.Item>
+
             <Form.Item name="is_active" label="Status">
               <Select>
                 <Option value={1}>Active</Option>
@@ -334,8 +396,12 @@ const CustomerMaster: React.FC = () => {
           </div>
 
           <div className="flex justify-end mt-4">
-            <Button onClick={() => setOpen(false)} style={{ marginRight: 8 }}>Close</Button>
-            <Button type="primary" htmlType="submit">Save</Button>
+            <Button onClick={() => setOpen(false)} style={{ marginRight: 8 }}>
+              Close
+            </Button>
+            <Button type="primary" htmlType="submit">
+              Save
+            </Button>
           </div>
         </Form>
       </Modal>

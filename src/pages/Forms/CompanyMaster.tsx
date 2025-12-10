@@ -110,7 +110,7 @@ const CompanyMaster: React.FC = () => {
           uid: "-1",
           name: "logo.png",
           status: "done",
-          url: `http://localhost:5000${record.logo_path}`,
+          url: `${BASE_URL.replace('/api', '')}${record.logo_path}`,
         },
       ]);
     } else {
@@ -153,7 +153,7 @@ const CompanyMaster: React.FC = () => {
       render: (logo: string) =>
         logo ? (
           <img
-            src={`http://localhost:5000${logo}`}
+            src={`${BASE_URL.replace('/api', '')}${logo}`}
             alt="logo"
             style={{
               width: 50,

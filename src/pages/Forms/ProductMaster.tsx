@@ -1,4 +1,3 @@
-// src/pages/Forms/ProductMaster.tsx
 import { useState, useEffect } from "react";
 import {
   Table,
@@ -10,15 +9,16 @@ import {
   Select,
   message,
   Popconfirm,
+  Upload,
 } from "antd";
-import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { UploadOutlined, EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import axios from "axios";
 
 const { Option } = Select;
 
 interface Product {
   id?: number;
-  product_code: string;
+  product_code?: string;
   name: string;
   description?: string;
   unit?: string;
@@ -30,14 +30,18 @@ interface Product {
   max_level?: number;
   product_service_type?: number;
   is_active?: 0 | 1;
+  gst?: number;
+  model?: string;
+  frequency?: string;
+  watt?: string;
+  image?: string;
 }
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// Axios instance for products API
+// Axios instance
 export const productAPI = axios.create({
   baseURL: `${BASE_URL}/products`,
-  headers: { "Content-Type": "application/json" },
 });
 
 const ProductMaster = () => {
@@ -47,6 +51,8 @@ const ProductMaster = () => {
   const [form] = Form.useForm();
   const [editId, setEditId] = useState<number | null>(null);
   const [searchText, setSearchText] = useState("");
+  const [fileList, setFileList] = useState<any[]>([]);
+  const [gstList, setGstList] = useState<any[]>([]);
 
   // Fetch all products
   const fetchProducts = async () => {
@@ -60,11 +66,21 @@ const ProductMaster = () => {
     }
   };
 
+  // Fetch GST options
+  const fetchGst = async () => {
+    try {
+      const res = await axios.get("http://localhost:5001/api/gst-master");
+      setGstList(res.data);
+    } catch (err) {
+      console.error("Fetch GST error:", err);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
+    fetchGst();
   }, []);
 
-  // Search products by name or code
   const handleSearch = (text: string) => {
     setSearchText(text);
     const filtered = products.filter(
@@ -75,40 +91,64 @@ const ProductMaster = () => {
     setFilteredProducts(filtered);
   };
 
-  // Save (Add or Update) product
+  // Save product (Add/Update)
   const handleSave = async (values: any) => {
-  try {
-    // Remove 'image' key if it exists
-    const payload = { ...values };
-    if ("image" in payload) delete payload.image;
+    try {
+      const formData = new FormData();
 
-    if (editId) {
-      await productAPI.put(`/${editId}`, payload);
-      message.success("Product updated successfully!");
-    } else {
-      await productAPI.post("/", payload);
-      message.success("Product added successfully!");
+      Object.keys(values).forEach((key) => {
+        if (values[key] !== undefined && values[key] !== null) {
+          formData.append(key, values[key]);
+        }
+      });
+
+      if (fileList.length > 0) {
+        formData.append("image", fileList[0].originFileObj);
+      }
+
+      if (editId) {
+        await productAPI.put(`/${editId}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        message.success("Product updated successfully!");
+      } else {
+        await productAPI.post("/", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        message.success("Product added successfully!");
+      }
+
+      fetchProducts();
+      setOpen(false);
+      form.resetFields();
+      setFileList([]);
+      setEditId(null);
+    } catch (err: any) {
+      console.error("Save product error:", err.response?.data || err.message);
+      message.error("Failed to save product");
     }
+  };
 
-    fetchProducts();
-    setOpen(false);
-    form.resetFields();
-    setEditId(null);
-  } catch (err: any) {
-    console.error("Save product error:", err.response?.data || err.message);
-    message.error("Failed to save product");
-  }
-};
-
-
-  // Edit product
   const handleEdit = (record: Product) => {
     setEditId(record.id || null);
     form.setFieldsValue(record);
     setOpen(true);
+
+    if (record.image) {
+  setFileList([
+    {
+      uid: "-1",
+      name: record.image,
+      status: "done",
+      url: `${BASE_URL.replace('/api', '')}/uploads/${record.image}`,
+    },
+  ]);
+
+    } else {
+      setFileList([]);
+    }
   };
 
-  // Delete product
   const handleDelete = async (id?: number) => {
     if (!id) return;
     try {
@@ -120,6 +160,48 @@ const ProductMaster = () => {
       message.error("Failed to delete product");
     }
   };
+
+  const columns = [
+    { title: "SNo", key: "sno", render: (_t: any, _r: any, index: number) => index + 1, width: 60 },
+    { title: "Code", dataIndex: "product_code" },
+    { title: "Name", dataIndex: "name" },
+    { title: "Unit", dataIndex: "unit" },
+    { title: "Price", dataIndex: "price" },
+    { title: "Sale Price", dataIndex: "sale_price" },
+    { title: "HSN No", dataIndex: "hsn_no" },
+    {
+      title: "GST",
+      dataIndex: "gst",
+      render: (val: number) => {
+        const gst = gstList.find((g) => g.gst_id === val);
+        return gst ? gst.gst_name : "-";
+      },
+    },
+    {
+      title: "Status",
+      dataIndex: "is_active",
+      render: (val: number) =>
+        val === 1 ? <span style={{ color: "green" }}>Active</span> : <span style={{ color: "red" }}>Inactive</span>,
+    },
+    {
+      title: "Image",
+      dataIndex: "image",
+      render: (url: string) =>
+        url ? <img src={`${BASE_URL.replace('/api', '')}/uploads/${url}`} width={50} style={{ borderRadius: 4 }} /> : "No Image",
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_: any, record: Product) => (
+        <div style={{ display: "flex", gap: 8 }}>
+          <Button icon={<EditOutlined style={{ color: "#1677ff" }} />} onClick={() => handleEdit(record)} />
+          <Popconfirm title="Are you sure to delete this product?" onConfirm={() => handleDelete(record.id)}>
+            <Button icon={<DeleteOutlined style={{ color: "red" }} />} />
+          </Popconfirm>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="p-6">
@@ -140,6 +222,7 @@ const ProductMaster = () => {
             onClick={() => {
               form.resetFields();
               setEditId(null);
+              setFileList([]);
               setOpen(true);
             }}
           >
@@ -149,118 +232,79 @@ const ProductMaster = () => {
       </div>
 
       {/* Products Table */}
-      <Table
-        dataSource={filteredProducts}
-        rowKey="id"
-        bordered
-        pagination={{ pageSize: 5 }}
-        columns={[
-          { title: "Sno", key: "sno", render: (_t, _r, index) => index + 1, width: 60 },
-          { title: "Code", dataIndex: "product_code" },
-          { title: "Name", dataIndex: "name" },
-          { title: "Unit", dataIndex: "unit" },
-          { title: "Price", dataIndex: "price" },
-          { title: "Sale Price", dataIndex: "sale_price" },
-          { title: "HSN No", dataIndex: "hsn_no" },
-          {
-            title: "Status",
-            dataIndex: "is_active",
-            render: (val: number) =>
-              val === 1 ? (
-                <span style={{ color: "green" }}>Active</span>
-              ) : (
-                <span style={{ color: "red" }}>Inactive</span>
-              ),
-          },
-          {
-            title: "Actions",
-            key: "actions",
-            fixed: "right",
-            render: (_: any, record: Product) => (
-              <div style={{ display: "flex", gap: 8 }}>
-                <Button
-                  icon={<EditOutlined style={{ color: "#1677ff" }} />}
-                  onClick={() => handleEdit(record)}
-                />
-                <Popconfirm
-                  title="Are you sure to delete this product?"
-                  onConfirm={() => handleDelete(record.id)}
-                >
-                  <Button icon={<DeleteOutlined style={{ color: "red" }} />} />
-                </Popconfirm>
-              </div>
-            ),
-          },
-        ]}
-      />
+      <Table dataSource={filteredProducts} rowKey="id" bordered pagination={{ pageSize: 5 }} columns={columns} />
 
       {/* Add/Edit Modal */}
-      <Modal
-        title={editId ? "Edit Product" : "Add New Product"}
-        open={open}
-        destroyOnClose
-        onCancel={() => setOpen(false)}
-        footer={null}
-        width={800}
-      >
+      <Modal title={editId ? "Edit Product" : "Add New Product"} open={open} destroyOnClose onCancel={() => setOpen(false)} footer={null} width={1000}>
         <Form layout="vertical" form={form} onFinish={handleSave}>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="product_code" label="Product Code" rules={[{ required: true }]}>
+          <div className="grid grid-cols-3 gap-4">
+            <Form.Item name="product_code" label="Product Code">
               <Input placeholder="Enter product code" />
             </Form.Item>
-
             <Form.Item name="name" label="Name" rules={[{ required: true }]}>
               <Input placeholder="Enter product name" />
             </Form.Item>
-
             <Form.Item name="description" label="Description">
               <Input placeholder="Enter description" />
             </Form.Item>
-
             <Form.Item name="unit" label="Unit">
               <Input placeholder="Enter unit" />
             </Form.Item>
-
             <Form.Item name="price" label="Price">
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
-
             <Form.Item name="sale_price" label="Sale Price">
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
-
             <Form.Item name="hsn_no" label="HSN No">
               <Input placeholder="Enter HSN number" />
             </Form.Item>
-
             <Form.Item name="specification" label="Specification">
               <Input placeholder="Enter specification" />
             </Form.Item>
-
             <Form.Item name="min_level" label="Min Level">
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
-
             <Form.Item name="max_level" label="Max Level">
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
-
             <Form.Item name="product_service_type" label="Product/Service Type">
               <Select placeholder="Select type" allowClear>
                 <Option value={1}>Product</Option>
                 <Option value={2}>Service</Option>
-                <Option value={2}>warrenty</Option>
+                <Option value={3}>Warranty</Option>
               </Select>
             </Form.Item>
-
+            <Form.Item name="gst" label="GST">
+              <Select placeholder="Select GST" allowClear>
+                {gstList.map((g) => (
+                  <Option key={g.gst_id} value={g.gst_id}>
+                    {g.gst_name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item name="model" label="Model">
+              <Input placeholder="Enter model" />
+            </Form.Item>
+            <Form.Item name="frequency" label="Frequency">
+              <Input placeholder="Enter frequency" />
+            </Form.Item>
+            <Form.Item name="watt" label="Watt">
+              <Input placeholder="Enter watt" />
+            </Form.Item>
             <Form.Item name="is_active" label="Status">
               <Select>
                 <Option value={1}>Active</Option>
                 <Option value={0}>Inactive</Option>
               </Select>
             </Form.Item>
+            <Form.Item label="Image">
+              <Upload fileList={fileList} beforeUpload={() => false} onChange={({ fileList }) => setFileList(fileList)}>
+                <Button icon={<UploadOutlined />}>Select Image</Button>
+              </Upload>
+            </Form.Item>
           </div>
-
           <div className="flex justify-end mt-4">
             <Button onClick={() => setOpen(false)} style={{ marginRight: 8 }}>
               Close

@@ -1,4 +1,3 @@
-// src/pages/Forms/UserMaster.tsx
 import React, { useState, useEffect } from "react";
 import {
   Table,
@@ -20,9 +19,9 @@ interface User {
   role_id: number;
   name: string;
   email: string;
-  password?: string;
   phone?: string;
-  is_active: number; // 1 = Active, 0 = Inactive
+  is_active: number;
+  rolename?: string;
 }
 
 interface Role {
@@ -30,38 +29,41 @@ interface Role {
   name: string;
 }
 
-// ✅ Vite base URL
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
+// Axios Base URL
 const API = axios.create({
-  baseURL: `${BASE_URL}/users`,
+  baseURL: "http://localhost:5001/api/users",
 });
 
 const UserMaster: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
   const [editId, setEditId] = useState<number | null>(null);
 
-  // ✅ Fetch all users
+  // Fetch users
   const fetchUsers = async () => {
     try {
+      setLoading(true);
       const res = await API.get("/");
       setUsers(res.data);
     } catch (err) {
       message.error("Failed to fetch users");
-      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ✅ Fetch roles for dropdown
+  // ❌ FIXED fetchRoles (correct axios + added res)
   const fetchRoles = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/roles`);
+      const res = await axios.get("http://localhost:5001/api/roles");
       setRoles(res.data);
     } catch (err) {
       message.error("Failed to fetch roles");
+      console.error(err);
     }
   };
 
@@ -70,13 +72,12 @@ const UserMaster: React.FC = () => {
     fetchRoles();
   }, []);
 
-  // ✅ Save or Update user
-  const handleSave = async (values: any) => {
+  // Save user
+  const handleSave = async (values: Partial<User> & { password?: string }) => {
     try {
-      const payload = {
-        ...values,
-        is_active: Number(values.is_active),
-      };
+      setSaving(true);
+
+      const payload = { ...values, is_active: Number(values.is_active) };
 
       if (editId) {
         await API.put(`/${editId}`, payload);
@@ -91,42 +92,41 @@ const UserMaster: React.FC = () => {
       form.resetFields();
       setEditId(null);
     } catch (err: any) {
-      console.error(err);
       message.error(err.response?.data?.error || "Error saving user");
+    } finally {
+      setSaving(false);
     }
   };
 
-  // ✅ Edit user
+  // Edit user
   const handleEdit = (record: User) => {
     setEditId(record.id);
     form.setFieldsValue({
       role_id: record.role_id,
       name: record.name,
       email: record.email,
-      password: record.password,
       phone: record.phone,
       is_active: record.is_active,
     });
     setOpen(true);
   };
 
-  // ✅ Delete user
+  // Delete user
   const handleDelete = async (id: number) => {
     try {
       await API.delete(`/${id}`);
       message.success("User deleted successfully!");
       fetchUsers();
-    } catch (err) {
+    } catch {
       message.error("Error deleting user");
     }
   };
 
-  // ✅ Table columns
   const columns = [
     {
       title: "Sno",
       key: "sno",
-      render: (_text: any, _record: User, index: number) => index + 1,
+      render: (_: any, _record: User, index: number) => index + 1,
       width: 60,
     },
     { title: "Name", dataIndex: "name", key: "name" },
@@ -187,10 +187,10 @@ const UserMaster: React.FC = () => {
         columns={columns}
         rowKey="id"
         bordered
+        loading={loading}
         pagination={{ pageSize: 5 }}
       />
 
-      {/* Modal Form */}
       <Modal
         title={editId ? "Edit User" : "Add New User"}
         open={open}
@@ -231,13 +231,15 @@ const UserMaster: React.FC = () => {
               <Input type="email" placeholder="Enter email" />
             </Form.Item>
 
-            <Form.Item
-              name="password"
-              label="Password"
-              rules={[{ required: !editId, message: "Please enter password" }]}
-            >
-              <Input type="password" placeholder="Enter password" />
-            </Form.Item>
+            {!editId && (
+              <Form.Item
+                name="password"
+                label="Password"
+                rules={[{ required: true, message: "Please enter password" }]}
+              >
+                <Input type="password" placeholder="Enter password" />
+              </Form.Item>
+            )}
 
             <Form.Item name="phone" label="Phone">
               <Input placeholder="Enter phone" />
@@ -259,7 +261,7 @@ const UserMaster: React.FC = () => {
             <Button onClick={() => setOpen(false)} style={{ marginRight: 8 }}>
               Close
             </Button>
-            <Button type="primary" htmlType="submit">
+            <Button type="primary" htmlType="submit" loading={saving}>
               Save
             </Button>
           </div>

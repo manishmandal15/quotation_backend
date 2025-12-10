@@ -21,6 +21,7 @@ import CompanyMaster from "./pages/Forms/CompanyMaster";
 import StateMaster from "./pages/Forms/StateMaster";
 import RoleMaster from "./pages/Forms/roleMaster";
 import CurrencyMaster from "./pages/Forms/CurrencyMaster";
+import GstMaster from "./pages/Forms/GstMaster";
 import CustomerMaster from "./pages/Forms/CustomerMaster";
 import UserMaster from "./pages/Forms/UserMaster";
 import ProductMaster from "./pages/Forms/ProductMaster";
@@ -63,6 +64,7 @@ export default function App() {
           <Route path="/forms/currency" element={<CurrencyMaster />} />
           <Route path="/forms/state-master" element={<StateMaster />} />
           <Route path="/forms/district-master" element={<DistrictMaster />} />
+           <Route path="/forms/gst-master" element={<GstMaster />} />
           <Route path="/forms/products" element={<ProductMaster />} />
           <Route path="/forms/customers" element={<CustomerMaster />} />
           <Route path="/forms/users" element={<UserMaster />} />

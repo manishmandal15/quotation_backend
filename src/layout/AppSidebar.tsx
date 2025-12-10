@@ -125,6 +125,7 @@ const AppSidebar: React.FC = () => {
           { name: "Roles", path: "/forms/role-master" },
           { name: "State", path: "/forms/state-master" },
           { name: "District", path: "/forms/district-master" },
+           { name: "GST Master", path: "/forms/gst-master" },
           { name: "Currency", path: "/forms/currency" },
           { name: "User Master", path: "/forms/users" },
           { name: "Customers", path: "/forms/customers" },

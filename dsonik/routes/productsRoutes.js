@@ -1,12 +1,21 @@
 const express = require("express");
 const router = express.Router();
+const upload = require("../middleware/uploadProducts");
 const productsController = require("../controllers/productsController");
 
-// CRUD routes
-router.get("/", productsController.getAllProducts);
+// Create product with image
+router.post("/", upload.single("image"), productsController.createProduct);
+
+// Get all products
+router.get("/", productsController.getProducts);
+
+// Get single product
 router.get("/:id", productsController.getProductById);
-router.post("/", productsController.createProduct);
-router.put("/:id", productsController.updateProduct);
+
+// Update product (image optional)
+router.put("/:id", upload.single("image"), productsController.updateProduct);
+
+// Delete product
 router.delete("/:id", productsController.deleteProduct);
 
 module.exports = router;
