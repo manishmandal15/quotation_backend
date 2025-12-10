@@ -20,15 +20,30 @@ exports.getCustomerById = (req, res) => {
 };
 
 // ✅ Create customer
+// ✅ Create customer
 exports.createCustomer = (req, res) => {
-  const {
+  let {
     name, email, phone, gst_no, pan_no, address, city,
     district_id, state_id, pincode, country, contact_person,
     shipping_address, shipping_city, shipping_district, shipping_state,
-    shipping_pincode, shipping_country, is_active
+    shipping_pincode, shipping_country, is_active, sameAsBilling
   } = req.body;
 
   if (!name) return res.status(400).json({ error: "Name is required" });
+
+  // ⭐ AUTO-FILL SHIPPING IF sameAsBilling = true OR shipping empty
+  if (
+    sameAsBilling === true ||
+    sameAsBilling === "true" ||
+    (!shipping_address && !shipping_city && !shipping_state)
+  ) {
+    shipping_address = address;
+    shipping_city = city;
+    shipping_district = district_id;
+    shipping_state = state_id;
+    shipping_pincode = pincode;
+    shipping_country = country || "India";
+  }
 
   const sql = `
     INSERT INTO customers (
@@ -55,20 +70,39 @@ exports.createCustomer = (req, res) => {
         console.error(err);
         return res.status(500).json({ error: "Database error" });
       }
-      res.status(201).json({ message: "Customer added successfully", insertId: result.insertId });
+      res.status(201).json({
+        message: "Customer added successfully",
+        insertId: result.insertId
+      });
     }
   );
 };
 
 // ✅ Update customer
+// ✅ Update customer
 exports.updateCustomer = (req, res) => {
   const { id } = req.params;
-  const {
+
+  let {
     name, email, phone, gst_no, pan_no, address, city,
     district_id, state_id, pincode, country, contact_person,
     shipping_address, shipping_city, shipping_district, shipping_state,
-    shipping_pincode, shipping_country, is_active
+    shipping_pincode, shipping_country, is_active, sameAsBilling
   } = req.body;
+
+  // ⭐ AUTO-FILL SHIPPING
+  if (
+    sameAsBilling === true ||
+    sameAsBilling === "true" ||
+    (!shipping_address && !shipping_city && !shipping_state)
+  ) {
+    shipping_address = address;
+    shipping_city = city;
+    shipping_district = district_id;
+    shipping_state = state_id;
+    shipping_pincode = pincode;
+    shipping_country = country || "India";
+  }
 
   const sql = `
     UPDATE customers SET
@@ -87,7 +121,8 @@ exports.updateCustomer = (req, res) => {
       pincode || null, country || "India", contact_person || null,
       shipping_address || null, shipping_city || null, shipping_district || null,
       shipping_state || null, shipping_pincode || null, shipping_country || "India",
-      typeof is_active !== "undefined" ? is_active : 1, id
+      typeof is_active !== "undefined" ? is_active : 1,
+      id
     ],
     (err, result) => {
       if (err) {
@@ -96,10 +131,12 @@ exports.updateCustomer = (req, res) => {
       }
       if (result.affectedRows === 0)
         return res.status(404).json({ error: "Customer not found" });
+
       res.json({ message: "Customer updated successfully" });
     }
   );
 };
+
 
 // ✅ Delete customer
 exports.deleteCustomer = (req, res) => {

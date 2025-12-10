@@ -19,9 +19,10 @@ export default function EcommerceMetrics() {
   const [quotationCount, setQuotationCount] = useState(0);
   const [dealYes, setDealYes] = useState(0);
   const [dealNo, setDealNo] = useState(0);
+  const [todaysFollowups, setTodaysFollowups] = useState(0);
 
   const navigate = useNavigate();
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL; // e.g., http://localhost:5001/api
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL; 
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,6 +36,23 @@ export default function EcommerceMetrics() {
         const data = quoteRes.data || [];
         setDealYes(data.filter((q) => q.is_deal_finalised === "Yes").length);
         setDealNo(data.filter((q) => q.is_deal_finalised === "No").length);
+
+        // 🔹 Today's Followups
+        const followupsRes = await axios.get(`${BASE_URL}/quotation_followups`);
+        const followups = followupsRes.data || [];
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const countToday = followups.filter(f => {
+          const fDate = f.next_followup_date ? new Date(f.next_followup_date) : null;
+          if (!fDate) return false;
+          fDate.setHours(0, 0, 0, 0);
+          return fDate.getTime() === today.getTime();
+        }).length;
+
+        setTodaysFollowups(countToday);
+
       } catch (error) {
         console.error("Error fetching dashboard metrics:", error);
       }
@@ -68,6 +86,13 @@ export default function EcommerceMetrics() {
       count: dealNo,
       icon: <CloseIcon className="text-black size-7" />,
       path: "/forms/new-quotation",
+    },
+    {
+      title: "Today's Followups",
+      count: todaysFollowups,
+      icon: <CheckCircleIcon className="text-black size-7" />, // Use existing icon
+      path: "/followups",
+      badge: <Badge color="info">Today</Badge>,
     },
   ];
 
