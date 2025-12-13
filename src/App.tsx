@@ -37,7 +37,9 @@ import PrintPage from "./quotation-module/PrintPage";
 import MenuMaster from "./pages/Forms/MenuMaster.tsx";
 import RoleMenuMapping from "./pages/Forms/RoleMenuMapping";
 import ModuleMenuMaster from "./pages/Forms/ModuleMenuMaster";
-
+import WarehouseLocations from "./pages/Forms/WarehouseLocations";  
+import ProductStock from "./pages/Forms/ProductStock"; 
+import ProductStockEntryMaster from "./pages/Forms/ProductStockEntryMaster"; 
 
 export default function App() {
   return (
@@ -82,7 +84,9 @@ export default function App() {
         <Route path="/forms/menu-master" element={<MenuMaster />} />
         <Route path="/forms/Role-menu-master" element={<RoleMenuMapping />} />
         <Route path="/forms/module-menu-master" element={<ModuleMenuMaster />} />
-
+        <Route path="/warehouse-locations" element={<WarehouseLocations />} />
+        <Route path="/product-stock" element={<ProductStock />} />
+        <Route path="/product-stock-entry" element={<ProductStockEntryMaster />} />  
           {/* Tables */}
           <Route path="/basic-tables" element={<BasicTables />} />
 

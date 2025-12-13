@@ -135,6 +135,17 @@ const AppSidebar: React.FC = () => {
           { name: "Module Menu Master", path: "/forms/module-menu-master" },
         ],
       },
+
+      {
+        name: "Warehouse",
+        icon: <ListIcon />,
+        subItems: [
+          { name: "Warehouse", path: "/warehouse-locations" }, 
+          { name: "Prouct stock", path: "/product-stock" }, 
+          // { name: "Prouct stock Entry", path: "/product-stock-entry" },  
+         
+        ],
+      },
     ];
   } else {
     // ========== DYNAMIC MENU (API BASED) ==========
