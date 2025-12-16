@@ -37,7 +37,7 @@ exports.createProduct = (req, res) => {
 
 // Get All Products
 exports.getProducts = (req, res) => {
-  db.query("SELECT * FROM products", (err, results) => {
+  db.query("SELECT * FROM products inner join ( select gst_id,gst_name from gst_master) as g on g.gst_id=gst", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });

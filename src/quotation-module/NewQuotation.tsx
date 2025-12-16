@@ -404,6 +404,10 @@ const NewQuotation: React.FC = () => {
             if (selected) {
               updateItem(record.key, "description", selected.description || "");
               updateItem(record.key, "unit_price", selected.price || 0);
+
+
+
+               updateItem(record.key, "tax_rate", Number(selected.gst_name) || 0);
             }
           }}
           placeholder="Select product"

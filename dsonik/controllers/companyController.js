@@ -12,50 +12,121 @@ exports.getAllCompanies = (req, res) => {
 
 // ✅ Add new company
 exports.createCompany = (req, res) => {
-  const { company_name, address, email, phone, website, gst_no, pan_no } = req.body;
+  const {
+    company_name,
+    address,
+    email,
+    phone,
+    website,
+    gst_no,
+    pan_no,
+    bank_name,
+    bank_address,
+    acc_no,
+    ifsc
+  } = req.body;
+
   const logoPath = req.file ? `/uploads/${req.file.filename}` : null;
 
-  const query = `
-    INSERT INTO company_settings 
-    (company_name, address, email, phone, website, gst_no, pan_no, logo_path, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+  const sql = `
+    INSERT INTO company_settings
+    (company_name, address, email, phone, website, gst_no, pan_no, logo_path,
+     bank_name, bank_address, acc_no, ifsc, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
   `;
 
   db.query(
-    query,
-    [company_name, address, email, phone, website, gst_no, pan_no, logoPath],
-    (err, results) => {
+    sql,
+    [
+      company_name,
+      address,
+      email,
+      phone,
+      website,
+      gst_no,
+      pan_no,
+      logoPath,
+      bank_name,
+      bank_address,
+      acc_no,
+      ifsc
+    ],
+    (err, result) => {
       if (err) return res.status(500).json({ error: err });
-      res.status(201).json({ message: "Company added successfully", id: results.insertId });
+      res.status(201).json({ message: "Company saved successfully" });
     }
   );
 };
 
+
 // ✅ Update company
 exports.updateCompany = (req, res) => {
   const { id } = req.params;
-  const { company_name, address, email, phone, website, gst_no, pan_no } = req.body;
-  const logoPath = req.file ? `/uploads/${req.file.filename}` : null;
+  const {
+    company_name,
+    address,
+    email,
+    phone,
+    website,
+    gst_no,
+    pan_no,
+    bank_name,
+    bank_address,
+    acc_no,
+    ifsc
+  } = req.body;
 
-  let query = `
-    UPDATE company_settings 
-    SET company_name=?, address=?, email=?, phone=?, website=?, gst_no=?, pan_no=?, updated_at=NOW()
-  `;
-  const params = [company_name, address, email, phone, website, gst_no, pan_no];
+  const newLogo = req.file ? `/uploads/${req.file.filename}` : null;
 
-  if (logoPath) {
-    query += `, logo_path=?`;
-    params.push(logoPath);
-  }
+  // get old logo
+  db.query(
+    "SELECT logo_path FROM company_settings WHERE id=?",
+    [id],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err });
 
-  query += ` WHERE id=?`;
-  params.push(id);
+      if (newLogo && result[0]?.logo_path) {
+        const oldPath = path.join(__dirname, "..", result[0].logo_path);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
 
-  db.query(query, params, (err) => {
-    if (err) return res.status(500).json({ error: err });
-    res.json({ message: "Company updated successfully" });
-  });
+      let sql = `
+        UPDATE company_settings SET
+        company_name=?, address=?, email=?, phone=?, website=?,
+        gst_no=?, pan_no=?, bank_name=?, bank_address=?, acc_no=?, ifsc=?,
+        updated_at=NOW()
+      `;
+
+      const params = [
+        company_name,
+        address,
+        email,
+        phone,
+        website,
+        gst_no,
+        pan_no,
+        bank_name,
+        bank_address,
+        acc_no,
+        ifsc
+      ];
+
+      if (newLogo) {
+        sql += `, logo_path=?`;
+        params.push(newLogo);
+      }
+
+      sql += ` WHERE id=?`;
+      params.push(id);
+
+      db.query(sql, params, (err) => {
+        if (err) return res.status(500).json({ error: err });
+        res.json({ message: "Company updated successfully" });
+      });
+    }
+  );
 };
+
 
 // ✅ Delete company
 exports.deleteCompany = (req, res) => {

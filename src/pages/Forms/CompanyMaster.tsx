@@ -33,6 +33,10 @@ interface Company {
   gst_no: string;
   pan_no: string;
   logo_path?: string;
+  bank_name?: string;
+  bank_address?: string;
+  acc_no?: string;
+  ifsc?: string;
 }
 
 const CompanyMaster: React.FC = () => {
@@ -102,6 +106,12 @@ const CompanyMaster: React.FC = () => {
       address: record.address,
       gst_no: record.gst_no,
       pan_no: record.pan_no,
+
+      // 🏦 Bank details
+      bank_name: record.bank_name,
+      bank_address: record.bank_address,
+      acc_no: record.acc_no,
+      ifsc: record.ifsc,
     });
 
     if (record.logo_path) {
@@ -110,7 +120,7 @@ const CompanyMaster: React.FC = () => {
           uid: "-1",
           name: "logo.png",
           status: "done",
-          url: `${BASE_URL.replace('/api', '')}${record.logo_path}`,
+          url: `${BASE_URL.replace("/api", "")}${record.logo_path}`,
         },
       ]);
     } else {
@@ -153,7 +163,7 @@ const CompanyMaster: React.FC = () => {
       render: (logo: string) =>
         logo ? (
           <img
-            src={`${BASE_URL.replace('/api', '')}${logo}`}
+            src={`${BASE_URL.replace("/api", "")}${logo}`}
             alt="logo"
             style={{
               width: 50,
@@ -237,72 +247,98 @@ const CompanyMaster: React.FC = () => {
 
       {/* Modal Form */}
       <Modal
-        title={editId ? "Edit Company" : "Add New Company"}
-        open={open}
-        destroyOnClose
-        onCancel={() => setOpen(false)}
-        footer={null}
-        width={700}
+  title={editId ? "Edit Company" : "Add Company"}
+  open={open}
+  destroyOnClose
+  onCancel={() => setOpen(false)}
+  footer={null}
+  width={1000}   // ⬅️ 3 column ke liye width thodi badha di
+>
+  <Form layout="vertical" form={form} onFinish={handleSave}>
+    {/* COMPANY DETAILS */}
+    <div className="grid grid-cols-4 gap-4">
+      <Form.Item
+        name="company_name"
+        label="Company Name"
+        rules={[{ required: true, message: "Please enter company name" }]}
       >
-        <Form layout="vertical" form={form} onFinish={handleSave}>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item
-              name="company_name"
-              label="Company Name"
-              rules={[{ required: true, message: "Please enter company name" }]}
-            >
-              <Input placeholder="Enter company name" />
-            </Form.Item>
+        <Input />
+      </Form.Item>
 
-            <Form.Item name="email" label="Email">
-              <Input type="email" placeholder="Enter email" />
-            </Form.Item>
+      <Form.Item name="email" label="Email">
+        <Input />
+      </Form.Item>
 
-            <Form.Item name="phone" label="Phone">
-              <Input placeholder="Enter phone number" />
-            </Form.Item>
+      <Form.Item name="phone" label="Phone">
+        <Input />
+      </Form.Item>
 
-            <Form.Item name="website" label="Website">
-              <Input placeholder="Enter website" />
-            </Form.Item>
+      <Form.Item name="website" label="Website">
+        <Input />
+      </Form.Item>
 
-            <Form.Item name="address" label="Address">
-              <Input placeholder="Enter address" />
-            </Form.Item>
+      <Form.Item name="gst_no" label="GST Number">
+        <Input />
+      </Form.Item>
 
-            <Form.Item name="gst_no" label="GST Number">
-              <Input placeholder="Enter GST number" />
-            </Form.Item>
+      <Form.Item name="pan_no" label="PAN Number">
+        <Input />
+      </Form.Item>
 
-            <Form.Item name="pan_no" label="PAN Number">
-              <Input placeholder="Enter PAN number" />
-            </Form.Item>
+      {/* FULL WIDTH */}
+      <Form.Item name="address" label="Address" className="col-span-3">
+        <Input />
+      </Form.Item>
 
-            <Form.Item label="Company Logo">
-              <Upload
-                fileList={fileList}
-                beforeUpload={() => false}
-                onChange={({ fileList }) => setFileList(fileList)}
-                maxCount={1}
-              >
-                <Button icon={<UploadOutlined />}>Upload Logo</Button>
-              </Upload>
-            </Form.Item>
-          </div>
+      <Form.Item label="Company Logo">
+        <Upload
+          fileList={fileList}
+          beforeUpload={() => false}
+          onChange={({ fileList }) => setFileList(fileList)}
+          maxCount={1}
+        >
+          <Button icon={<UploadOutlined />}>Upload Logo</Button>
+        </Upload>
+      </Form.Item>
+    </div>
 
-          <div className="flex justify-end mt-4">
-            <Button
-              onClick={() => setOpen(false)}
-              style={{ marginRight: 8 }}
-            >
-              Close
-            </Button>
-            <Button type="primary" htmlType="submit">
-              Save
-            </Button>
-          </div>
-        </Form>
-      </Modal>
+    {/* BANK DETAILS */}
+    <div className="mt-6">
+      <h3 className="text-lg font-semibold mb-3 border-b pb-1">
+        Bank Details
+      </h3>
+
+      <div className="grid grid-cols-4 gap-3">
+        <Form.Item name="bank_name" label="Bank Name">
+          <Input />
+        </Form.Item>
+
+        <Form.Item name="bank_address" label="Bank Address">
+          <Input />
+        </Form.Item>
+
+        <Form.Item name="acc_no" label="Account Number">
+          <Input />
+        </Form.Item>
+
+        <Form.Item name="ifsc" label="IFSC Code">
+          <Input />
+        </Form.Item>
+      </div>
+    </div>
+
+    {/* ACTION BUTTONS */}
+    <div className="flex justify-end mt-6">
+      <Button onClick={() => setOpen(false)} style={{ marginRight: 8 }}>
+        Close
+      </Button>
+      <Button type="primary" htmlType="submit">
+        Save
+      </Button>
+    </div>
+  </Form>
+</Modal>
+
     </div>
   );
 };
