@@ -40,6 +40,11 @@ import ModuleMenuMaster from "./pages/Forms/ModuleMenuMaster";
 import WarehouseLocations from "./pages/Forms/WarehouseLocations";  
 import ProductStock from "./pages/Forms/ProductStock"; 
 import ProductStockEntryMaster from "./pages/Forms/ProductStockEntryMaster"; 
+import SupplierMaster from "./pages/Forms/SupplierMaster"; 
+import RawMaterialMaster from "./pages/Forms/RawMaterialMaster";
+import RmStockMaster from "./pages/Forms/RmStockMaster"; 
+import RmIssueMaster from "./pages/Forms/RmIssueMaster";  
+import RmIssueItemMaster from "./pages/Forms/RmIssueItemMaster";   
 
 export default function App() {
   return (
@@ -86,7 +91,12 @@ export default function App() {
         <Route path="/forms/module-menu-master" element={<ModuleMenuMaster />} />
         <Route path="/warehouse-locations" element={<WarehouseLocations />} />
         <Route path="/product-stock" element={<ProductStock />} />
-        <Route path="/product-stock-entry" element={<ProductStockEntryMaster />} />  
+        <Route path="/product-stock-entry" element={<ProductStockEntryMaster />} /> 
+         <Route path="/suppliers" element={<SupplierMaster />} />
+         <Route path="/raw-material" element={<RawMaterialMaster />} /> 
+         <Route path="/rmStockmaster" element={<RmStockMaster />} />   
+         <Route path="/rmIssue" element={<RmIssueMaster />} /> 
+         <Route path="/rmIssueItem" element={<RmIssueItemMaster />} />   
           {/* Tables */}
           <Route path="/basic-tables" element={<BasicTables />} />
 

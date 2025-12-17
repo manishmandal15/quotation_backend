@@ -13,11 +13,12 @@ import {
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import axios from "axios";
 import dayjs from "dayjs";
+import { BASE_URL } from "../../quotation-module/quotationApi";
 
 const { Option } = Select;
 
 const API = axios.create({
-  baseURL: "http://localhost:5001/api/gst-master", 
+  baseURL: `${BASE_URL}/gst-master`, 
 });
 
 const GstMasterCrud: React.FC = () => {

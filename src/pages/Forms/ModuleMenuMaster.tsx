@@ -44,7 +44,7 @@ const ModuleMenuMaster: React.FC = () => {
 
   const fetchUrl = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/url");
+      const res = await axios.get(`${BASE_URL}/url`);
       // Assuming your API returns something like { url: "https://example.com" }
        console.log("API response:", res.data); // ← ye line add karo
       setUrl(res.data[0].url);

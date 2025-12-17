@@ -162,11 +162,13 @@ import {
 import axios from "axios";
 import dayjs from "dayjs";
 
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const API = axios.create({
-  baseURL: "http://localhost:5001/api/product-stock",
+  baseURL: `${BASE_URL}/product-stock`,
 });
-const PRODUCTS_API = "http://localhost:5001/api/products";
-const LOCATIONS_API = "http://localhost:5001/api/warehouse-locations";
+const PRODUCTS_API = `${BASE_URL}/products`;
+const LOCATIONS_API = `${BASE_URL}/warehouse-locations`;
 
 export default function ProductStock() {
   const [data, setData] = useState([]);

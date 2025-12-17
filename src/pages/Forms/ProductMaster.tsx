@@ -69,7 +69,7 @@ const ProductMaster = () => {
   // Fetch GST options
   const fetchGst = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/api/gst-master");
+      const res = await axios.get(`${BASE_URL}/gst-master`);
       setGstList(res.data);
     } catch (err) {
       console.error("Fetch GST error:", err);

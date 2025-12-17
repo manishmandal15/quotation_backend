@@ -166,6 +166,20 @@ const gstRoutes = require("./routes/gstRoutes");
 const warehouseRoutes = require("./routes/warehouseLocationRoutes");
 const productStockRoutes = require("./routes/productStockRoutes");
 const productStockEntryRoutes = require("./routes/productStockEntryRoutes");
+const supplierRoutes = require("./routes/supplierRoutes");
+const rawMaterialRoutes = require("./routes/rawMaterialRoutes");
+const rmStockRoutes = require("./routes/rmStockRoutes");
+const rmIssueRoutes = require("./routes/rmIssueRoutes");
+const rmIssueItemRoutes = require("./routes/rmIssueItemRoutes");
+
+
+
+
+
+
+
+
+
 
 
 
@@ -203,6 +217,11 @@ app.use("/api/gst-master", gstRoutes);
 app.use("/api/warehouse-locations", warehouseRoutes);
 app.use("/api/product-stock", productStockRoutes);
 app.use("/api/product-stock-entry", productStockEntryRoutes);
+app.use("/api/suppliers", supplierRoutes);
+app.use("/api/raw-materials", rawMaterialRoutes);
+app.use("/api/rm-stock", rmStockRoutes);
+app.use("/api/rm-issues", rmIssueRoutes);
+app.use("/api/rm-issue-items", rmIssueItemRoutes);
 // ----------------------------
 // ROOT ROUTE
 // ----------------------------

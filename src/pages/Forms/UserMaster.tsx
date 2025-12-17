@@ -28,10 +28,10 @@ interface Role {
   id: number;
   name: string;
 }
-
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // Axios Base URL
 const API = axios.create({
-  baseURL: "http://localhost:5001/api/users",
+  baseURL: `${BASE_URL}/users`,
 });
 
 const UserMaster: React.FC = () => {
@@ -55,11 +55,11 @@ const UserMaster: React.FC = () => {
       setLoading(false);
     }
   };
-
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   // ❌ FIXED fetchRoles (correct axios + added res)
   const fetchRoles = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/api/roles");
+      const res = await axios.get(`${BASE_URL}/roles`);
       setRoles(res.data);
     } catch (err) {
       message.error("Failed to fetch roles");

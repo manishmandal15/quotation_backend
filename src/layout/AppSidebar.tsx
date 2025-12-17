@@ -142,6 +142,20 @@ const AppSidebar: React.FC = () => {
         subItems: [
           { name: "Warehouse", path: "/warehouse-locations" }, 
           { name: "Prouct stock", path: "/product-stock" }, 
+          { name: "Row Material Stock", path: "/rmStockmaster" },
+          { name: "Row Material Issue Stock", path: "/rmIssue " },
+          { name: "Row Material Issue Item Stock", path: "/rmIssueItem " },   
+         
+        ],
+      },
+
+      {
+        name: "Inventory Master",
+        icon: <ListIcon />,
+        subItems: [
+          { name: "Supplier master", path: "/suppliers" },
+          { name: "RawMaterial Master", path: "/raw-material" },  
+           
           // { name: "Prouct stock Entry", path: "/product-stock-entry" },  
          
         ],

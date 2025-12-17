@@ -138,7 +138,7 @@ const QuotationFollowupReminder: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-       const res = await axios.get("http://localhost:5001/api/users");
+       const res = await axios.get(`${BASE_URL}/users`);
       setUsers(res.data || []);
     } catch (err) {
       console.error(err);
