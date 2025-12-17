@@ -347,7 +347,7 @@ const NewQuotation: React.FC = () => {
 
         return (
           <Space>
-            <Button icon={<EyeOutlined />} onClick={() => onView(rec)} />
+            <Button icon={<EyeOutlined />} onClick={() => window.open(link, "_blank")} />
             <Button icon={<PrinterOutlined />} onClick={() => window.open(link, "_blank")} />
             <Button icon={<EditOutlined />} onClick={() => onEdit(rec)} />
             <Popconfirm title="Delete quotation?" onConfirm={() => onDelete(rec)}>
