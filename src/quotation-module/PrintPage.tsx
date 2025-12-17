@@ -744,7 +744,12 @@ export default function PrintPage() {
         <Button type="primary" icon={<PrinterOutlined />} onClick={handlePrint} style={{ marginRight: 6 }}>Print</Button>
         <Button type="default" icon={<CloseOutlined />} onClick={() => window.close()}>Close</Button>
       </div>
-      <div ref={printRef} className="print-container">
+      <div ref={printRef} style={{
+  minHeight: "calc(297mm - 20mm)",
+  border: "3px solid black",
+  padding: "12px",
+  boxSizing: "border-box",
+}}  >
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "2px solid #000", paddingBottom: 4, background: "#f0f0f0" }}>
           <img src={logo} alt="logo" style={{ height: 60, margin: 4 }} />
@@ -762,9 +767,9 @@ export default function PrintPage() {
             <div>GSTIN: {company.gst_no}</div>
             <h4 style={{ marginTop: 16, padding: 4, border: "1px solid #000", background: "#ccc" }}>BILL TO :</h4>
             <div style={{ fontSize: 12, marginTop: 4 }}>
-              <p style={{ margin: 0 }}><b>{customer.name}</b></p>
+              <p style={{ margin: 0 }}>Customer Nmae: <b>{customer.name}</b></p>
               <p style={{ margin: 0 }}>{customer.address}</p>
-              <p style={{ margin: 0 }}>Contact: {customer.contact_person}</p>
+              <p style={{ margin: 0 }}>Contact Person: {customer.contact_person}</p>
               <p style={{ margin: 0 }}>Phone: {customer.phone}</p>
               {customer.email && <p style={{ margin: 0 }}>Email: {customer.email}</p>}
               {customer.gst_no && <p style={{ margin: 0 }}>GSTIN: {customer.gst_no}</p>}
@@ -844,7 +849,7 @@ export default function PrintPage() {
           </div>
         </div>
 
-        <p style={{ textAlign: "right", marginTop: 150, border: "1px solid #000", background: "#ccc", padding: 4 }}>
+        <p style={{ textAlign: "right", marginTop: 40, border: "1px solid #000", background: "#ccc", padding: 4 }}>
           <b>Thank You For Your Business!</b>
         </p>
       </div>
