@@ -27,6 +27,10 @@ const rawMaterialAPI = axios.create({
   baseURL: `${BASE_URL}/raw-materials`,
 });
 
+const warehouseAPI = axios.create({
+  baseURL: `${BASE_URL}/warehouse-locations`,
+});
+
 interface Stock {
   stock_id?: number;
   material_id?: number;
@@ -46,6 +50,7 @@ const RmStockMaster = () => {
   const [materials, setMaterials] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
+  const [locations, setLocations] = useState<any[]>([]);
   const [form] = Form.useForm();
 
   // ================= FETCH =================
@@ -67,9 +72,20 @@ const RmStockMaster = () => {
     }
   };
 
+  const fetchLocations = async () => {
+  try {
+    const res = await warehouseAPI.get("/");
+    setLocations(res.data || []);
+  } catch {
+    message.error("Failed to load warehouse locations");
+  }
+};
+
+
   useEffect(() => {
     fetchStock();
     fetchMaterials();
+    fetchLocations();
   }, []);
 
   // ================= SAVE =================
@@ -198,20 +214,28 @@ const RmStockMaster = () => {
   <Form layout="vertical" form={form} onFinish={handleSave}>
     <Row gutter={16}>
       <Col span={12}>
-        <Form.Item
-          name="material_id"
-          label="Raw Material"
-          rules={[{ required: true }]}
-        >
-          <Select placeholder="Select material">
-            {materials.map((m) => (
-              <Option key={m.material_id} value={m.material_id}>
-                {m.name}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-      </Col>
+  <Form.Item
+    name="material_id"
+    label="Raw Material"
+    rules={[{ required: true }]}
+  >
+    <Select
+      placeholder="Select material"
+      showSearch
+      optionFilterProp="children"
+      filterOption={(input, option) =>
+        (option?.children as string).toLowerCase().includes(input.toLowerCase())
+      }
+    >
+      {materials.map((m) => (
+        <Option key={m.material_id} value={m.material_id}>
+          {m.name}
+        </Option>
+      ))}
+    </Select>
+  </Form.Item>
+</Col>
+
 
       <Col span={12}>
         <Form.Item name="batchno" label="Batch No">
@@ -244,10 +268,25 @@ const RmStockMaster = () => {
       </Col>
 
       <Col span={12}>
-        <Form.Item name="warehouse_location" label="Warehouse Location">
-          <InputNumber style={{ width: "100%" }} />
-        </Form.Item>
-      </Col>
+  <Form.Item
+    name="warehouse_location"
+    label="Warehouse Location"
+    rules={[{ required: true, message: "Select warehouse location" }]}
+  >
+    <Select
+      showSearch
+      optionFilterProp="children"
+      placeholder="Select Warehouse Location"
+    >
+      {locations.map((loc) => (
+        <Option key={loc.location_id} value={loc.location_id}>
+          {loc.location_name}
+        </Option>
+      ))}
+    </Select>
+  </Form.Item>
+</Col>
+
 
       <Col span={12}>
         <Form.Item name="last_inventory_check" label="Last Inventory Check">

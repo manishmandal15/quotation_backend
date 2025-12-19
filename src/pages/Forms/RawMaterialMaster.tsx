@@ -214,16 +214,49 @@ const RawMaterialMaster = () => {
       </Col>
 
       <Col span={12}>
-        <Form.Item name="material_type" label="Material Type">
-          <Input />
-        </Form.Item>
-      </Col>
+  <Form.Item
+    name="material_type"
+    label="Material Type"
+    rules={[{ required: true, message: "Please select material type" }]}
+  >
+    <Select
+      showSearch
+      placeholder="Select Material Type"
+      optionFilterProp="children"
+      filterOption={(input, option) =>
+        option?.children
+          ?.toLowerCase()
+          .includes(input.toLowerCase())
+      }
+    >
+      <Option value="metal">Metal</Option>
+      <Option value="plastic">Plastic</Option>
+      <Option value="chemical">Chemical</Option>
+    </Select>
+  </Form.Item>
+</Col>
 
-      <Col span={12}>
-        <Form.Item name="unit" label="Unit">
-          <Input />
-        </Form.Item>
-      </Col>
+     <Col span={12}>
+  <Form.Item
+    name="unit"
+    label="Unit"
+    rules={[{ required: true, message: "Please select unit" }]}
+  >
+    <Select
+      showSearch
+      placeholder="Select Unit"
+      optionFilterProp="children"
+      filterOption={(input, option) =>
+        option?.children?.toLowerCase().includes(input.toLowerCase())
+      }
+    >
+      <Option value="kg">Kg</Option>
+      <Option value="meter">Meter</Option>
+      <Option value="liter">Liter</Option>
+      <Option value="number">Number</Option>
+    </Select>
+  </Form.Item>
+</Col>
 
       <Col span={12}>
         <Form.Item name="purchase_price" label="Purchase Price">
@@ -249,17 +282,40 @@ const RawMaterialMaster = () => {
         </Form.Item>
       </Col>
 
-      <Col span={12}>
-        <Form.Item name="storage_condition" label="Storage Condition">
-          <Input />
-        </Form.Item>
-      </Col>
+     <Col span={12}>
+  <Form.Item
+    name="storage_condition"
+    label="Storage Condition"
+    rules={[{ required: true, message: "Please select storage condition" }]}
+  >
+    <Select
+      showSearch
+      placeholder="Select Storage Condition"
+      optionFilterProp="children"
+    >
+      <Option value="cool">Cool</Option>
+      <Option value="dry">Dry</Option>
+      <Option value="room_temperature">Room Temperature</Option>
+    </Select>
+  </Form.Item>
+</Col>
 
       <Col span={12}>
-        <Form.Item name="quality_grade" label="Quality Grade">
-          <Input />
-        </Form.Item>
-      </Col>
+  <Form.Item
+    name="quality_grade"
+    label="Quality Grade"
+    rules={[{ required: true, message: "Please select quality grade" }]}
+  >
+    <Select
+      showSearch
+      placeholder="Select Quality Grade"
+      optionFilterProp="children"
+    >
+      <Option value="A">Grade A</Option>
+      <Option value="B">Grade B</Option>
+    </Select>
+  </Form.Item>
+</Col>
 
       <Col span={12}>
         <Form.Item name="is_active" label="Status">

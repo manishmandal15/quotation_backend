@@ -171,6 +171,9 @@ const rawMaterialRoutes = require("./routes/rawMaterialRoutes");
 const rmStockRoutes = require("./routes/rmStockRoutes");
 const rmIssueRoutes = require("./routes/rmIssueRoutes");
 const rmIssueItemRoutes = require("./routes/rmIssueItemRoutes");
+const productIssueRoutes = require("./routes/productIssueRoutes");
+
+
 
 
 
@@ -222,6 +225,7 @@ app.use("/api/raw-materials", rawMaterialRoutes);
 app.use("/api/rm-stock", rmStockRoutes);
 app.use("/api/rm-issues", rmIssueRoutes);
 app.use("/api/rm-issue-items", rmIssueItemRoutes);
+app.use("/api/product-issue", productIssueRoutes);
 // ----------------------------
 // ROOT ROUTE
 // ----------------------------

@@ -277,7 +277,7 @@ const ProductStockEntryMaster: React.FC = () => {
   // ✅ Fetch Products
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/api/products");
+      const res = await axios.get(`${BASE_URL}/products`);
       setProducts(res.data);
     } catch (err) {
       console.error(err);
