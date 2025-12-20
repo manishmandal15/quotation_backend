@@ -232,6 +232,7 @@ const RawMaterialMaster = () => {
       <Option value="metal">Metal</Option>
       <Option value="plastic">Plastic</Option>
       <Option value="chemical">Chemical</Option>
+      <Option value="chemical">Other</Option>
     </Select>
   </Form.Item>
 </Col>
@@ -253,7 +254,7 @@ const RawMaterialMaster = () => {
       <Option value="kg">Kg</Option>
       <Option value="meter">Meter</Option>
       <Option value="liter">Liter</Option>
-      <Option value="number">Number</Option>
+      <Option value="number">No.</Option>
     </Select>
   </Form.Item>
 </Col>
@@ -296,16 +297,17 @@ const RawMaterialMaster = () => {
       <Option value="cool">Cool</Option>
       <Option value="dry">Dry</Option>
       <Option value="room_temperature">Room Temperature</Option>
+      <Option value="dry">Other</Option>
     </Select>
   </Form.Item>
 </Col>
 
       <Col span={12}>
   <Form.Item
-    name="quality_grade"
-    label="Quality Grade"
-    rules={[{ required: true, message: "Please select quality grade" }]}
-  >
+  name="quality_grade"
+  label="Quality Grade"
+  rules={[{ required: false }]}
+>
     <Select
       showSearch
       placeholder="Select Quality Grade"

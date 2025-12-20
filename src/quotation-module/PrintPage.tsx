@@ -200,14 +200,12 @@
 // </html>
 // `);
 
-
 //   newWin.document.close();
 //   setTimeout(() => {
 //     newWin.focus();
 //     newWin.print();
 //   }, 300);
 // };
-
 
 //   if (loading)
 //     return <h2 style={{ textAlign: "center", marginTop: 40 }}>Loading...</h2>;
@@ -597,9 +595,6 @@
 //   );
 // }
 
-
-
-
 import React, { useEffect, useRef, useState } from "react";
 import dayjs from "dayjs";
 import { getQuotationByNumber } from "./quotationApi";
@@ -617,8 +612,17 @@ type Item = {
   line_total?: number;
 };
 
-const th: React.CSSProperties = { border: "1px solid #000", padding: 6, fontSize: 12, textAlign: "left" };
-const td: React.CSSProperties = { border: "1px solid #000", padding: 6, fontSize: 12 };
+const th: React.CSSProperties = {
+  border: "1px solid #000",
+  padding: 6,
+  fontSize: 12,
+  textAlign: "left",
+};
+const td: React.CSSProperties = {
+  border: "1px solid #000",
+  padding: 6,
+  fontSize: 12,
+};
 
 export default function PrintPage() {
   const printRef = useRef<HTMLDivElement | null>(null);
@@ -639,15 +643,67 @@ export default function PrintPage() {
 
   const numberToWords = (num: number) => {
     if (!num || isNaN(num)) return "";
-    const a = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
-    const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+    const a = [
+      "",
+      "One",
+      "Two",
+      "Three",
+      "Four",
+      "Five",
+      "Six",
+      "Seven",
+      "Eight",
+      "Nine",
+      "Ten",
+      "Eleven",
+      "Twelve",
+      "Thirteen",
+      "Fourteen",
+      "Fifteen",
+      "Sixteen",
+      "Seventeen",
+      "Eighteen",
+      "Nineteen",
+    ];
+    const b = [
+      "",
+      "",
+      "Twenty",
+      "Thirty",
+      "Forty",
+      "Fifty",
+      "Sixty",
+      "Seventy",
+      "Eighty",
+      "Ninety",
+    ];
     const convert = (n: number): string => {
       if (n < 20) return a[n];
-      if (n < 100) return b[Math.floor(n / 10)] + (n % 10 ? " " + a[n % 10] : "");
-      if (n < 1000) return a[Math.floor(n / 100)] + " Hundred" + (n % 100 ? " " + convert(n % 100) : "");
-      if (n < 100000) return convert(Math.floor(n / 1000)) + " Thousand" + (n % 1000 ? " " + convert(n % 1000) : "");
-      if (n < 10000000) return convert(Math.floor(n / 100000)) + " Lakh" + (n % 100000 ? " " + convert(n % 100000) : "");
-      return convert(Math.floor(n / 10000000)) + " Crore" + (n % 10000000 ? " " + convert(n % 10000000) : "");
+      if (n < 100)
+        return b[Math.floor(n / 10)] + (n % 10 ? " " + a[n % 10] : "");
+      if (n < 1000)
+        return (
+          a[Math.floor(n / 100)] +
+          " Hundred" +
+          (n % 100 ? " " + convert(n % 100) : "")
+        );
+      if (n < 100000)
+        return (
+          convert(Math.floor(n / 1000)) +
+          " Thousand" +
+          (n % 1000 ? " " + convert(n % 1000) : "")
+        );
+      if (n < 10000000)
+        return (
+          convert(Math.floor(n / 100000)) +
+          " Lakh" +
+          (n % 100000 ? " " + convert(n % 100000) : "")
+        );
+      return (
+        convert(Math.floor(n / 10000000)) +
+        " Crore" +
+        (n % 10000000 ? " " + convert(n % 10000000) : "")
+      );
     };
     const rupees = Math.floor(num);
     const paise = Math.round((num - rupees) * 100);
@@ -657,12 +713,17 @@ export default function PrintPage() {
   };
 
   const loadQuotation = async (q: string, shouldAutoPrint?: boolean) => {
-    setLoading(true); setError(null);
+    setLoading(true);
+    setError(null);
     try {
       const res = await getQuotationByNumber(q);
       setData(res?.data ?? res);
       if (shouldAutoPrint) setTimeout(() => handlePrint(), 500);
-    } catch (err) { setError("Failed to load quotation"); } finally { setLoading(false); }
+    } catch (err) {
+      setError("Failed to load quotation");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePrint = () => {
@@ -676,13 +737,24 @@ export default function PrintPage() {
           <title>Quotation</title>
           <style>
             @page { size: A4; margin: 10mm; }
-            body { font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 0; }
+            body { border: solid 2px; font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 3; }
             .print-container { padding: 12px; box-sizing: border-box; border: 3px solid black; width: 100%; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; page-break-inside: auto; }
             th, td { border: 1px solid #000; padding: 6px; font-size: 12px; }
             thead { display: table-header-group; }
             tfoot { display: table-footer-group; }
             tr { page-break-inside: avoid; page-break-after: auto; }
+             .print-footer {
+            position: fixed;
+            bottom: 0mm;
+            left: 1mm;
+            right: 1mm;
+            border-top: 1px solid #000;
+            background: #ccc;
+            padding: 1px;
+            text-align: right;
+            font-weight: bold;
+          }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           </style>
         </head>
@@ -692,12 +764,18 @@ export default function PrintPage() {
       </html>
     `);
     newWin.document.close();
-    setTimeout(() => { newWin.focus(); newWin.print(); }, 300);
+    setTimeout(() => {
+      newWin.focus();
+      newWin.print();
+    }, 300);
   };
 
-  if (loading) return <h2 style={{ textAlign: "center", marginTop: 40 }}>Loading...</h2>;
-  if (error) return <h3 style={{ textAlign: "center", marginTop: 40 }}>{error}</h3>;
-  if (!data) return <h3 style={{ textAlign: "center", marginTop: 40 }}>No Data</h3>;
+  if (loading)
+    return <h2 style={{ textAlign: "center", marginTop: 40 }}>Loading...</h2>;
+  if (error)
+    return <h3 style={{ textAlign: "center", marginTop: 40 }}>{error}</h3>;
+  if (!data)
+    return <h3 style={{ textAlign: "center", marginTop: 40 }}>No Data</h3>;
 
   const cust = data?.customer || {};
   const customer = {
@@ -730,7 +808,9 @@ export default function PrintPage() {
         unit_price: Number(item.unit_price || 0),
         discount: Number(item.discount || 0),
         tax_rate: Number(item.tax_rate || 0),
-        line_total: Number(item.line_total) || Number(item.quantity || 0) * Number(item.unit_price || 0),
+        line_total:
+          Number(item.line_total) ||
+          Number(item.quantity || 0) * Number(item.unit_price || 0),
       }))
     : [];
   const subtotal = mappedItems.reduce((sum, i) => sum + (i.line_total || 0), 0);
@@ -739,54 +819,125 @@ export default function PrintPage() {
   const total = subtotal - discount + tax;
 
   return (
-    <div style={{ padding: 0, fontFamily: "Arial, sans-serif" }}>
+    <div style={{ fontFamily: "Arial, sans-serif" }}>
       <div style={{ marginBottom: 12, textAlign: "right" }}>
-        <Button type="primary" icon={<PrinterOutlined />} onClick={handlePrint} style={{ marginRight: 6 }}>Print</Button>
-        <Button type="default" icon={<CloseOutlined />} onClick={() => window.close()}>Close</Button>
+        <Button
+          type="primary"
+          icon={<PrinterOutlined />}
+          onClick={handlePrint}
+          style={{ marginRight: 6 }}
+        >
+          Print
+        </Button>
+        <Button
+          type="default"
+          icon={<CloseOutlined />}
+          onClick={() => window.close()}
+        >
+          Close
+        </Button>
       </div>
-      <div ref={printRef} style={{
-  minHeight: "calc(297mm - 20mm)",
-  border: "3px solid black",
-  padding: "12px",
-  boxSizing: "border-box",
-}}  >
+
+      <div>
+        
+      </div>
+      <div
+        ref={printRef}
+        style={{
+          minHeight: "calc(297mm - 20mm)",
+          // border: "3px solid black",
+          // padding: "12px",
+          boxSizing: "border-box",
+        }}
+      >
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "2px solid #000", paddingBottom: 4, background: "#f0f0f0" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            borderBottom: "2px solid #000",
+            paddingBottom: 4,
+            background: "#f0f0f0",
+          }}
+        >
           <img src={logo} alt="logo" style={{ height: 60, margin: 4 }} />
           <h1 style={{ fontSize: 48, margin: 0 }}>Quotation</h1>
         </div>
 
         {/* Customer & Quotation Info */}
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: 8,
+          }}
+        >
           <div style={{ width: "48%" }}>
             <h2>{company.name}</h2>
-            <div style={{ fontSize: 12, whiteSpace: "pre-line" }}>{company.address}</div>
+            <div style={{ fontSize: 12, whiteSpace: "pre-line" }}>
+              {company.address}
+            </div>
             <div>Phone: {company.phone}</div>
             <div>Email: {company.email}</div>
             <div>Website: {company.website}</div>
             <div>GSTIN: {company.gst_no}</div>
-            <h4 style={{ marginTop: 16, padding: 4, border: "1px solid #000", background: "#ccc" }}>BILL TO :</h4>
+            <h4
+              style={{
+                marginTop: 16,
+                padding: 4,
+                border: "1px solid #000",
+                background: "#ccc",
+              }}
+            >
+              BILL TO :
+            </h4>
             <div style={{ fontSize: 12, marginTop: 4 }}>
-              <p style={{ margin: 0 }}>Customer Nmae: <b>{customer.name}</b></p>
+              <p style={{ margin: 0 }}>
+                Customer Nmae: <b>{customer.name}</b>
+              </p>
               <p style={{ margin: 0 }}>{customer.address}</p>
-              <p style={{ margin: 0 }}>Contact Person: {customer.contact_person}</p>
+              <p style={{ margin: 0 }}>
+                Contact Person: {customer.contact_person}
+              </p>
               <p style={{ margin: 0 }}>Phone: {customer.phone}</p>
-              {customer.email && <p style={{ margin: 0 }}>Email: {customer.email}</p>}
-              {customer.gst_no && <p style={{ margin: 0 }}>GSTIN: {customer.gst_no}</p>}
+              {customer.email && (
+                <p style={{ margin: 0 }}>Email: {customer.email}</p>
+              )}
+              {customer.gst_no && (
+                <p style={{ margin: 0 }}>GSTIN: {customer.gst_no}</p>
+              )}
             </div>
           </div>
           <div style={{ width: "48%", textAlign: "left", paddingLeft: 60 }}>
             <h4>Quotation Info</h4>
-            <p><b>No:</b> {data.quotation_no || quotationNo}</p>
-            <p><b>Date:</b> {data.created_at ? dayjs(data.created_at).format("DD-MM-YYYY") : "-"}</p>
-            <p><b>Validity:</b> {data.validity_date ? dayjs(data.validity_date).format("DD-MM-YYYY") : "-"}</p>
-            <p><b>Payment:</b> {data.payment_terms || "50% Advance"}</p>
-            <p><b>Delivery:</b> {data.delivery_terms || "As discussed"}</p>
+            <p>
+              <b>No:</b> {data.quotation_no || quotationNo}
+            </p>
+            <p>
+              <b>Date:</b>{" "}
+              {data.created_at
+                ? dayjs(data.created_at).format("DD-MM-YYYY")
+                : "-"}
+            </p>
+            <p>
+              <b>Validity:</b>{" "}
+              {data.validity_date
+                ? dayjs(data.validity_date).format("DD-MM-YYYY")
+                : "-"}
+            </p>
+            <p>
+              <b>Payment:</b> {data.payment_terms || "50% Advance"}
+            </p>
+            <p>
+              <b>Delivery:</b> {data.delivery_terms || "As discussed"}
+            </p>
           </div>
         </div>
 
         {/* Items Table */}
-        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12 }}>
+        <table
+          style={{ width: "100%", borderCollapse: "collapse", marginTop: 12 }}
+        >
           <thead>
             <tr style={{ background: "#f3f3f3" }}>
               <th style={th}>S.No</th>
@@ -800,28 +951,49 @@ export default function PrintPage() {
             </tr>
           </thead>
           <tbody>
-            {mappedItems.length ? mappedItems.map((item, i) => (
-              <tr key={i}>
-                <td style={td}>{i + 1}</td>
-                <td style={td}>{item.product_name}</td>
-                <td style={td}>{item.description}</td>
-                <td style={td}>{item.quantity}</td>
-                <td style={td}>{item.unit_price?.toFixed(2)}</td>
-                <td style={td}>{item.discount}</td>
-                <td style={td}>{item.tax_rate}</td>
-                <td style={td}>{item.line_total?.toFixed(2)}</td>
+            {mappedItems.length ? (
+              mappedItems.map((item, i) => (
+                <tr key={i}>
+                  <td style={td}>{i + 1}</td>
+                  <td style={td}>{item.product_name}</td>
+                  <td style={td}>{item.description}</td>
+                  <td style={td}>{item.quantity}</td>
+                  <td style={td}>{item.unit_price?.toFixed(2)}</td>
+                  <td style={td}>{item.discount}</td>
+                  <td style={td}>{item.tax_rate}</td>
+                  <td style={td}>{item.line_total?.toFixed(2)}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={8} style={{ textAlign: "center", padding: 10 }}>
+                  No products found
+                </td>
               </tr>
-            )) : <tr><td colSpan={8} style={{ textAlign: "center", padding: 10 }}>No products found</td></tr>}
+            )}
           </tbody>
         </table>
 
         {/* Totals */}
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: 12,
+          }}
+        >
           <div style={{ width: "70%", border: "1px solid #000", padding: 6 }}>
             <h3 style={{ margin: 0 }}>Amount in Words :</h3>
             <p style={{ margin: 0 }}>{numberToWords(total)}</p>
           </div>
-          <div style={{ width: "28%", textAlign: "right", border: "1px solid #000", padding: 6 }}>
+          <div
+            style={{
+              width: "28%",
+              textAlign: "right",
+              border: "1px solid #000",
+              padding: 6,
+            }}
+          >
             <div>Sub Total: ₹{subtotal.toFixed(2)}</div>
             <div>Discount: ₹{discount.toFixed(2)}</div>
             <div>Tax: ₹{tax.toFixed(2)}</div>
@@ -831,15 +1003,44 @@ export default function PrintPage() {
 
         {/* Terms */}
         <div style={{ marginTop: 16 }}>
-          <h4 style={{ margin: 0, padding: 4, border: "1px solid #000", background: "#ccc" }}>Terms & conditions :</h4>
-          <p style={{ whiteSpace: "pre-line" }}>{data.terms_conditions || "—"}</p>
+          <h4
+            style={{
+              margin: 0,
+              padding: 4,
+              border: "1px solid #000",
+              background: "#ccc",
+            }}
+          >
+            Terms & conditions :
+          </h4>
+          <p style={{ whiteSpace: "pre-line" }}>
+            {data.terms_conditions || "—"}
+          </p>
         </div>
 
         {/* Footer */}
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 20 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: 20,
+          }}
+        >
           <div>
-            <p><b>Devender Kumar</b><br />Director<br />9810776728</p>
-            <p><b>Sanjay</b><br />Business Partner<br />9220480010</p>
+            <p>
+              <b>Devender Kumar</b>
+              <br />
+              Director
+              <br />
+              9810776728
+            </p>
+            <p>
+              <b>Sanjay</b>
+              <br />
+              Business Partner
+              <br />
+              9220480010
+            </p>
           </div>
           <div style={{ textAlign: "left" }}>
             <h4>Bank Details</h4>
@@ -849,11 +1050,18 @@ export default function PrintPage() {
           </div>
         </div>
 
-        <p style={{ textAlign: "right", marginTop: 40, border: "1px solid #000", background: "#ccc", padding: 4 }}>
+        <p className="print-footer"
+          style={{
+            textAlign: "right",
+            // marginTop: 40,
+            border: "1px solid #000",
+            background: "#ccc",
+            padding: 4,
+          }}
+        >
           <b>Thank You For Your Business!</b>
         </p>
       </div>
     </div>
   );
 }
-

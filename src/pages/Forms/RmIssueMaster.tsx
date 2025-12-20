@@ -829,6 +829,391 @@
 
 
 
+// ye chal rha h
+
+
+// import { useEffect, useState } from "react";
+// import {
+//   Table,
+//   Button,
+//   Form,
+//   Input,
+//   DatePicker,
+//   message,
+//   Popconfirm,
+//   Select,
+//   Row,
+//   Col,
+//   Card,
+//   Divider,
+//   InputNumber,
+// } from "antd";
+// import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+// import axios from "axios";
+// import dayjs from "dayjs";
+
+// const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// // ================= TYPES =================
+// interface RmIssue {
+//   id?: number;
+//   order_no?: string;
+//   job_no?: string;
+//   issue_date?: string;
+//   issue_to?: string;
+//   remark?: string;
+//   issue_type?: string;
+// }
+
+// interface RmItem {
+//   material_id: number;
+//   name: string;
+//   unit: string;
+// }
+
+// interface IssueItem {
+//   key: number;
+//   material_id?: number;
+//   name?: string;
+//   unit?: string;
+//   batch_no?: string;
+//   available_qty?: number;
+//   issue_qty?: number;
+//   remark?: string;
+// }
+
+// const RmIssueMaster = () => {
+//   const [data, setData] = useState<RmIssue[]>([]);
+//   const [rmItems, setRmItems] = useState<RmItem[]>([]);
+//   const [items, setItems] = useState<IssueItem[]>([]);
+//   const [showForm, setShowForm] = useState(false);
+//   const [editId, setEditId] = useState<number | null>(null);
+//   const [form] = Form.useForm();
+
+//   // ================= FETCH =================
+//   const fetchIssues = async () => {
+//     const res = await axios.get(`${BASE_URL}/rm-issues`);
+//     setData(res.data || []);
+//   };
+
+//   const fetchRmItems = async () => {
+//     const res = await axios.get(`${BASE_URL}/raw-materials`);
+//     setRmItems(res.data || []);
+//   };
+
+//   useEffect(() => {
+//     fetchIssues();
+//     fetchRmItems();
+//   }, []);
+
+//   // ================= ITEM HANDLERS =================
+//   const addItem = () => {
+//     setItems([...items, { key: Date.now() }]);
+//   };
+
+//   const updateItem = (key: number, field: string, value: any) => {
+//     setItems((prev) =>
+//       prev.map((it) => (it.key === key ? { ...it, [field]: value } : it))
+//     );
+//   };
+
+//   const removeItem = (key: number) => {
+//     setItems(items.filter((i) => i.key !== key));
+//   };
+
+//   // ================= SAVE =================
+//  const handleSave = async (values: any) => {
+//   if (!items.length) {
+//     return message.error("Please add at least one item");
+//   }
+
+//   try {
+//     // =========================
+//     // 1️⃣ SAVE RM ISSUE (MASTER)
+//     // =========================
+//     const issuePayload = {
+//       order_no: values.order_no,
+//       job_no: values.job_no,
+//       issue_date: values.issue_date.format("YYYY-MM-DD"),
+//       issue_type: values.issue_type,
+//       issue_to: values.issue_to,
+//       remark: values.remark,
+//     };
+
+//     let issueId = editId;
+
+//     if (editId) {
+//       await axios.put(`${BASE_URL}/rm-issues/${editId}`, issuePayload);
+
+//       // (optional but recommended)
+//       // old items delete if API exists
+//       // await axios.delete(`${BASE_URL}/rm-issue-items/${editId}`);
+//     } else {
+//       const res = await axios.post(`${BASE_URL}/rm-issues`, issuePayload);
+//       issueId = res.data.id; // 👈 MUST come from backend
+//     }
+
+//     // =========================
+//     // 2️⃣ SAVE RM ISSUE ITEMS
+//     // =========================
+//     for (const item of items) {
+//       if (!item.material_id || !item.issue_qty) continue;
+
+//       await axios.post(`${BASE_URL}/rm-issue-items`, {
+//         issue_id: issueId,
+//         material_id: item.material_id,
+//         batch_no: item.batch_no || "",
+//         available_qty: item.available_qty || 0,
+//         issue_qty: item.issue_qty,
+//         remark: item.remark || "",
+//         issue_date: values.issue_date.format("YYYY-MM-DD"),
+//         issue_type: values.issue_type,
+//       });
+//     }
+
+//     message.success("RM Issue saved successfully");
+
+//     setShowForm(false);
+//     setItems([]);
+//     setEditId(null);
+//     form.resetFields();
+//     fetchIssues();
+
+//   } catch (err) {
+//     console.error(err);
+//     message.error("Save failed");
+//   }
+// };
+
+
+//   // ================= EDIT =================
+//   const handleEdit = (record: RmIssue) => {
+//     setEditId(record.id || null);
+//     setShowForm(true);
+//     form.setFieldsValue({
+//       ...record,
+//       issue_date: record.issue_date ? dayjs(record.issue_date) : null,
+//     });
+//     setItems([]);
+//   };
+
+//   // ================= DELETE =================
+//   const handleDelete = async (id?: number) => {
+//     await axios.delete(`${BASE_URL}/rm-issues/${id}`);
+//     message.success("Deleted");
+//     fetchIssues();
+//   };
+
+//   // ================= TABLE COLUMNS =================
+//   const columns = [
+//     { title: "S.No", render: (_: any, __: any, i: number) => i + 1 },
+//     { title: "Order No", dataIndex: "order_no" },
+//     { title: "Job No", dataIndex: "job_no" },
+//     {
+//       title: "Issue Date",
+//       dataIndex: "issue_date",
+//       render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
+//     },
+//     { title: "Issue Type", dataIndex: "issue_type" },
+//     { title: "Issue To", dataIndex: "issue_to" },
+//     {
+//       title: "Action",
+//       render: (_: any, r: RmIssue) => (
+//         <>
+//           <Button icon={<EditOutlined />} onClick={() => handleEdit(r)} />
+//           <Popconfirm
+//             title="Delete?"
+//             onConfirm={() => handleDelete(r.id)}
+//           >
+//             <Button danger icon={<DeleteOutlined />} />
+//           </Popconfirm>
+//         </>
+//       ),
+//     },
+//   ];
+
+//   // ================= RENDER =================
+//   return (
+//     <div className="p-6 bg-white">
+//       {!showForm && (
+//         <>
+//           <div className="flex justify-between mb-4">
+//             <h2 className="text-xl font-semibold">Raw Material Issue</h2>
+//             <Button
+//               type="primary"
+//               icon={<PlusOutlined />}
+//               onClick={() => setShowForm(true)}
+//             >
+//               Add RM Issue
+//             </Button>
+//           </div>
+
+//           <Table columns={columns} dataSource={data} rowKey="id" bordered />
+//         </>
+//       )}
+
+//       {showForm && (
+//         <Card>
+//           <Form layout="vertical" form={form} onFinish={handleSave}>
+//             <Row gutter={16}>
+//               <Col span={8}>
+//                 <Form.Item name="order_no" label="Order No">
+//                   <Input />
+//                 </Form.Item>
+//               </Col>
+//               <Col span={8}>
+//                 <Form.Item name="job_no" label="Job No">
+//                   <Input />
+//                 </Form.Item>
+//               </Col>
+//               <Col span={8}>
+//                 <Form.Item name="issue_date" label="Issue Date">
+//                   <DatePicker style={{ width: "100%" }} />
+//                 </Form.Item>
+//               </Col>
+//               <Col span={8}>
+//                 <Form.Item name="issue_type" label="Issue Type">
+//                   <Select>
+//                     <Select.Option value="Production">Production</Select.Option>
+//                     <Select.Option value="Maintenance">Maintenance</Select.Option>
+//                     <Select.Option value="Sample">Sample</Select.Option>
+//                   </Select>
+//                 </Form.Item>
+//               </Col>
+//               <Col span={8}>
+//                 <Form.Item name="issue_to" label="Issue To">
+//                   <Input />
+//                 </Form.Item>
+//               </Col>
+//               <Col span={24}>
+//                 <Form.Item name="remark" label="Remark">
+//                   <Input.TextArea rows={2} />
+//                 </Form.Item>
+//               </Col>
+//             </Row>
+
+//             <Divider />
+
+//             {/* ================= ITEM TABLE (FIXED) ================= */}
+//             <Table
+//               dataSource={items}
+//               rowKey="key"
+//               pagination={false}
+//               bordered
+//               columns={[
+//                 {
+//                   title: "Material",
+//                   render: (_: any, r: IssueItem) => (
+//                     <Select
+//                       style={{ width: 200 }}
+//                       value={r.material_id}
+//                       onChange={(val) => {
+//                         const mat = rmItems.find(
+//                           (m) => m.material_id === val
+//                         );
+//                         updateItem(r.key, "material_id", val);
+//                         updateItem(r.key, "name", mat?.name);
+//                         updateItem(r.key, "unit", mat?.unit);
+//                       }}
+//                     >
+//                       {rmItems.map((m) => (
+//                         <Select.Option
+//                           key={m.material_id}
+//                           value={m.material_id}
+//                         >
+//                           {m.name}
+//                         </Select.Option>
+//                       ))}
+//                     </Select>
+//                   ),
+//                 },
+//                 {
+//                   title: "Unit",
+//                   render: (_: any, r: IssueItem) => (
+//                     <Input value={r.unit} disabled />
+//                   ),
+//                 },
+//                 {
+//                   title: "Batch No",
+//                   render: (_: any, r: IssueItem) => (
+//                     <Input
+//                       onChange={(e) =>
+//                         updateItem(r.key, "batch_no", e.target.value)
+//                       }
+//                     />
+//                   ),
+//                 },
+//                 {
+//                   title: "Available Qty",
+//                   render: (_: any, r: IssueItem) => (
+//                     <InputNumber
+//                       min={0}
+//                       onChange={(v) =>
+//                         updateItem(r.key, "available_qty", v)
+//                       }
+//                     />
+//                   ),
+//                 },
+//                 {
+//                   title: "Issue Qty",
+//                   render: (_: any, r: IssueItem) => (
+//                     <InputNumber
+//                       min={0}
+//                       onChange={(v) =>
+//                         updateItem(r.key, "issue_qty", v)
+//                       }
+//                     />
+//                   ),
+//                 },
+//                 {
+//                   title: "Remark",
+//                   render: (_: any, r: IssueItem) => (
+//                     <Input
+//                       onChange={(e) =>
+//                         updateItem(r.key, "remark", e.target.value)
+//                       }
+//                     />
+//                   ),
+//                 },
+//                 {
+//                   title: "Action",
+//                   render: (_: any, r: IssueItem) => (
+//                     <Button
+//                       danger
+//                       icon={<DeleteOutlined />}
+//                       onClick={() => removeItem(r.key)}
+//                     />
+//                   ),
+//                 },
+//               ]}
+//             />
+
+//             <Button
+//               className="mt-3"
+//               icon={<PlusOutlined />}
+//               onClick={addItem}
+//             >
+//               Add Item
+//             </Button>
+
+//             <div className="flex justify-end gap-2 mt-4">
+//               <Button onClick={() => setShowForm(false)}>Cancel</Button>
+//               <Button type="primary" htmlType="submit">
+//                 Save
+//               </Button>
+//             </div>
+//           </Form>
+//         </Card>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default RmIssueMaster;
+
+
+
+
 
 
 
@@ -901,6 +1286,26 @@ const RmIssueMaster = () => {
     setRmItems(res.data || []);
   };
 
+  // 🔥 FETCH ISSUE ITEMS (EDIT MODE)
+  const fetchIssueItems = async (issueId: number) => {
+    const res = await axios.get(
+      `${BASE_URL}/rm-issue-items/${issueId}`
+    );
+
+    const mapped = res.data.map((it: any) => ({
+      key: Date.now() + Math.random(),
+      material_id: it.material_id,
+      name: it.name,
+      unit: it.unit,
+      batch_no: it.batch_no,
+      available_qty: it.available_qty,
+      issue_qty: it.issue_qty,
+      remark: it.remark,
+    }));
+
+    setItems(mapped);
+  };
+
   useEffect(() => {
     fetchIssues();
     fetchRmItems();
@@ -922,80 +1327,102 @@ const RmIssueMaster = () => {
   };
 
   // ================= SAVE =================
- const handleSave = async (values: any) => {
-  if (!items.length) {
-    return message.error("Please add at least one item");
-  }
-
-  try {
-    // =========================
-    // 1️⃣ SAVE RM ISSUE (MASTER)
-    // =========================
-    const issuePayload = {
-      order_no: values.order_no,
-      job_no: values.job_no,
-      issue_date: values.issue_date.format("YYYY-MM-DD"),
-      issue_type: values.issue_type,
-      issue_to: values.issue_to,
-      remark: values.remark,
-    };
-
-    let issueId = editId;
-
-    if (editId) {
-      await axios.put(`${BASE_URL}/rm-issues/${editId}`, issuePayload);
-
-      // (optional but recommended)
-      // old items delete if API exists
-      // await axios.delete(`${BASE_URL}/rm-issue-items/${editId}`);
-    } else {
-      const res = await axios.post(`${BASE_URL}/rm-issues`, issuePayload);
-      issueId = res.data.id; // 👈 MUST come from backend
+  const handleSave = async (values: any) => {
+    if (!items.length) {
+      return message.error("Please add at least one item");
     }
 
-    // =========================
-    // 2️⃣ SAVE RM ISSUE ITEMS
-    // =========================
-    for (const item of items) {
-      if (!item.material_id || !item.issue_qty) continue;
-
-      await axios.post(`${BASE_URL}/rm-issue-items`, {
-        issue_id: issueId,
-        material_id: item.material_id,
-        batch_no: item.batch_no || "",
-        available_qty: item.available_qty || 0,
-        issue_qty: item.issue_qty,
-        remark: item.remark || "",
-        issue_date: values.issue_date.format("YYYY-MM-DD"),
+    try {
+      const payload = {
+        order_no: values.order_no,
+        job_no: values.job_no,
+        issue_date: values.issue_date?.format("YYYY-MM-DD"),
         issue_type: values.issue_type,
-      });
+        issue_to: values.issue_to,
+        remark: values.remark,
+      };
+
+      let issueId = editId;
+
+      if (editId) {
+        await axios.put(`${BASE_URL}/rm-issues/${editId}`, payload);
+
+        // 🔥 DELETE OLD ITEMS
+        await axios.delete(
+          `${BASE_URL}/rm-issue-items/by-issue/${editId}`
+        );
+      } else {
+        const res = await axios.post(`${BASE_URL}/rm-issues`, payload);
+        issueId = res.data.id;
+      }
+
+      // 🔥 INSERT ITEMS
+      for (const item of items) {
+        if (!item.material_id || !item.issue_qty) continue;
+
+        await axios.post(`${BASE_URL}/rm-issue-items`, {
+          issue_id: issueId,
+          material_id: item.material_id,
+          batch_no: item.batch_no || "",
+          available_qty: item.available_qty || 0,
+          issue_qty: item.issue_qty,
+          remark: item.remark || "",
+        });
+      }
+
+      message.success("RM Issue saved successfully");
+
+      setShowForm(false);
+      setEditId(null);
+      setItems([]);
+      form.resetFields();
+      fetchIssues();
+
+    } catch (err) {
+      console.error(err);
+      message.error("Save failed");
     }
-
-    message.success("RM Issue saved successfully");
-
-    setShowForm(false);
-    setItems([]);
-    setEditId(null);
-    form.resetFields();
-    fetchIssues();
-
-  } catch (err) {
-    console.error(err);
-    message.error("Save failed");
-  }
-};
-
+  };
 
   // ================= EDIT =================
-  const handleEdit = (record: RmIssue) => {
+ const handleEdit = async (record: RmIssue) => {
+  try {
     setEditId(record.id || null);
     setShowForm(true);
+
+    // ======================
+    // 1️⃣ MASTER AUTO FILL
+    // ======================
     form.setFieldsValue({
       ...record,
       issue_date: record.issue_date ? dayjs(record.issue_date) : null,
     });
-    setItems([]);
-  };
+
+    // ======================
+    // 2️⃣ ITEMS AUTO FILL
+    // ======================
+    if (record.id) {
+      const res = await axios.get(`${BASE_URL}/rm-issue-items/${record.id}`);
+
+      const issueItems = (res.data.items || []).map((it: any) => ({
+        key: Date.now() + Math.random(), // unique key for table
+        material_id: it.material_id,
+        name: it.name,
+        unit: it.unit,
+        batch_no: it.batch_no,
+        available_qty: it.available_qty,
+        issue_qty: it.issue_qty,
+        remark: it.remark,
+      }));
+
+      setItems(issueItems);
+    }
+  } catch (err) {
+    console.error(err);
+    message.error("Failed to load RM Issue items");
+  }
+};
+
 
   // ================= DELETE =================
   const handleDelete = async (id?: number) => {
@@ -1004,7 +1431,7 @@ const RmIssueMaster = () => {
     fetchIssues();
   };
 
-  // ================= TABLE COLUMNS =================
+  // ================= TABLE =================
   const columns = [
     { title: "S.No", render: (_: any, __: any, i: number) => i + 1 },
     { title: "Order No", dataIndex: "order_no" },
@@ -1021,10 +1448,7 @@ const RmIssueMaster = () => {
       render: (_: any, r: RmIssue) => (
         <>
           <Button icon={<EditOutlined />} onClick={() => handleEdit(r)} />
-          <Popconfirm
-            title="Delete?"
-            onConfirm={() => handleDelete(r.id)}
-          >
+          <Popconfirm title="Delete?" onConfirm={() => handleDelete(r.id)}>
             <Button danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </>
@@ -1056,45 +1480,22 @@ const RmIssueMaster = () => {
         <Card>
           <Form layout="vertical" form={form} onFinish={handleSave}>
             <Row gutter={16}>
-              <Col span={8}>
-                <Form.Item name="order_no" label="Order No">
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item name="job_no" label="Job No">
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item name="issue_date" label="Issue Date">
-                  <DatePicker style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item name="issue_type" label="Issue Type">
-                  <Select>
-                    <Select.Option value="Production">Production</Select.Option>
-                    <Select.Option value="Maintenance">Maintenance</Select.Option>
-                    <Select.Option value="Sample">Sample</Select.Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item name="issue_to" label="Issue To">
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col span={24}>
-                <Form.Item name="remark" label="Remark">
-                  <Input.TextArea rows={2} />
-                </Form.Item>
-              </Col>
+              <Col span={8}><Form.Item name="order_no" label="Order No"><Input /></Form.Item></Col>
+              <Col span={8}><Form.Item name="job_no" label="Job No"><Input /></Form.Item></Col>
+              <Col span={8}><Form.Item name="issue_date" label="Issue Date"><DatePicker style={{ width: "100%" }} /></Form.Item></Col>
+              <Col span={8}><Form.Item name="issue_type" label="Issue Type">
+                <Select>
+                  <Select.Option value="Production">Production</Select.Option>
+                  <Select.Option value="Maintenance">Maintenance</Select.Option>
+                  <Select.Option value="Sample">Sample</Select.Option>
+                </Select>
+              </Form.Item></Col>
+              <Col span={8}><Form.Item name="issue_to" label="Issue To"><Input /></Form.Item></Col>
+              <Col span={24}><Form.Item name="remark" label="Remark"><Input.TextArea rows={2} /></Form.Item></Col>
             </Row>
 
             <Divider />
 
-            {/* ================= ITEM TABLE (FIXED) ================= */}
             <Table
               dataSource={items}
               rowKey="key"
@@ -1108,99 +1509,36 @@ const RmIssueMaster = () => {
                       style={{ width: 200 }}
                       value={r.material_id}
                       onChange={(val) => {
-                        const mat = rmItems.find(
-                          (m) => m.material_id === val
-                        );
+                        const mat = rmItems.find(m => m.material_id === val);
                         updateItem(r.key, "material_id", val);
                         updateItem(r.key, "name", mat?.name);
                         updateItem(r.key, "unit", mat?.unit);
                       }}
                     >
-                      {rmItems.map((m) => (
-                        <Select.Option
-                          key={m.material_id}
-                          value={m.material_id}
-                        >
+                      {rmItems.map(m => (
+                        <Select.Option key={m.material_id} value={m.material_id}>
                           {m.name}
                         </Select.Option>
                       ))}
                     </Select>
                   ),
                 },
-                {
-                  title: "Unit",
-                  render: (_: any, r: IssueItem) => (
-                    <Input value={r.unit} disabled />
-                  ),
-                },
-                {
-                  title: "Batch No",
-                  render: (_: any, r: IssueItem) => (
-                    <Input
-                      onChange={(e) =>
-                        updateItem(r.key, "batch_no", e.target.value)
-                      }
-                    />
-                  ),
-                },
-                {
-                  title: "Available Qty",
-                  render: (_: any, r: IssueItem) => (
-                    <InputNumber
-                      min={0}
-                      onChange={(v) =>
-                        updateItem(r.key, "available_qty", v)
-                      }
-                    />
-                  ),
-                },
-                {
-                  title: "Issue Qty",
-                  render: (_: any, r: IssueItem) => (
-                    <InputNumber
-                      min={0}
-                      onChange={(v) =>
-                        updateItem(r.key, "issue_qty", v)
-                      }
-                    />
-                  ),
-                },
-                {
-                  title: "Remark",
-                  render: (_: any, r: IssueItem) => (
-                    <Input
-                      onChange={(e) =>
-                        updateItem(r.key, "remark", e.target.value)
-                      }
-                    />
-                  ),
-                },
-                {
-                  title: "Action",
-                  render: (_: any, r: IssueItem) => (
-                    <Button
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={() => removeItem(r.key)}
-                    />
-                  ),
-                },
+                { title: "Unit", render: (_: any, r: IssueItem) => <Input value={r.unit} disabled /> },
+                { title: "Batch No", render: (_: any, r: IssueItem) => <Input value={r.batch_no} onChange={e => updateItem(r.key, "batch_no", e.target.value)} /> },
+                { title: "Available Qty", render: (_: any, r: IssueItem) => <InputNumber min={0} value={r.available_qty} onChange={v => updateItem(r.key, "available_qty", v)} /> },
+                { title: "Issue Qty", render: (_: any, r: IssueItem) => <InputNumber min={0} value={r.issue_qty} onChange={v => updateItem(r.key, "issue_qty", v)} /> },
+                { title: "Remark", render: (_: any, r: IssueItem) => <Input value={r.remark} onChange={e => updateItem(r.key, "remark", e.target.value)} /> },
+                { title: "Action", render: (_: any, r: IssueItem) => <Button danger icon={<DeleteOutlined />} onClick={() => removeItem(r.key)} /> },
               ]}
             />
 
-            <Button
-              className="mt-3"
-              icon={<PlusOutlined />}
-              onClick={addItem}
-            >
+            <Button className="mt-3" icon={<PlusOutlined />} onClick={addItem}>
               Add Item
             </Button>
 
             <div className="flex justify-end gap-2 mt-4">
               <Button onClick={() => setShowForm(false)}>Cancel</Button>
-              <Button type="primary" htmlType="submit">
-                Save
-              </Button>
+              <Button type="primary" htmlType="submit">Save</Button>
             </div>
           </Form>
         </Card>
@@ -1210,6 +1548,7 @@ const RmIssueMaster = () => {
 };
 
 export default RmIssueMaster;
+
 
 
 

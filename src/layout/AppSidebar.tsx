@@ -118,44 +118,48 @@ const AppSidebar: React.FC = () => {
       },
 
       {
+        name: "Inventory Mgmt.",
+        icon: <ListIcon />,
+        subItems: [
+         
+          { name: "Prouct stock", path: "/product-stock" },
+          { name: "Product Issue List", path: "product-issue " },  
+          { name: "Row Material Stock", path: "/rmStockmaster" },
+          { name: "Row Material Issue Stock", path: "/rmIssue " },
+          // { name: "Row Material Issue Item Stock", path: "/rmIssueItem " },   
+          
+         
+        ],
+      },
+
+      {
         name: "Masters",
         icon: <ListIcon />,
         subItems: [
           { name: "Company_setting", path: "/forms/company-master" },
           { name: "Roles", path: "/forms/role-master" },
           { name: "State", path: "/forms/state-master" },
-          { name: "District", path: "/forms/district-master" },
-           { name: "GST Master", path: "/forms/gst-master" },
+          { name: "District", path: "/forms/district-master" }, 
           { name: "Currency", path: "/forms/currency" },
           { name: "User Master", path: "/forms/users" },
-          { name: "Customers", path: "/forms/customers" },
-          { name: "Product Master", path: "/forms/products" },
           { name: "Menu Master", path: "/forms/menu-master" },
           { name: "Role Menu Master", path: "/forms/Role-menu-master" },
-          { name: "Module Menu Master", path: "/forms/module-menu-master" },
+          { name: "Module Menu Master", path: "/forms/module-menu-master" },  
         ],
       },
 
-      {
-        name: "Warehouse",
-        icon: <ListIcon />,
-        subItems: [
-          { name: "Warehouse", path: "/warehouse-locations" }, 
-          { name: "Prouct stock", path: "/product-stock" }, 
-          { name: "Row Material Stock", path: "/rmStockmaster" },
-          { name: "Row Material Issue Stock", path: "/rmIssue " },
-          { name: "Row Material Issue Item Stock", path: "/rmIssueItem " },   
-         
-        ],
-      },
+      
 
       {
         name: "Inventory Master",
         icon: <ListIcon />,
         subItems: [
           { name: "Supplier master", path: "/suppliers" },
-          { name: "RawMaterial Master", path: "/raw-material" },  
-           
+          { name: "RawMaterial Master", path: "/raw-material" },
+          { name: "Customers", path: "/forms/customers" },
+          { name: "Product Master", path: "/forms/products" },
+          { name: "GST Master", path: "/forms/gst-master" },  
+          { name: "Location/Warehouse", path: "/warehouse-locations" }, 
           // { name: "Prouct stock Entry", path: "/product-stock-entry" },  
          
         ],
@@ -267,8 +271,17 @@ const AppSidebar: React.FC = () => {
   );
 
   return (
-    <aside
+    /**
+     * 
+     * <aside
       className={`fixed mt-16 flex flex-col top-0 px-5 bg-white h-screen border-r transition-all z-50 
+      ${isExpanded || isMobileOpen || isHovered ? "w-[290px]" : "w-[90px]"}`}
+      onMouseEnter={() => !isExpanded && setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+     */
+    <aside
+      className={`fixed flex flex-col top-0 px-5 bg-white h-screen border-r transition-all z-50 
       ${isExpanded || isMobileOpen || isHovered ? "w-[290px]" : "w-[90px]"}`}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

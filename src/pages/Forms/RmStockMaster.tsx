@@ -10,7 +10,7 @@ import {
   Popconfirm,
   DatePicker,
   Col,
-  Row
+  Row,
 } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
@@ -73,14 +73,13 @@ const RmStockMaster = () => {
   };
 
   const fetchLocations = async () => {
-  try {
-    const res = await warehouseAPI.get("/");
-    setLocations(res.data || []);
-  } catch {
-    message.error("Failed to load warehouse locations");
-  }
-};
-
+    try {
+      const res = await warehouseAPI.get("/");
+      setLocations(res.data || []);
+    } catch {
+      message.error("Failed to load warehouse locations");
+    }
+  };
 
   useEffect(() => {
     fetchStock();
@@ -145,7 +144,7 @@ const RmStockMaster = () => {
     { title: "Material", dataIndex: "material_name" },
     { title: "Batch No", dataIndex: "batchno" },
     { title: "Qty On Hand", dataIndex: "quantity_on_hand" },
-    { title: "Qty On Order", dataIndex: "quantity_on_order" },
+    // { title: "Qty On Order", dataIndex: "quantity_on_order" },
     { title: "Min", dataIndex: "min_quantity" },
     { title: "Max", dataIndex: "max_quantity" },
     {
@@ -195,124 +194,123 @@ const RmStockMaster = () => {
         </Button>
       </div>
 
-      <Table
-        dataSource={stocks}
-        columns={columns}
-        rowKey="stock_id"
-        bordered
-      />
+      <Table dataSource={stocks} columns={columns} rowKey="stock_id" bordered />
 
       {/* MODAL */}
       <Modal
-  title={editId ? "Edit RM Stock" : "Add RM Stock"}
-  open={open}
-  onCancel={() => setOpen(false)}
-  footer={null}
-  width={800}
-  destroyOnClose
->
-  <Form layout="vertical" form={form} onFinish={handleSave}>
-    <Row gutter={16}>
-      <Col span={12}>
-  <Form.Item
-    name="material_id"
-    label="Raw Material"
-    rules={[{ required: true }]}
-  >
-    <Select
-      placeholder="Select material"
-      showSearch
-      optionFilterProp="children"
-      filterOption={(input, option) =>
-        (option?.children as string).toLowerCase().includes(input.toLowerCase())
-      }
-    >
-      {materials.map((m) => (
-        <Option key={m.material_id} value={m.material_id}>
-          {m.name}
-        </Option>
-      ))}
-    </Select>
-  </Form.Item>
-</Col>
+        title={editId ? "Edit RM Stock" : "Add RM Stock"}
+        open={open}
+        onCancel={() => setOpen(false)}
+        footer={null}
+        width={800}
+        destroyOnClose
+      >
+        <Form layout="vertical" form={form} onFinish={handleSave}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="material_id"
+                label="Raw Material"
+                rules={[{ required: true }]}
+              >
+                <Select
+                  placeholder="Select material"
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.children as string)
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                >
+                  {materials.map((m) => (
+                    <Option key={m.material_id} value={m.material_id}>
+                      {m.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
 
+            <Col span={12}>
+              <Form.Item name="batchno" label="Batch No">
+                <InputNumber style={{ width: "100%" }} />
+              </Form.Item>
+            </Col>
 
-      <Col span={12}>
-        <Form.Item name="batchno" label="Batch No">
-          <InputNumber style={{ width: "100%" }} />
-        </Form.Item>
-      </Col>
+           <Col span={12}>
+              <Form.Item name="quantity_on_hand" label="Quantity In Hand">
+                <InputNumber style={{ width: "100%" }} />
+              </Form.Item>
+            </Col>
 
-      <Col span={12}>
-        <Form.Item name="quantity_on_hand" label="Quantity On Hand">
-          <InputNumber style={{ width: "100%" }} />
-        </Form.Item>
-      </Col>
+            {/*  <Col span={12}>
+              <Form.Item name="quantity_on_order" label="Quantity On Order">
+                <InputNumber style={{ width: "100%" }} />
+              </Form.Item>
+            </Col> */}
 
-      <Col span={12}>
-        <Form.Item name="quantity_on_order" label="Quantity On Order">
-          <InputNumber style={{ width: "100%" }} />
-        </Form.Item>
-      </Col>
+            <Col span={12}>
+              <Form.Item name="min_quantity" label="Min Quantity">
+                <InputNumber style={{ width: "100%" }} />
+              </Form.Item>
+            </Col>
 
-      <Col span={12}>
-        <Form.Item name="min_quantity" label="Min Quantity">
-          <InputNumber style={{ width: "100%" }} />
-        </Form.Item>
-      </Col>
+            <Col span={12}>
+              <Form.Item name="max_quantity" label="Max Quantity">
+                <InputNumber style={{ width: "100%" }} />
+              </Form.Item>
+            </Col>
 
-      <Col span={12}>
-        <Form.Item name="max_quantity" label="Max Quantity">
-          <InputNumber style={{ width: "100%" }} />
-        </Form.Item>
-      </Col>
+            <Col span={12}>
+              <Form.Item
+                name="warehouse_location"
+                label="Warehouse Location"
+                rules={[
+                  { required: true, message: "Select warehouse location" },
+                ]}
+              >
+                <Select
+                  showSearch
+                  optionFilterProp="children"
+                  placeholder="Select Warehouse Location"
+                >
+                  {locations.map((loc) => (
+                    <Option key={loc.location_id} value={loc.location_id}>
+                      {loc.location_name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
 
-      <Col span={12}>
-  <Form.Item
-    name="warehouse_location"
-    label="Warehouse Location"
-    rules={[{ required: true, message: "Select warehouse location" }]}
-  >
-    <Select
-      showSearch
-      optionFilterProp="children"
-      placeholder="Select Warehouse Location"
-    >
-      {locations.map((loc) => (
-        <Option key={loc.location_id} value={loc.location_id}>
-          {loc.location_name}
-        </Option>
-      ))}
-    </Select>
-  </Form.Item>
-</Col>
+            <Col span={12}>
+              <Form.Item
+                name="last_inventory_check"
+                label="Last Inventory Check"
+              >
+                <DatePicker showTime style={{ width: "100%" }} />
+              </Form.Item>
+            </Col>
 
+            <Col span={12}>
+              <Form.Item name="is_active" label="Status" initialValue={1}>
+                <Select>
+                  <Option value={1}>Active</Option>
+                  <Option value={0}>Inactive</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
 
-      <Col span={12}>
-        <Form.Item name="last_inventory_check" label="Last Inventory Check">
-          <DatePicker showTime style={{ width: "100%" }} />
-        </Form.Item>
-      </Col>
-
-      <Col span={12}>
-        <Form.Item name="is_active" label="Status" initialValue={1}>
-          <Select>
-            <Option value={1}>Active</Option>
-            <Option value={0}>Inactive</Option>
-          </Select>
-        </Form.Item>
-      </Col>
-    </Row>
-
-    <div className="flex justify-end gap-2 mt-4">
-      <Button onClick={() => setOpen(false)}>Cancel</Button>
-      <Button type="primary" htmlType="submit">
-        Save
-      </Button>
-    </div>
-  </Form>
-</Modal>
-
+          <div className="flex justify-end gap-2 mt-4">
+            <Button onClick={() => setOpen(false)}>Cancel</Button>
+            <Button type="primary" htmlType="submit">
+              Save
+            </Button>
+          </div>
+        </Form>
+      </Modal>
     </div>
   );
 };

@@ -188,23 +188,65 @@ class RMIssueController {
   }
 
   // 2️⃣ GET RM ISSUE BY ID
-  getById(req, res) {
-    const { id } = req.params;
+  // getById(req, res) {
+  //   const { id } = req.params;
 
-    const query = `
-      SELECT *
-      FROM rm_issue_dtl
-      WHERE id = ?
-    `;
+  //   const query = `
+  //     SELECT *
+  //     FROM rm_issue_dtl
+  //     WHERE id = ?
+  //   `;
 
-    db.query(query, [id], (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
-      if (!result.length)
-        return res.status(404).json({ error: "RM Issue not found" });
+  //   db.query(query, [id], (err, result) => {
+  //     if (err) return res.status(500).json({ error: err.message });
+  //     if (!result.length)
+  //       return res.status(404).json({ error: "RM Issue not found" });
 
-      res.json(result[0]);
+  //     res.json(result[0]);
+  //   });
+  // }
+
+
+  // 2️⃣ GET RM ISSUE BY ID (WITH ITEMS)
+getById(req, res) {
+  const { id } = req.params;
+
+  const issueQuery = `
+    SELECT *
+    FROM rm_issue_dtl
+    WHERE id = ?
+  `;
+
+  const itemsQuery = `
+    SELECT 
+      rii.*,
+      rm.name,
+      rm.unit
+    FROM rm_issue_items rii
+    LEFT JOIN raw_materials rm ON rm.material_id = rii.material_id
+    WHERE rii.issue_id = ?
+  `;
+
+  // 1️⃣ get master
+  db.query(issueQuery, [id], (err, issueResult) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!issueResult.length)
+      return res.status(404).json({ error: "RM Issue not found" });
+
+    const issue = issueResult[0];
+
+    // 2️⃣ get items
+    db.query(itemsQuery, [id], (err2, itemsResult) => {
+      if (err2) return res.status(500).json({ error: err2.message });
+
+      res.json({
+        issue,
+        items: itemsResult || [],
+      });
     });
-  }
+  });
+}
+
 
   // 3️⃣ CREATE RM ISSUE
   create(req, res) {

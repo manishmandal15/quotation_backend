@@ -44,7 +44,8 @@ import SupplierMaster from "./pages/Forms/SupplierMaster";
 import RawMaterialMaster from "./pages/Forms/RawMaterialMaster";
 import RmStockMaster from "./pages/Forms/RmStockMaster"; 
 import RmIssueMaster from "./pages/Forms/RmIssueMaster";  
-import RmIssueItemMaster from "./pages/Forms/RmIssueItemMaster";   
+import RmIssueItemMaster from "./pages/Forms/RmIssueItemMaster";  
+import ProductIssue from "./pages/Forms/ProductIssue";    
 
 export default function App() {
   return (
@@ -96,7 +97,8 @@ export default function App() {
          <Route path="/raw-material" element={<RawMaterialMaster />} /> 
          <Route path="/rmStockmaster" element={<RmStockMaster />} />   
          <Route path="/rmIssue" element={<RmIssueMaster />} /> 
-         <Route path="/rmIssueItem" element={<RmIssueItemMaster />} />   
+         <Route path="/rmIssueItem" element={<RmIssueItemMaster />} />  
+          <Route path="/product-issue" element={<ProductIssue />} />   
           {/* Tables */}
           <Route path="/basic-tables" element={<BasicTables />} />
 
