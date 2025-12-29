@@ -407,7 +407,7 @@ const NewQuotation: React.FC = () => {
 
 
 
-               updateItem(record.key, "tax_rate", Number(selected.gst_name) || 0);
+               updateItem(record.key, "tax_rate", Number(selected.gst_rate) || 0);
             }
           }}
           placeholder="Select product"

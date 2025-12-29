@@ -36,12 +36,29 @@ exports.createProduct = (req, res) => {
 };
 
 // Get All Products
+// exports.getProducts = (req, res) => {
+//   db.query("SELECT * FROM products inner join ( select gst_id,gst_name from gst_master) as g on g.gst_id=gst", (err, results) => {
+//     if (err) return res.status(500).json({ error: err.message });
+//     res.json(results);
+//   });
+// };
+
+
 exports.getProducts = (req, res) => {
-  db.query("SELECT * FROM products inner join ( select gst_id,gst_name from gst_master) as g on g.gst_id=gst", (err, results) => {
+  db.query(`
+    SELECT 
+      p.*,
+      g.gst_id,
+      g.gst_name,
+      g.gst AS gst_rate
+    FROM products p
+    LEFT JOIN gst_master g ON g.gst_id = p.gst
+  `, (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
 };
+
 
 // Get Single Product
 exports.getProductById = (req, res) => {

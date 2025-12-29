@@ -174,7 +174,7 @@ const ProductMaster = () => {
       dataIndex: "gst",
       render: (val: number) => {
         const gst = gstList.find((g) => g.gst_id === val);
-        return gst ? gst.gst_name : "-";
+        return gst ? gst.gst : "-";
       },
     },
     {
@@ -279,7 +279,7 @@ const ProductMaster = () => {
               <Select placeholder="Select GST" allowClear>
                 {gstList.map((g) => (
                   <Option key={g.gst_id} value={g.gst_id}>
-                    {g.gst_name}
+                    {g.gst}
                   </Option>
                 ))}
               </Select>
