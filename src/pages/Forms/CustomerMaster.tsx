@@ -57,6 +57,10 @@ const CustomerMaster: React.FC = () => {
   const [form] = Form.useForm();
   const [editId, setEditId] = useState<number | null>(null);
   const [searchText, setSearchText] = useState("");
+  const [filteredDistricts, setFilteredDistricts] = useState<any[]>([]);
+  const [filteredShippingDistricts, setFilteredShippingDistricts] = useState<any[]>([]);
+
+
 
   const fetchCustomers = async () => {
     try {
@@ -307,25 +311,53 @@ const CustomerMaster: React.FC = () => {
               <Input />
             </Form.Item>
 
-            <Form.Item name="district_id" label="District">
-              <Select allowClear>
-                {districts.map((d) => (
-                  <Option key={d.id} value={d.id}>
-                    {d.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
 
-            <Form.Item name="state_id" label="State">
-              <Select allowClear>
-                {states.map((s) => (
-                  <Option key={s.id} value={s.id}>
-                    {s.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
+
+           <Form.Item name="state_id" label="State">
+  <Select
+    allowClear
+    showSearch
+    placeholder="Select State"
+    optionFilterProp="label"
+    onChange={(stateId) => {
+      form.setFieldsValue({ district_id: undefined });
+
+      const fd = districts.filter(
+        (d) => Number(d.state_id) === Number(stateId)
+      );
+      setFilteredDistricts(fd);
+    }}
+  >
+    {states.map((s) => (
+      <Option key={s.id} value={s.id} label={s.name}>
+        {s.name}
+      </Option>
+    ))}
+  </Select>
+</Form.Item>
+
+
+
+
+
+
+
+          <Form.Item name="district_id" label="District">
+  <Select
+    allowClear
+    showSearch
+    optionFilterProp="label"
+    placeholder="Select District"
+  >
+    {filteredDistricts.map((d) => (
+      <Option key={d.id} value={d.id} label={d.name}>
+        {d.name}
+      </Option>
+    ))}
+  </Select>
+</Form.Item>
+
+
 
             <Form.Item name="pincode" label="Pincode">
               <Input />
@@ -355,25 +387,35 @@ const CustomerMaster: React.FC = () => {
               <Input />
             </Form.Item>
 
-            <Form.Item name="shipping_district" label="Shipping District">
-              <Select allowClear>
-                {districts.map((d) => (
-                  <Option key={d.id} value={d.id}>
-                    {d.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-
             <Form.Item name="shipping_state" label="Shipping State">
-              <Select allowClear>
-                {states.map((s) => (
-                  <Option key={s.id} value={s.id}>
-                    {s.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
+  <Select
+    allowClear
+    onChange={(stateId) => {
+      form.setFieldsValue({ shipping_district: undefined });
+      setFilteredShippingDistricts(
+        districts.filter((d) => Number(d.state_id) === Number(stateId))
+      );
+    }}
+  >
+    {states.map((s) => (
+      <Option key={s.id} value={s.id}>
+        {s.name}
+      </Option>
+    ))}
+  </Select>
+</Form.Item>
+
+
+            <Form.Item name="shipping_district" label="Shipping District">
+  <Select allowClear>
+    {filteredShippingDistricts.map((d) => (
+      <Option key={d.id} value={d.id}>
+        {d.name}
+      </Option>
+    ))}
+  </Select>
+</Form.Item>
+
 
             <Form.Item name="shipping_pinocde" label="Shipping Pincode">
               <Input />

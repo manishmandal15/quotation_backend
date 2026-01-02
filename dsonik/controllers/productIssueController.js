@@ -1176,6 +1176,27 @@ exports.createIssue = (req, res) => {
       db.query(itemSql, [itemValues], (err) => {
         if (err) return res.status(500).json({ error: err });
 
+         items.forEach((i) => {
+    db.query(
+      `UPDATE product_stock_dtl
+       SET qty = qty - ?
+       WHERE product_id = ?
+       AND batch_lotno = ?`,
+      [i.issue_qty, i.product_id, i.batch_no_lot_no],
+      (err, result) => {
+        if (err) {
+          console.error("Stock update error:", err);
+        } else if (result.affectedRows === 0) {
+          console.warn(
+            "No stock row found for",
+            i.product_id,
+            i.batch_no_lot_no
+          );
+        }
+      }
+    );
+  });
+
         res.json({
           message: "Issue + items created successfully",
           issue_no: issueNo,
