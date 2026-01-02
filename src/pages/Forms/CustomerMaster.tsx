@@ -58,9 +58,9 @@ const CustomerMaster: React.FC = () => {
   const [editId, setEditId] = useState<number | null>(null);
   const [searchText, setSearchText] = useState("");
   const [filteredDistricts, setFilteredDistricts] = useState<any[]>([]);
-  const [filteredShippingDistricts, setFilteredShippingDistricts] = useState<any[]>([]);
-
-
+  const [filteredShippingDistricts, setFilteredShippingDistricts] = useState<
+    any[]
+  >([]);
 
   const fetchCustomers = async () => {
     try {
@@ -130,7 +130,26 @@ const CustomerMaster: React.FC = () => {
 
   const handleEdit = (record: Customer) => {
     setEditId(record.id || null);
+
+    // 🔹 Billing districts filter
+    if (record.state_id) {
+      const fd = districts.filter(
+        (d) => Number(d.state_id) === Number(record.state_id)
+      );
+      setFilteredDistricts(fd);
+    }
+
+    // 🔹 Shipping districts filter
+    if (record.shipping_state) {
+      const sfd = districts.filter(
+        (d) => Number(d.state_id) === Number(record.shipping_state)
+      );
+      setFilteredShippingDistricts(sfd);
+    }
+
+    // 🔹 Now set form values
     form.setFieldsValue(record);
+
     setOpen(true);
   };
 
@@ -146,27 +165,60 @@ const CustomerMaster: React.FC = () => {
   };
 
   // ⭐ AUTO-FILL SHIPPING
-  const handleSameAsBilling = (checked: boolean) => {
-    const billing = form.getFieldsValue([
-      "address",
-      "city",
-      "district_id",
-      "state_id",
-      "pincode",
-      "country",
-    ]);
+  // const handleSameAsBilling = (checked: boolean) => {
+  //   const billing = form.getFieldsValue([
+  //     "address",
+  //     "city",
+  //     "district_id",
+  //     "state_id",
+  //     "pincode",
+  //     "country",
+  //   ]);
 
-    if (checked) {
-      form.setFieldsValue({
-        shipping_address: billing.address,
-        shipping_city: billing.city,
-        shipping_district: billing.district_id,
-        shipping_state: billing.state_id,
-        shipping_pinocde: billing.pincode,
-        shipping_country: billing.country,
-      });
+  //   if (checked) {
+  //     form.setFieldsValue({
+  //       shipping_address: billing.address,
+  //       shipping_city: billing.city,
+  //       shipping_district: billing.district_id,
+  //       shipping_state: billing.state_id,
+  //       shipping_pinocde: billing.pincode,
+  //       shipping_country: billing.country,
+  //     });
+  //   }
+  // };
+
+
+  const handleSameAsBilling = (checked: boolean) => {
+  const billing = form.getFieldsValue([
+    "address",
+    "city",
+    "district_id",
+    "state_id",
+    "pincode",
+    "country",
+  ]);
+
+  if (checked) {
+    // ⭐ FIRST: shipping districts filter karo
+    if (billing.state_id) {
+      const sfd = districts.filter(
+        (d) => Number(d.state_id) === Number(billing.state_id)
+      );
+      setFilteredShippingDistricts(sfd);
     }
-  };
+
+    // ⭐ THEN: form values set karo
+    form.setFieldsValue({
+      shipping_address: billing.address,
+      shipping_city: billing.city,
+      shipping_state: billing.state_id,
+      shipping_district: billing.district_id,
+      shipping_pinocde: billing.pincode,
+      shipping_country: billing.country,
+    });
+  }
+};
+
 
   return (
     <div className="p-6">
@@ -278,7 +330,7 @@ const CustomerMaster: React.FC = () => {
         <Form layout="vertical" form={form} onFinish={handleSave}>
           <h3 className="text-lg font-semibold mb-2">Billing Details</h3>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <Form.Item name="name" label="Name" rules={[{ required: true }]}>
               <Input placeholder="Enter customer name" />
             </Form.Item>
@@ -311,53 +363,47 @@ const CustomerMaster: React.FC = () => {
               <Input />
             </Form.Item>
 
+            <Form.Item name="state_id" label="State">
+              <Select
+                allowClear
+                showSearch
+                placeholder="Select State"
+                optionFilterProp="label"
+                onChange={(stateId) => {
+                  form.setFieldsValue({ district_id: undefined });
 
+                  const fd = districts.filter(
+                    (d) => Number(d.state_id) === Number(stateId)
+                  );
+                  setFilteredDistricts(fd);
+                }}
+              >
+                {[...states]
+                  .sort((a, b) => a.name.localeCompare(b.name)) // 👈 ORDER BY name ASC
+                  .map((s) => (
+                    <Option key={s.id} value={s.id} label={s.name}>
+                      {s.name}
+                    </Option>
+                  ))}
+              </Select>
+            </Form.Item>
 
-           <Form.Item name="state_id" label="State">
-  <Select
-    allowClear
-    showSearch
-    placeholder="Select State"
-    optionFilterProp="label"
-    onChange={(stateId) => {
-      form.setFieldsValue({ district_id: undefined });
-
-      const fd = districts.filter(
-        (d) => Number(d.state_id) === Number(stateId)
-      );
-      setFilteredDistricts(fd);
-    }}
-  >
-    {states.map((s) => (
-      <Option key={s.id} value={s.id} label={s.name}>
-        {s.name}
-      </Option>
-    ))}
-  </Select>
-</Form.Item>
-
-
-
-
-
-
-
-          <Form.Item name="district_id" label="District">
-  <Select
-    allowClear
-    showSearch
-    optionFilterProp="label"
-    placeholder="Select District"
-  >
-    {filteredDistricts.map((d) => (
-      <Option key={d.id} value={d.id} label={d.name}>
-        {d.name}
-      </Option>
-    ))}
-  </Select>
-</Form.Item>
-
-
+            <Form.Item name="district_id" label="District">
+              <Select
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                placeholder="Select District"
+              >
+                {[...filteredDistricts]
+                  .sort((a, b) => a.name.localeCompare(b.name)) // 👈 ORDER BY name ASC
+                  .map((d) => (
+                    <Option key={d.id} value={d.id} label={d.name}>
+                      {d.name}
+                    </Option>
+                  ))}
+              </Select>
+            </Form.Item>
 
             <Form.Item name="pincode" label="Pincode">
               <Input />
@@ -378,7 +424,7 @@ const CustomerMaster: React.FC = () => {
             Same as Billing
           </Checkbox>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <Form.Item name="shipping_address" label="Shipping Address">
               <Input />
             </Form.Item>
@@ -388,34 +434,46 @@ const CustomerMaster: React.FC = () => {
             </Form.Item>
 
             <Form.Item name="shipping_state" label="Shipping State">
-  <Select
-    allowClear
-    onChange={(stateId) => {
-      form.setFieldsValue({ shipping_district: undefined });
-      setFilteredShippingDistricts(
-        districts.filter((d) => Number(d.state_id) === Number(stateId))
-      );
-    }}
-  >
-    {states.map((s) => (
-      <Option key={s.id} value={s.id}>
-        {s.name}
-      </Option>
-    ))}
-  </Select>
-</Form.Item>
+              <Select
+                allowClear
+                showSearch // 🔍 searchable
+                placeholder="Select Shipping State"
+                optionFilterProp="label" // search name se ho
+                onChange={(stateId) => {
+                  form.setFieldsValue({ shipping_district: undefined });
 
+                  const fd = districts.filter(
+                    (d) => Number(d.state_id) === Number(stateId)
+                  );
+                  setFilteredShippingDistricts(fd);
+                }}
+              >
+                {[...states]
+                  .sort((a, b) => a.name.localeCompare(b.name)) // 🔠 ORDER BY name ASC
+                  .map((s) => (
+                    <Option key={s.id} value={s.id} label={s.name}>
+                      {s.name}
+                    </Option>
+                  ))}
+              </Select>
+            </Form.Item>
 
             <Form.Item name="shipping_district" label="Shipping District">
-  <Select allowClear>
-    {filteredShippingDistricts.map((d) => (
-      <Option key={d.id} value={d.id}>
-        {d.name}
-      </Option>
-    ))}
-  </Select>
-</Form.Item>
-
+              <Select
+                allowClear
+                showSearch // 🔍 searchable
+                placeholder="Select Shipping District"
+                optionFilterProp="label" // name se search
+              >
+                {[...filteredShippingDistricts]
+                  .sort((a, b) => a.name.localeCompare(b.name)) // 🔠 ORDER BY name ASC
+                  .map((d) => (
+                    <Option key={d.id} value={d.id} label={d.name}>
+                      {d.name}
+                    </Option>
+                  ))}
+              </Select>
+            </Form.Item>
 
             <Form.Item name="shipping_pinocde" label="Shipping Pincode">
               <Input />

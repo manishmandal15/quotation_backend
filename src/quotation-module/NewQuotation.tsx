@@ -1128,38 +1128,76 @@ const NewQuotation: React.FC = () => {
         //   ))}
         // </Select>
 
+        // <Select
+        //   showSearch
+        //   value={record.product_id}
+        //   placeholder="Select product"
+        //   style={{ minWidth: 300 }}
+        //   optionFilterProp="label"
+        //   onChange={(v) => {
+        //     const selected = products.find((p) => p.id === v);
+
+        //     updateItem(record.key, "product_id", v);
+
+        //     if (selected) {
+        //       updateItem(record.key, "description", selected.description || "");
+        //       updateItem(record.key, "unit_price", selected.price || 0);
+        //       updateItem(
+        //         record.key,
+        //         "tax_rate",
+        //         Number(selected.gst_rate) || 0
+        //       );
+        //     }
+        //   }}
+        // >
+        //   {products.map((p) => (
+        //     <Select.Option
+        //       key={p.id}
+        //       value={p.id}
+        //       label={p.name} // 👈 IMPORTANT for search
+        //     >
+        //       {p.name}
+        //     </Select.Option>
+        //   ))}
+        // </Select>
+
+
         <Select
-          showSearch
-          value={record.product_id}
-          placeholder="Select product"
-          style={{ minWidth: 300 }}
-          optionFilterProp="label"
-          onChange={(v) => {
-            const selected = products.find((p) => p.id === v);
+  showSearch
+  value={record.product_id}
+  placeholder="Select product"
+  style={{ minWidth: 300 }}
+  optionFilterProp="label"
+  onChange={(v) => {
+    const selected = products.find((p) => p.id === v);
 
-            updateItem(record.key, "product_id", v);
+    updateItem(record.key, "product_id", v);
 
-            if (selected) {
-              updateItem(record.key, "description", selected.description || "");
-              updateItem(record.key, "unit_price", selected.price || 0);
-              updateItem(
-                record.key,
-                "tax_rate",
-                Number(selected.gst_rate) || 0
-              );
-            }
-          }}
-        >
-          {products.map((p) => (
-            <Select.Option
-              key={p.id}
-              value={p.id}
-              label={p.name} // 👈 IMPORTANT for search
-            >
-              {p.name}
-            </Select.Option>
-          ))}
-        </Select>
+    if (selected) {
+      updateItem(record.key, "description", selected.description || "");
+      updateItem(record.key, "unit_price", selected.price || 0);
+      updateItem(
+        record.key,
+        "tax_rate",
+        Number(selected.gst_rate) || 0
+      );
+    }
+  }}
+>
+  {products
+    .slice() // ✅ original array mutate na ho
+    .sort((a, b) => a.name.localeCompare(b.name)) // ✅ ORDER BY name ASC
+    .map((p) => (
+      <Select.Option
+        key={p.id}
+        value={p.id}
+        label={p.name} // 👈 search ke liye
+      >
+        {p.name}
+      </Select.Option>
+    ))}
+</Select>
+
       ),
     },
     {
@@ -1301,25 +1339,27 @@ const NewQuotation: React.FC = () => {
                 </Form.Item> */}
 
                 <Form.Item
-                  label="Customer"
-                  name="customer_id"
-                  rules={[
-                    { required: true, message: "Please select customer" },
-                  ]}
-                >
-                  <Select
-                    showSearch
-                    placeholder="Select customer"
-                    onChange={onCustomerChange}
-                    optionFilterProp="label"
-                  >
-                    {customers.map((c) => (
-                      <Select.Option key={c.id} value={c.id} label={c.name}>
-                        {c.name}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
+  label="Customer"
+  name="customer_id"
+  rules={[{ required: true, message: "Please select customer" }]}
+>
+  <Select
+    showSearch
+    placeholder="Select customer"
+    onChange={onCustomerChange}
+    optionFilterProp="label"
+  >
+    {customers
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((c) => (
+        <Select.Option key={c.id} value={c.id} label={c.name}>
+          {c.name}
+        </Select.Option>
+      ))}
+  </Select>
+</Form.Item>
+
               </Col>
               <Col xs={24} sm={12} md={8} lg={6}>
                 <Form.Item label="Currency" name="currency_id">

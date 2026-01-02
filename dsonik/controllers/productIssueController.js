@@ -1255,6 +1255,68 @@ exports.createIssue = (req, res) => {
 //   );
 // };
 
+// exports.updateIssue = (req, res) => {
+//   const { id } = req.params;
+//   const {
+//     order_no,
+//     bill_no_invoice_no,
+//     customer_id,
+//     issue_date,
+//     remarks,
+//     issue_type,
+//     issue_by,
+//     items = []
+//   } = req.body;
+
+//   // 1️⃣ Update header
+//   const sqlHeader = `
+//     UPDATE product_issue_dtl
+//     SET order_no=?, bill_no_invoice_no=?, customer_id=?, issue_date=?, remarks=?, issue_type=?, issue_by=?, updated_at=NOW()
+//     WHERE issue_no=?
+//   `;
+
+//   db.query(sqlHeader, [order_no,bill_no_invoice_no,customer_id,issue_date,remarks,issue_type,issue_by,id], (err) => {
+//     if(err) return res.status(500).json({ error: err });
+
+//     // 2️⃣ Get existing items to revert stock
+//     db.query("SELECT * FROM product_issue_item_dtl WHERE issue_no=?", [id], (err, existingItems) => {
+//       if(err) return res.status(500).json({ error: err });
+
+//       // 3️⃣ Revert stock for old items
+//       existingItems.forEach(item => {
+//         db.query("UPDATE product_stock SET qty=qty+? WHERE product_id=?", [item.issue_qty, item.product_id]);
+//       });
+
+//       // 4️⃣ Delete old items
+//       db.query("DELETE FROM product_issue_item_dtl WHERE issue_no=?", [id], (err) => {
+//         if(err) return res.status(500).json({ error: err });
+
+//         if(!items.length) return res.json({ message:"Issue updated (no items)" });
+
+//         // 5️⃣ Insert new items
+//         const itemSql = `
+//           INSERT INTO product_issue_item_dtl
+//           (issue_no, customer_id, product_id, issue_qty, issue_date, batch_no_lot_no, remarks, issue_type)
+//           VALUES ?
+//         `;
+//         const itemValues = items.map(i => [id, customer_id, i.product_id, i.issue_qty, issue_date, i.batch_no_lot_no||null, i.remarks||null, issue_type]);
+        
+//         db.query(itemSql, [itemValues], (err) => {
+//           if(err) return res.status(500).json({ error: err });
+
+//           // 6️⃣ Update stock quantities for new items
+//           items.forEach(i => {
+//             db.query("UPDATE product_stock_dtl SET qty=qty-? WHERE product_id=?", [i.issue_qty, i.product_id]);
+//           });
+
+//           res.json({ message:"Issue + items updated successfully" });
+//         });
+//       });
+//     });
+//   });
+// };
+
+
 exports.updateIssue = (req, res) => {
   const { id } = req.params;
   const {
@@ -1271,50 +1333,88 @@ exports.updateIssue = (req, res) => {
   // 1️⃣ Update header
   const sqlHeader = `
     UPDATE product_issue_dtl
-    SET order_no=?, bill_no_invoice_no=?, customer_id=?, issue_date=?, remarks=?, issue_type=?, issue_by=?, updated_at=NOW()
+    SET order_no=?, bill_no_invoice_no=?, customer_id=?, issue_date=?,
+        remarks=?, issue_type=?, issue_by=?, updated_at=NOW()
     WHERE issue_no=?
   `;
 
-  db.query(sqlHeader, [order_no,bill_no_invoice_no,customer_id,issue_date,remarks,issue_type,issue_by,id], (err) => {
-    if(err) return res.status(500).json({ error: err });
+  db.query(
+    sqlHeader,
+    [order_no, bill_no_invoice_no, customer_id, issue_date, remarks, issue_type, issue_by, id],
+    (err) => {
+      if (err) return res.status(500).json({ error: err });
 
-    // 2️⃣ Get existing items to revert stock
-    db.query("SELECT * FROM product_issue_item_dtl WHERE issue_no=?", [id], (err, existingItems) => {
-      if(err) return res.status(500).json({ error: err });
+      // 2️⃣ Get existing items
+      db.query(
+        "SELECT * FROM product_issue_item_dtl WHERE issue_no=?",
+        [id],
+        (err, existingItems) => {
+          if (err) return res.status(500).json({ error: err });
 
-      // 3️⃣ Revert stock for old items
-      existingItems.forEach(item => {
-        db.query("UPDATE product_stock SET qty=qty+? WHERE product_id=?", [item.issue_qty, item.product_id]);
-      });
-
-      // 4️⃣ Delete old items
-      db.query("DELETE FROM product_issue_item_dtl WHERE issue_no=?", [id], (err) => {
-        if(err) return res.status(500).json({ error: err });
-
-        if(!items.length) return res.json({ message:"Issue updated (no items)" });
-
-        // 5️⃣ Insert new items
-        const itemSql = `
-          INSERT INTO product_issue_item_dtl
-          (issue_no, customer_id, product_id, issue_qty, issue_date, batch_no_lot_no, remarks, issue_type)
-          VALUES ?
-        `;
-        const itemValues = items.map(i => [id, customer_id, i.product_id, i.issue_qty, issue_date, i.batch_no_lot_no||null, i.remarks||null, issue_type]);
-        
-        db.query(itemSql, [itemValues], (err) => {
-          if(err) return res.status(500).json({ error: err });
-
-          // 6️⃣ Update stock quantities for new items
-          items.forEach(i => {
-            db.query("UPDATE product_stock SET qty=qty-? WHERE product_id=?", [i.issue_qty, i.product_id]);
+          // 3️⃣ Revert stock (OLD items)
+          existingItems.forEach(item => {
+            db.query(
+              `UPDATE product_stock_dtl
+               SET qty = qty + ?
+               WHERE product_id = ?
+               AND batch_lotno = ?`,
+              [item.issue_qty, item.product_id, item.batch_no_lot_no]
+            );
           });
 
-          res.json({ message:"Issue + items updated successfully" });
-        });
-      });
-    });
-  });
-};
+          // 4️⃣ Delete old items
+          db.query(
+            "DELETE FROM product_issue_item_dtl WHERE issue_no=?",
+            [id],
+            (err) => {
+              if (err) return res.status(500).json({ error: err });
+
+              if (!items.length) {
+                return res.json({ message: "Issue updated (no items)" });
+              }
+
+              // 5️⃣ Insert new items
+              const itemSql = `
+                INSERT INTO product_issue_item_dtl
+                (issue_no, customer_id, product_id, issue_qty, issue_date, batch_no_lot_no, remarks, issue_type)
+                VALUES ?
+              `;
+
+              const itemValues = items.map(i => [
+                id,
+                customer_id,
+                i.product_id,
+                i.issue_qty,
+                issue_date,
+                i.batch_no_lot_no || null,
+                i.remarks || null,
+                issue_type
+              ]);
+
+              db.query(itemSql, [itemValues], (err) => {
+                if (err) return res.status(500).json({ error: err });
+
+                // 6️⃣ Minus stock (NEW items)
+                items.forEach(i => {
+                  db.query(
+                    `UPDATE product_stock_dtl
+                     SET qty = qty - ?
+                     WHERE product_id = ?
+                     AND batch_lotno = ?`,
+                    [i.issue_qty, i.product_id, i.batch_no_lot_no]
+                  );
+                });
+
+                res.json({ message: "Issue + items updated successfully" });
+              });
+            }
+          );
+        }
+      );
+    }
+  );
+}; 
+
 
 
 /* ===============================
