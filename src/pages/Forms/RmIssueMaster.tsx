@@ -828,6 +828,541 @@
 
 
 
+// import { useEffect, useState } from "react";
+// import {
+//   Table,
+//   Button,
+//   Form,
+//   Input,
+//   DatePicker,
+//   message,
+//   Select,
+//   Row,
+//   Col,
+//   InputNumber,
+//   Card,
+// } from "antd";
+// import { PlusOutlined, DeleteOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+// import axios from "axios";
+// import dayjs from "dayjs";
+
+// const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// // ================= TYPES =================
+// interface RawMaterial {
+//   material_id: number;
+//   name: string;
+//   unit: string;
+// }
+
+// interface IssueItem {
+//   key: number;
+//   material_id?: number;
+//   name?: string;
+//   unit?: string;
+//   batch_no?: string;
+//   available_qty?: number;
+//   issue_qty?: number;
+//   remark?: string;
+// }
+
+// const RmIssueMaster = () => {
+//   const [listView, setListView] = useState(true);
+//   const [items, setItems] = useState<IssueItem[]>([]);
+//   const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>([]);
+//   const [form] = Form.useForm();
+
+//   // ================= LOAD RAW MATERIALS =================
+//   const loadRawMaterials = async () => {
+//     try {
+//       const res = await axios.get(`${BASE_URL}/raw-materials`);
+//       setRawMaterials(res.data || []);
+//     } catch {
+//       message.error("Failed to load raw materials");
+//     }
+//   };
+
+//   useEffect(() => {
+//     loadRawMaterials();
+//   }, []);
+
+//   // ================= ADD ITEM ROW =================
+//   const addItemRow = () => {
+//     setItems([...items, { key: Date.now() }]);
+//   };
+
+//   // ================= UPDATE ITEM =================
+//   const updateItem = (key: number, field: string, value: any) => {
+//     setItems((prev) =>
+//       prev.map((it) => (it.key === key ? { ...it, [field]: value } : it))
+//     );
+//   };
+
+//   // ================= REMOVE ITEM =================
+//   const removeItem = (key: number) => {
+//     setItems(items.filter((i) => i.key !== key));
+//   };
+
+//   // ================= SAVE =================
+//   const handleSave = async (values: any) => {
+//     if (!items.length) {
+//       message.error("Please add at least one item");
+//       return;
+//     }
+
+//     try {
+//       for (const item of items) {
+//         await axios.post(`${BASE_URL}/rm-issue-items`, {
+//           material_id: item.material_id,
+//           batch_no: item.batch_no,
+//           available_qty: item.available_qty || 0,
+//           issue_qty: item.issue_qty || 0,
+//           issue_date: values.issue_date.format("YYYY-MM-DD"),
+//           operator_id: null,
+//           remark: item.remark || "",
+//           issue_type: values.issue_type,
+//         });
+//       }
+
+//       message.success("RM Issue saved successfully");
+//       form.resetFields();
+//       setItems([]);
+//       setListView(true);
+//     } catch {
+//       message.error("Save failed");
+//     }
+//   };
+
+//   // ================= ITEM COLUMNS =================
+//   const itemColumns = [
+//     {
+//       title: "Material",
+//       render: (_: any, record: IssueItem) => (
+//         <Select
+//           style={{ width: 200 }}
+//           placeholder="Select"
+//           value={record.material_id}
+//           onChange={(val) => {
+//             const mat = rawMaterials.find((m) => m.material_id === val);
+//             updateItem(record.key, "material_id", val);
+//             updateItem(record.key, "name", mat?.name);
+//             updateItem(record.key, "unit", mat?.unit);
+//           }}
+//         >
+//           {rawMaterials.map((m) => (
+//             <Select.Option key={m.material_id} value={m.material_id}>
+//               {m.name}
+//             </Select.Option>
+//           ))}
+//         </Select>
+//       ),
+//     },
+//     {
+//       title: "Unit",
+//       render: (_: any, record: IssueItem) => <Input value={record.unit} disabled />,
+//     },
+//     {
+//       title: "Batch No",
+//       render: (_: any, record: IssueItem) => (
+//         <Input
+//           onChange={(e) => updateItem(record.key, "batch_no", e.target.value)}
+//         />
+//       ),
+//     },
+//     {
+//       title: "Available Qty",
+//       render: (_: any, record: IssueItem) => (
+//         <InputNumber
+//           min={0}
+//           onChange={(val) => updateItem(record.key, "available_qty", val)}
+//         />
+//       ),
+//     },
+//     {
+//       title: "Issue Qty",
+//       render: (_: any, record: IssueItem) => (
+//         <InputNumber
+//           min={0}
+//           onChange={(val) => updateItem(record.key, "issue_qty", val)}
+//         />
+//       ),
+//     },
+//     {
+//       title: "Remark",
+//       render: (_: any, record: IssueItem) => (
+//         <Input onChange={(e) => updateItem(record.key, "remark", e.target.value)} />
+//       ),
+//     },
+//     {
+//       title: "Action",
+//       render: (_: any, record: IssueItem) => (
+//         <Button danger icon={<DeleteOutlined />} onClick={() => removeItem(record.key)} />
+//       ),
+//     },
+//   ];
+
+//   // ================= RENDER =================
+//   if (listView) {
+//     return (
+//       <div className="p-6 bg-white">
+//         <Button type="primary" icon={<PlusOutlined />} onClick={() => setListView(false)}>
+//           Add RM Issue
+//         </Button>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="p-6 bg-white">
+//       <Button icon={<ArrowLeftOutlined />} onClick={() => setListView(true)}>
+//         Back
+//       </Button>
+
+//       <Card title="RM Issue" className="mt-4">
+//         <Form layout="vertical" form={form} onFinish={handleSave}>
+//           <Row gutter={16}>
+//             <Col span={8}>
+//               <Form.Item name="issue_date" label="Issue Date" rules={[{ required: true }]}>
+//                 <DatePicker style={{ width: "100%" }} defaultValue={dayjs()} />
+//               </Form.Item>
+//             </Col>
+//             <Col span={8}>
+//               <Form.Item name="issue_type" label="Issue Type" rules={[{ required: true }]}>
+//                 <Select>
+//                   <Select.Option value="normal">Normal</Select.Option>
+//                   <Select.Option value="urgent">Urgent</Select.Option>
+//                 </Select>
+//               </Form.Item>
+//             </Col>
+//           </Row>
+
+//           <Table
+//             columns={itemColumns}
+//             dataSource={items}
+//             pagination={false}
+//             rowKey="key"
+//             bordered
+//           />
+
+//           <Button className="mt-3" onClick={addItemRow} icon={<PlusOutlined />}>
+//             Add Item
+//           </Button>
+
+//           <div className="flex justify-end mt-4 gap-2">
+//             <Button onClick={() => setListView(true)}>Cancel</Button>
+//             <Button type="primary" htmlType="submit">
+//               Save
+//             </Button>
+//           </div>
+//         </Form>
+//       </Card>
+//     </div>
+//   );
+// };
+
+// export default RmIssueMaster;
+
+
+
+
+// import { useEffect, useState } from "react";
+// import {
+//   Table,
+//   Button,
+//   Form,
+//   Input,
+//   DatePicker,
+//   message,
+//   Select,
+//   Row,
+//   Col,
+//   InputNumber,
+//   Card,
+//   Space,
+// } from "antd";
+// import {
+//   PlusOutlined,
+//   DeleteOutlined,
+//   ArrowLeftOutlined,
+// } from "@ant-design/icons";
+// import axios from "axios";
+// import dayjs from "dayjs";
+
+// const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// // ================= TYPES =================
+// interface RawMaterial {
+//   material_id: number;
+//   name: string;
+//   unit: string;
+// }
+
+// interface IssueItem {
+//   key: number;
+//   material_id?: number;
+//   name?: string;
+//   unit?: string;
+//   batch_no?: string;
+//   available_qty?: number;
+//   issue_qty?: number;
+//   remark?: string;
+// }
+
+// const RmIssueMaster = () => {
+//   const [listView, setListView] = useState(true);
+//   const [items, setItems] = useState<IssueItem[]>([]);
+//   const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>([]);
+//   const [issueList, setIssueList] = useState<any[]>([]);
+//   const [form] = Form.useForm();
+
+//   // ================= LOAD DATA =================
+//   const loadRawMaterials = async () => {
+//     const res = await axios.get(`${BASE_URL}/raw-materials`);
+//     setRawMaterials(res.data || []);
+//   };
+
+//   const loadIssueList = async () => {
+//     const res = await axios.get(`${BASE_URL}/rm-issue-items`);
+//     setIssueList(res.data || []);
+//   };
+
+//   useEffect(() => {
+//     loadRawMaterials();
+//     loadIssueList();
+//   }, []);
+
+//   // ================= ITEM HANDLERS =================
+//   const addItemRow = () => {
+//     setItems([...items, { key: Date.now() }]);
+//   };
+
+//   const updateItem = (key: number, field: string, value: any) => {
+//     setItems((prev) =>
+//       prev.map((it) => (it.key === key ? { ...it, [field]: value } : it))
+//     );
+//   };
+
+//   const removeItem = (key: number) => {
+//     setItems(items.filter((i) => i.key !== key));
+//   };
+
+//   // ================= SAVE =================
+//   const handleSave = async (values: any) => {
+//     if (!items.length) {
+//       message.error("Please add at least one item");
+//       return;
+//     }
+
+//     try {
+//       for (const item of items) {
+//         await axios.post(`${BASE_URL}/rm-issue-items`, {
+//           material_id: item.material_id,
+//           batch_no: item.batch_no,
+//           available_qty: item.available_qty || 0,
+//           issue_qty: item.issue_qty || 0,
+//           issue_date: values.issue_date.format("YYYY-MM-DD"),
+//           operator_id: null,
+//           remark: item.remark || "",
+//           issue_type: values.issue_type,
+//         });
+//       }
+
+//       message.success("RM Issue saved successfully");
+//       form.resetFields();
+//       setItems([]);
+//       setListView(true);
+//       loadIssueList();
+//     } catch {
+//       message.error("Save failed");
+//     }
+//   };
+
+//   // ================= LIST COLUMNS =================
+//   const listColumns = [
+//     { title: "S.No", render: (_: any, __: any, i: number) => i + 1 },
+//     { title: "Material ID", dataIndex: "material_id" },
+//     { title: "Batch No", dataIndex: "batch_no" },
+//     { title: "Issue Qty", dataIndex: "issue_qty" },
+//     {
+//       title: "Issue Date",
+//       dataIndex: "issue_date",
+//       render: (v: string) => dayjs(v).format("DD-MM-YYYY"),
+//     },
+//     { title: "Issue Type", dataIndex: "issue_type" },
+//   ];
+
+//   // ================= ITEM TABLE =================
+//   const itemColumns = [
+//     {
+//       title: "Material",
+//       render: (_: any, record: IssueItem) => (
+//         <Select
+//           style={{ width: 200 }}
+//           value={record.material_id}
+//           onChange={(val) => {
+//             const mat = rawMaterials.find((m) => m.material_id === val);
+//             updateItem(record.key, "material_id", val);
+//             updateItem(record.key, "name", mat?.name);
+//             updateItem(record.key, "unit", mat?.unit);
+//           }}
+//         >
+//           {rawMaterials.map((m) => (
+//             <Select.Option key={m.material_id} value={m.material_id}>
+//               {m.name}
+//             </Select.Option>
+//           ))}
+//         </Select>
+//       ),
+//     },
+//     {
+//       title: "Unit",
+//       render: (_: any, r: IssueItem) => <Input value={r.unit} disabled />,
+//     },
+//     {
+//       title: "Batch No",
+//       render: (_: any, r: IssueItem) => (
+//         <Input onChange={(e) => updateItem(r.key, "batch_no", e.target.value)} />
+//       ),
+//     },
+//     {
+//       title: "Available Qty",
+//       render: (_: any, r: IssueItem) => (
+//         <InputNumber
+//           min={0}
+//           onChange={(v) => updateItem(r.key, "available_qty", v)}
+//         />
+//       ),
+//     },
+//     {
+//       title: "Issue Qty",
+//       render: (_: any, r: IssueItem) => (
+//         <InputNumber
+//           min={0}
+//           onChange={(v) => updateItem(r.key, "issue_qty", v)}
+//         />
+//       ),
+//     },
+//     {
+//       title: "Remark",
+//       render: (_: any, r: IssueItem) => (
+//         <Input onChange={(e) => updateItem(r.key, "remark", e.target.value)} />
+//       ),
+//     },
+//     {
+//       title: "Action",
+//       render: (_: any, r: IssueItem) => (
+//         <Button danger icon={<DeleteOutlined />} onClick={() => removeItem(r.key)} />
+//       ),
+//     },
+//   ];
+
+//   // ================= RENDER =================
+//   return listView ? (
+//     <div className="p-6 bg-white">
+//       <div className="flex justify-between mb-4">
+//         <h2 className="text-xl font-semibold">RM Issue List</h2>
+//         <Button
+//           type="primary"
+//           icon={<PlusOutlined />}
+//           onClick={() => setListView(false)}
+//         >
+//           Add RM Issue
+//         </Button>
+//       </div>
+
+//       <Table
+//         dataSource={issueList}
+//         columns={listColumns}
+//         rowKey="id"
+//         bordered
+//       />
+//     </div>
+//   ) : (
+//     <div className="p-6 bg-white">
+//       <Button icon={<ArrowLeftOutlined />} onClick={() => setListView(true)}>
+//         Back
+//       </Button>
+
+//       <Card title="Add RM Issue" className="mt-4">
+//         <Form layout="vertical" form={form} onFinish={handleSave}>
+//           <Row gutter={16}>
+//             <Col span={8}>
+//                  <Form.Item name="order_no" label="Order No">
+//                    <Input />
+//                 </Form.Item>
+//               </Col>
+
+//                <Col span={8}>
+//                  <Form.Item name="job_no" label="Job No">
+//                    <Input />
+//                  </Form.Item>
+//                </Col>
+
+//               <Col span={8}>
+//                 <Form.Item name="issue_date" label="Issue Date">
+//                    <DatePicker style={{ width: "100%" }} />
+//                  </Form.Item>
+//                </Col>
+
+//                <Col span={8}>
+//                  <Form.Item name="issue_type" label="Issue Type">
+//                    <Select allowClear>
+//                      <Select.Option value="Production">
+//                        Production
+//                     </Select.Option>
+//                     <Select.Option value="Maintenance">
+//                       Maintenance
+//                     </Select.Option>
+//                     <Select.Option value="Sample">Sample</Select.Option>
+//                 </Select>
+//                  </Form.Item>
+//              </Col>
+
+//               <Col span={8}>
+//                 <Form.Item name="issue_to" label="Issue To">
+//                  <Input />
+//                  </Form.Item>
+//               </Col>
+
+//                <Col span={24}>
+//                 <Form.Item name="remark" label="Remark">
+//                    <Input.TextArea rows={3} />
+//                  </Form.Item>
+//               </Col>
+//           </Row>
+
+//           <Table
+//             columns={itemColumns}
+//             dataSource={items}
+//             pagination={false}
+//             rowKey="key"
+//             bordered
+//           />
+
+//           <Button className="mt-3" onClick={addItemRow} icon={<PlusOutlined />}>
+//             Add Item
+//           </Button>
+
+//           <div className="flex justify-end mt-4 gap-2">
+//             <Button onClick={() => setListView(true)}>Cancel</Button>
+//             <Button type="primary" htmlType="submit">
+//               Save
+//             </Button>
+//           </div>
+//         </Form>
+//       </Card>
+//     </div>
+//   );
+// };
+
+// export default RmIssueMaster;
+
+
+
+
+
+
+
 
 // ye chal rha h
 
@@ -1552,12 +2087,6 @@ export default RmIssueMaster;
 
 
 
-
-
-
-
-
-
 // import { useEffect, useState } from "react";
 // import {
 //   Table,
@@ -1803,32 +2332,42 @@ export default RmIssueMaster;
 //   Input,
 //   DatePicker,
 //   message,
+//   Popconfirm,
 //   Select,
 //   Row,
 //   Col,
-//   InputNumber,
 //   Card,
-//   Space,
+//   Divider,
+//   InputNumber,
 // } from "antd";
-// import {
-//   PlusOutlined,
-//   DeleteOutlined,
-//   ArrowLeftOutlined,
-// } from "@ant-design/icons";
+// import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 // import axios from "axios";
 // import dayjs from "dayjs";
 
 // const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// // ================= TYPES =================
-// interface RawMaterial {
+// interface RmIssue {
+//   id?: number;
+//   order_no?: string;
+//   job_no?: string;
+//   issue_date?: string;
+//   issue_to?: string;
+//   remark?: string;
+//   issue_type?: string;
+// }
+
+// interface RmStock {
+//   stock_id: number;
 //   material_id: number;
 //   name: string;
 //   unit: string;
+//   batch_no: string;
+//   available_qty: number;
 // }
 
 // interface IssueItem {
 //   key: number;
+//   stock_id?: number;
 //   material_id?: number;
 //   name?: string;
 //   unit?: string;
@@ -1839,32 +2378,47 @@ export default RmIssueMaster;
 // }
 
 // const RmIssueMaster = () => {
-//   const [listView, setListView] = useState(true);
+//   const [data, setData] = useState<RmIssue[]>([]);
+//   const [rmStock, setRmStock] = useState<RmStock[]>([]);
 //   const [items, setItems] = useState<IssueItem[]>([]);
-//   const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>([]);
-//   const [issueList, setIssueList] = useState<any[]>([]);
+//   const [showForm, setShowForm] = useState(false);
+//   const [editId, setEditId] = useState<number | null>(null);
 //   const [form] = Form.useForm();
 
-//   // ================= LOAD DATA =================
-//   const loadRawMaterials = async () => {
-//     const res = await axios.get(`${BASE_URL}/raw-materials`);
-//     setRawMaterials(res.data || []);
+//   // ================= FETCH =================
+//   const fetchIssues = async () => {
+//     const res = await axios.get(`${BASE_URL}/rm-issues`);
+//     setData(res.data || []);
 //   };
 
-//   const loadIssueList = async () => {
-//     const res = await axios.get(`${BASE_URL}/rm-issue-items`);
-//     setIssueList(res.data || []);
+//   const fetchRmStock = async () => {
+//     const res = await axios.get(`${BASE_URL}/rm-stock`); // RM stock API
+//     setRmStock(res.data || []);
+//   };
+
+//   const fetchIssueItems = async (issueId: number) => {
+//     const res = await axios.get(`${BASE_URL}/rm-issue-items/${issueId}`);
+//     const mapped = (res.data.items || []).map((it: any) => ({
+//       key: Date.now() + Math.random(),
+//       stock_id: it.stock_id,
+//       material_id: it.material_id,
+//       name: it.name,
+//       unit: it.unit,
+//       batch_no: it.batch_no,
+//       available_qty: it.available_qty,
+//       issue_qty: it.issue_qty,
+//       remark: it.remark,
+//     }));
+//     setItems(mapped);
 //   };
 
 //   useEffect(() => {
-//     loadRawMaterials();
-//     loadIssueList();
+//     fetchIssues();
+//     fetchRmStock();
 //   }, []);
 
 //   // ================= ITEM HANDLERS =================
-//   const addItemRow = () => {
-//     setItems([...items, { key: Date.now() }]);
-//   };
+//   const addItem = () => setItems([...items, { key: Date.now() }]);
 
 //   const updateItem = (key: number, field: string, value: any) => {
 //     setItems((prev) =>
@@ -1872,220 +2426,217 @@ export default RmIssueMaster;
 //     );
 //   };
 
-//   const removeItem = (key: number) => {
-//     setItems(items.filter((i) => i.key !== key));
-//   };
+//   const removeItem = (key: number) => setItems(items.filter((i) => i.key !== key));
 
 //   // ================= SAVE =================
 //   const handleSave = async (values: any) => {
-//     if (!items.length) {
-//       message.error("Please add at least one item");
-//       return;
-//     }
+//     if (!items.length) return message.error("Please add at least one item");
 
 //     try {
+//       const payload = {
+//         order_no: values.order_no,
+//         job_no: values.job_no,
+//         issue_date: values.issue_date?.format("YYYY-MM-DD"),
+//         issue_type: values.issue_type,
+//         issue_to: values.issue_to,
+//         remark: values.remark,
+//       };
+
+//       let issueId = editId;
+
+//       if (editId) {
+//         // UPDATE MASTER
+//         await axios.put(`${BASE_URL}/rm-issues/${editId}`, payload);
+
+//         // DELETE OLD ITEMS & revert stock
+//         await axios.delete(`${BASE_URL}/rm-issue-items/by-issue/${editId}`);
+//       } else {
+//         const res = await axios.post(`${BASE_URL}/rm-issues`, payload);
+//         issueId = res.data.id;
+//       }
+
+//       // INSERT ITEMS & decrement stock
 //       for (const item of items) {
+//         if (!item.stock_id || !item.issue_qty) continue;
+
 //         await axios.post(`${BASE_URL}/rm-issue-items`, {
+//           issue_id: issueId,
+//           stock_id: item.stock_id,
 //           material_id: item.material_id,
-//           batch_no: item.batch_no,
-//           available_qty: item.available_qty || 0,
-//           issue_qty: item.issue_qty || 0,
-//           issue_date: values.issue_date.format("YYYY-MM-DD"),
-//           operator_id: null,
+//           batch_no: item.batch_no || "",
+//           issue_qty: item.issue_qty,
 //           remark: item.remark || "",
-//           issue_type: values.issue_type,
+//         });
+
+//         // update RM stock (minus)
+//         await axios.put(`${BASE_URL}/rm-stock/minus/${item.stock_id}`, {
+//           qty: item.issue_qty,
 //         });
 //       }
 
 //       message.success("RM Issue saved successfully");
-//       form.resetFields();
+//       setShowForm(false);
+//       setEditId(null);
 //       setItems([]);
-//       setListView(true);
-//       loadIssueList();
-//     } catch {
+//       form.resetFields();
+//       fetchIssues();
+//       fetchRmStock();
+//     } catch (err) {
+//       console.error(err);
 //       message.error("Save failed");
 //     }
 //   };
 
-//   // ================= LIST COLUMNS =================
-//   const listColumns = [
+//   // ================= EDIT =================
+//   const handleEdit = async (record: RmIssue) => {
+//     try {
+//       setEditId(record.id || null);
+//       setShowForm(true);
+
+//       form.setFieldsValue({
+//         ...record,
+//         issue_date: record.issue_date ? dayjs(record.issue_date) : null,
+//       });
+
+//       if (record.id) await fetchIssueItems(record.id);
+//     } catch (err) {
+//       console.error(err);
+//       message.error("Failed to load RM Issue items");
+//     }
+//   };
+
+//   // ================= DELETE =================
+//   const handleDelete = async (id?: number) => {
+//     if (!id) return;
+//     await axios.delete(`${BASE_URL}/rm-issues/${id}`);
+//     message.success("Deleted");
+//     fetchIssues();
+//     fetchRmStock();
+//   };
+
+//   // ================= TABLE =================
+//   const columns = [
 //     { title: "S.No", render: (_: any, __: any, i: number) => i + 1 },
-//     { title: "Material ID", dataIndex: "material_id" },
-//     { title: "Batch No", dataIndex: "batch_no" },
-//     { title: "Issue Qty", dataIndex: "issue_qty" },
+//     { title: "Order No", dataIndex: "order_no" },
+//     { title: "Job No", dataIndex: "job_no" },
 //     {
 //       title: "Issue Date",
 //       dataIndex: "issue_date",
-//       render: (v: string) => dayjs(v).format("DD-MM-YYYY"),
+//       render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
 //     },
 //     { title: "Issue Type", dataIndex: "issue_type" },
-//   ];
-
-//   // ================= ITEM TABLE =================
-//   const itemColumns = [
-//     {
-//       title: "Material",
-//       render: (_: any, record: IssueItem) => (
-//         <Select
-//           style={{ width: 200 }}
-//           value={record.material_id}
-//           onChange={(val) => {
-//             const mat = rawMaterials.find((m) => m.material_id === val);
-//             updateItem(record.key, "material_id", val);
-//             updateItem(record.key, "name", mat?.name);
-//             updateItem(record.key, "unit", mat?.unit);
-//           }}
-//         >
-//           {rawMaterials.map((m) => (
-//             <Select.Option key={m.material_id} value={m.material_id}>
-//               {m.name}
-//             </Select.Option>
-//           ))}
-//         </Select>
-//       ),
-//     },
-//     {
-//       title: "Unit",
-//       render: (_: any, r: IssueItem) => <Input value={r.unit} disabled />,
-//     },
-//     {
-//       title: "Batch No",
-//       render: (_: any, r: IssueItem) => (
-//         <Input onChange={(e) => updateItem(r.key, "batch_no", e.target.value)} />
-//       ),
-//     },
-//     {
-//       title: "Available Qty",
-//       render: (_: any, r: IssueItem) => (
-//         <InputNumber
-//           min={0}
-//           onChange={(v) => updateItem(r.key, "available_qty", v)}
-//         />
-//       ),
-//     },
-//     {
-//       title: "Issue Qty",
-//       render: (_: any, r: IssueItem) => (
-//         <InputNumber
-//           min={0}
-//           onChange={(v) => updateItem(r.key, "issue_qty", v)}
-//         />
-//       ),
-//     },
-//     {
-//       title: "Remark",
-//       render: (_: any, r: IssueItem) => (
-//         <Input onChange={(e) => updateItem(r.key, "remark", e.target.value)} />
-//       ),
-//     },
+//     { title: "Issue To", dataIndex: "issue_to" },
 //     {
 //       title: "Action",
-//       render: (_: any, r: IssueItem) => (
-//         <Button danger icon={<DeleteOutlined />} onClick={() => removeItem(r.key)} />
+//       render: (_: any, r: RmIssue) => (
+//         <>
+//           <Button icon={<EditOutlined />} onClick={() => handleEdit(r)} />
+//           <Popconfirm title="Delete?" onConfirm={() => handleDelete(r.id)}>
+//             <Button danger icon={<DeleteOutlined />} />
+//           </Popconfirm>
+//         </>
 //       ),
 //     },
 //   ];
 
 //   // ================= RENDER =================
-//   return listView ? (
+//   return (
 //     <div className="p-6 bg-white">
-//       <div className="flex justify-between mb-4">
-//         <h2 className="text-xl font-semibold">RM Issue List</h2>
-//         <Button
-//           type="primary"
-//           icon={<PlusOutlined />}
-//           onClick={() => setListView(false)}
-//         >
-//           Add RM Issue
-//         </Button>
-//       </div>
-
-//       <Table
-//         dataSource={issueList}
-//         columns={listColumns}
-//         rowKey="id"
-//         bordered
-//       />
-//     </div>
-//   ) : (
-//     <div className="p-6 bg-white">
-//       <Button icon={<ArrowLeftOutlined />} onClick={() => setListView(true)}>
-//         Back
-//       </Button>
-
-//       <Card title="Add RM Issue" className="mt-4">
-//         <Form layout="vertical" form={form} onFinish={handleSave}>
-//           <Row gutter={16}>
-//             <Col span={8}>
-//                  <Form.Item name="order_no" label="Order No">
-//                    <Input />
-//                 </Form.Item>
-//               </Col>
-
-//                <Col span={8}>
-//                  <Form.Item name="job_no" label="Job No">
-//                    <Input />
-//                  </Form.Item>
-//                </Col>
-
-//               <Col span={8}>
-//                 <Form.Item name="issue_date" label="Issue Date">
-//                    <DatePicker style={{ width: "100%" }} />
-//                  </Form.Item>
-//                </Col>
-
-//                <Col span={8}>
-//                  <Form.Item name="issue_type" label="Issue Type">
-//                    <Select allowClear>
-//                      <Select.Option value="Production">
-//                        Production
-//                     </Select.Option>
-//                     <Select.Option value="Maintenance">
-//                       Maintenance
-//                     </Select.Option>
-//                     <Select.Option value="Sample">Sample</Select.Option>
-//                 </Select>
-//                  </Form.Item>
-//              </Col>
-
-//               <Col span={8}>
-//                 <Form.Item name="issue_to" label="Issue To">
-//                  <Input />
-//                  </Form.Item>
-//               </Col>
-
-//                <Col span={24}>
-//                 <Form.Item name="remark" label="Remark">
-//                    <Input.TextArea rows={3} />
-//                  </Form.Item>
-//               </Col>
-//           </Row>
-
-//           <Table
-//             columns={itemColumns}
-//             dataSource={items}
-//             pagination={false}
-//             rowKey="key"
-//             bordered
-//           />
-
-//           <Button className="mt-3" onClick={addItemRow} icon={<PlusOutlined />}>
-//             Add Item
-//           </Button>
-
-//           <div className="flex justify-end mt-4 gap-2">
-//             <Button onClick={() => setListView(true)}>Cancel</Button>
-//             <Button type="primary" htmlType="submit">
-//               Save
+//       {!showForm && (
+//         <>
+//           <div className="flex justify-between mb-4">
+//             <h2 className="text-xl font-semibold">Raw Material Issue</h2>
+//             <Button type="primary" icon={<PlusOutlined />} onClick={() => setShowForm(true)}>
+//               Add RM Issue
 //             </Button>
 //           </div>
-//         </Form>
-//       </Card>
+
+//           <Table columns={columns} dataSource={data} rowKey="id" bordered />
+//         </>
+//       )}
+
+//       {showForm && (
+//         <Card>
+//           <Form layout="vertical" form={form} onFinish={handleSave}>
+//             <Row gutter={16}>
+//               <Col span={8}><Form.Item name="order_no" label="Order No"><Input /></Form.Item></Col>
+//               <Col span={8}><Form.Item name="job_no" label="Job No"><Input /></Form.Item></Col>
+//               <Col span={8}><Form.Item name="issue_date" label="Issue Date"><DatePicker style={{ width: "100%" }} /></Form.Item></Col>
+//               <Col span={8}><Form.Item name="issue_type" label="Issue Type">
+//                 <Select>
+//                   <Select.Option value="Production">Production</Select.Option>
+//                   <Select.Option value="Maintenance">Maintenance</Select.Option>
+//                   <Select.Option value="Sample">Sample</Select.Option>
+//                 </Select>
+//               </Form.Item></Col>
+//               <Col span={8}><Form.Item name="issue_to" label="Issue To"><Input /></Form.Item></Col>
+//               <Col span={24}><Form.Item name="remark" label="Remark"><Input.TextArea rows={2} /></Form.Item></Col>
+//             </Row>
+
+//             <Divider />
+
+//             <Table
+//               dataSource={items}
+//               rowKey="key"
+//               pagination={false}
+//               bordered
+//               columns={[
+//                 {
+//                   title: "Material",
+//                   render: (_: any, r: IssueItem) => (
+//                     <Select
+//                       style={{ width: 200 }}
+//                       value={r.stock_id}
+//                       onChange={(val) => {
+//                         const stock = rmStock.find((s) => s.stock_id === val);
+//                         updateItem(r.key, "stock_id", val);
+//                         updateItem(r.key, "material_id", stock?.material_id);
+//                         updateItem(r.key, "name", stock?.name);
+//                         updateItem(r.key, "unit", stock?.unit);
+//                         updateItem(r.key, "batch_no", stock?.batch_no);
+//                         updateItem(r.key, "available_qty", stock?.available_qty);
+//                       }}
+//                     >
+//                       {rmStock.map((s) => (
+//                         <Select.Option key={s.stock_id} value={s.stock_id}>
+//                           {s.name} ({s.batch_no}) - {s.available_qty}
+//                         </Select.Option>
+//                       ))}
+//                     </Select>
+//                   ),
+//                 },
+//                 { title: "Unit", render: (_: any, r: IssueItem) => <Input value={r.unit} disabled /> },
+//                 { title: "Batch No", render: (_: any, r: IssueItem) => <Input value={r.batch_no} disabled /> },
+//                 { title: "Available Qty", render: (_: any, r: IssueItem) => <InputNumber min={0} value={r.available_qty} disabled /> },
+//                 { title: "Issue Qty", render: (_: any, r: IssueItem) => <InputNumber min={0} value={r.issue_qty} onChange={v => updateItem(r.key, "issue_qty", v)} /> },
+//                 { title: "Remark", render: (_: any, r: IssueItem) => <Input value={r.remark} onChange={e => updateItem(r.key, "remark", e.target.value)} /> },
+//                 { title: "Action", render: (_: any, r: IssueItem) => <Button danger icon={<DeleteOutlined />} onClick={() => removeItem(r.key)} /> },
+//               ]}
+//             />
+
+//             <Button className="mt-3" icon={<PlusOutlined />} onClick={addItem}>Add Item</Button>
+
+//             <div className="flex justify-end gap-2 mt-4">
+//               <Button onClick={() => setShowForm(false)}>Cancel</Button>
+//               <Button type="primary" htmlType="submit">Save</Button>
+//             </div>
+//           </Form>
+//         </Card>
+//       )}
 //     </div>
 //   );
 // };
 
 // export default RmIssueMaster;
+
+
+
+
+
+
+
+
+
 
 
 

@@ -647,6 +647,24 @@
 
 
 
+//  const [form] = Form.useForm();
+//   const [quotations, setQuotations] = useState<any[]>([]);
+//   const [filteredQuotations, setFilteredQuotations] = useState<any[]>([]); // for search
+//   const [searchText, setSearchText] = useState(""); // search input
+//   const [customers, setCustomers] = useState<any[]>([]);
+//   const [currencies, setCurrencies] = useState<any[]>([]);
+//   const [products, setProducts] = useState<any[]>([]);
+//   const [items, setItems] = useState<any[]>([]);
+//   // const [isFormVisible, setIsFormVisible] = useState(false);
+//   const [isFormVisible, setIsFormVisible] = useState(true);
+
+//   const [editId, setEditId] = useState<number | null>(null);
+//   const [loading, setLoading] = useState(false);
+//   const [previewVisible, setPreviewVisible] = useState(false);
+//   const [selectedPreview, setSelectedPreview] = useState<any>(null);
+
+
+
 import React, { useEffect, useState } from "react";
 import {
   Card,
@@ -674,7 +692,7 @@ import {
 } from "@ant-design/icons";
 import axios from "axios";
 import dayjs from "dayjs";
-import QuotationPreview from "./QuotationPreview";
+import QuotationPreview from "./QuotationPreview";       
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -695,13 +713,13 @@ const NewQuotation: React.FC = () => {
   const [currencies, setCurrencies] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
-  // const [isFormVisible, setIsFormVisible] = useState(false);
   const [isFormVisible, setIsFormVisible] = useState(true);
-
   const [editId, setEditId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [previewVisible, setPreviewVisible] = useState(false);
   const [selectedPreview, setSelectedPreview] = useState<any>(null);
+  const DEFAULT_COMPANY_STATE = "uttar pradesh";
+
 
   useEffect(() => {
     fetchQuotations();
@@ -738,6 +756,15 @@ const NewQuotation: React.FC = () => {
       console.error(err);
     }
   };
+
+  const normalizeState = (s?: string) =>
+  (s || "").trim().toLowerCase();
+
+  
+
+
+
+
 
   const fetchProducts = async () => {
     try {
@@ -797,6 +824,11 @@ const NewQuotation: React.FC = () => {
     );
   };
 
+//   const customerState =
+//   customer.shipping_state_name || customer.state_name;
+
+// console.log("Customer State:", customerState);
+
   const onCustomerChange = (id: number) => {
     const customer = customers.find((c) => c.id === id);
     if (customer) {
@@ -806,9 +838,23 @@ const NewQuotation: React.FC = () => {
         cstate: customer.cstate,
         district: customer.district,
         address: customer.address,
+        state_id: customer.state_id,
+        state_name: customer.state_name
       });
+      console.log("Customer state name:", customer.state_name);
     }
   };
+
+  const isIntraState = () => {
+  const customerState = form.getFieldValue("state_name");
+
+   console.log("Customer State (from form):", customerState);
+  console.log("Company State:", DEFAULT_COMPANY_STATE);
+  return (
+    normalizeState(customerState) ===
+    normalizeState(DEFAULT_COMPANY_STATE)
+  );
+};
 
   const totals = items.reduce(
     (acc, it) => {
@@ -824,11 +870,29 @@ const NewQuotation: React.FC = () => {
     { total_amount: 0, discount_amount: 0, tax_amount: 0 }
   );
 
-  const closeForm = () => {
+  const taxBreakup = (() => {
+  const totalTax = totals.tax_amount;
+
+  if (isIntraState()) {
+    return {
+      cgst: totalTax / 2,
+      sgst: totalTax / 2,
+      igst: 0,
+    };
+  }
+
+  return {
+    cgst: 0,
+    sgst: 0,
+    igst: totalTax,
+  };
+})();
+
+  const closeForm = () => {     
     form.resetFields();
     setItems([]);
-    setEditId(null);
-    setIsFormVisible(false);
+    setEditId(null);    
+    setIsFormVisible(false);            
   };
 
   const onFinish = async (values: any) => {
@@ -1058,7 +1122,7 @@ const NewQuotation: React.FC = () => {
 
 
 
-               updateItem(record.key, "tax_rate", Number(selected.gst_name) || 0);
+               updateItem(record.key, "tax_rate", Number(selected.gst_rate) || 0);
             }
           }}
           placeholder="Select product"
@@ -1221,10 +1285,13 @@ const NewQuotation: React.FC = () => {
 
             <Row justify="end" style={{ marginTop: 20 }}>
               <Col xs={24} sm={12} md={8} lg={6}>
-                <div style={{ textAlign: "right" }}>
-                  <p>Total: ₹{totals.total_amount.toFixed(2)}</p>
-                  <p>Discount: ₹{totals.discount_amount.toFixed(2)}</p>
-                  <p>Tax: ₹{totals.tax_amount.toFixed(2)}</p>
+                <div style={{ textAlign: "left", marginLeft: "80px" }}>
+                  <p>Total  : ₹{totals.total_amount.toFixed(2)}</p>
+                  <p>CGST   : ₹{taxBreakup.cgst.toFixed(2)}</p>
+                  <p>SGST   : ₹{taxBreakup.sgst.toFixed(2)}</p>
+                  <p>IGST   : ₹{taxBreakup.igst.toFixed(2)}</p>
+                  <p>Total Tax: ₹{totals.tax_amount.toFixed(2)}</p>
+                  <p>Discount : ₹{totals.discount_amount.toFixed(2)}</p>
                   <h3>Net Amount: ₹{totals.total_amount.toFixed(2)}</h3>
                 </div>
               </Col>
@@ -1263,11 +1330,10 @@ const NewQuotation: React.FC = () => {
       )}
 
       {previewVisible && selectedPreview && (
-        <QuotationPreview visible={previewVisible} onClose={() => setPreviewVisible(true)} previewData={selectedPreview} />
+        <QuotationPreview visible={previewVisible} onClose={() => setPreviewVisible(false)} previewData={selectedPreview} />
       )}
     </Card>
   );
 };
 
 export default NewQuotation;
-

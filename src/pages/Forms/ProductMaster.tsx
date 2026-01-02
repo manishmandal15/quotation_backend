@@ -279,7 +279,7 @@ const ProductMaster = () => {
               <Select placeholder="Select GST" allowClear>
                 {gstList.map((g) => (
                   <Option key={g.gst_id} value={g.gst_id}>
-                    {g.gst}
+                    {g.gst_name}
                   </Option>
                 ))}
               </Select>

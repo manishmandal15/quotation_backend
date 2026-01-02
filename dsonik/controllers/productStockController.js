@@ -1,5 +1,35 @@
 const db = require("../config/db");
 
+
+/* =====================================================
+   GET STOCK FOR PRODUCT ISSUE DROPDOWN
+   ===================================================== */
+exports.getStockForIssue = (req, res) => {
+  const sql = `
+    SELECT
+      ps.id AS stock_id,
+      ps.product_id,
+      p.name AS product_name,
+      ps.batch_lotno,
+      ps.qty,
+      IFNULL(ps.block_qty, 0) AS block_qty,
+      (ps.qty - IFNULL(ps.block_qty, 0)) AS available_qty,
+      ps.location_id
+    FROM product_stock_dtl ps
+    JOIN products p ON p.id = ps.product_id
+    WHERE (ps.qty - IFNULL(ps.block_qty, 0)) > 0
+    ORDER BY p.name
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("STOCK ISSUE DROPDOWN ERROR:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+    res.json(results);
+  });
+};
+
 // ===============================
 // GET ALL STOCK RECORDS
 // ===============================

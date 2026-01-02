@@ -1,23 +1,75 @@
 const db = require("../config/db");
 
 // ✅ Get all customers
+// exports.getCustomers = (req, res) => {
+//   db.query("SELECT * FROM customers", (err, results) => {
+//     if (err) return res.status(500).json({ error: err.message });
+//     res.json(results);
+//   });
+// };
+
 exports.getCustomers = (req, res) => {
-  db.query("SELECT * FROM customers", (err, results) => {
+  const sql = `
+    SELECT
+      c.*,
+
+      s.name  AS state_name,
+      d.name  AS district_name,
+
+      ss.name AS shipping_state_name
+
+    FROM customers c
+    LEFT JOIN states s ON s.id = c.state_id
+    LEFT JOIN districts d ON d.id = c.district_id
+    LEFT JOIN states ss ON ss.id = c.shipping_state
+  `;
+
+  db.query(sql, (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
 };
 
+
 // ✅ Get single customer by ID
+// exports.getCustomerById = (req, res) => {
+//   const { id } = req.params;
+//   db.query("SELECT * FROM customers WHERE id=?", [id], (err, results) => {
+//     if (err) return res.status(500).json({ error: "Database error" });
+//     if (results.length === 0)
+//       return res.status(404).json({ error: "Customer not found" });
+//     res.json(results[0]);
+//   });
+// };
+
+
+
 exports.getCustomerById = (req, res) => {
   const { id } = req.params;
-  db.query("SELECT * FROM customers WHERE id=?", [id], (err, results) => {
+
+  const sql = `
+    SELECT
+      c.*,
+
+      s.name  AS state_name,
+      d.name  AS district_name,
+      ss.name AS shipping_state_name
+
+    FROM customers c
+    LEFT JOIN states s ON s.id = c.state_id
+    LEFT JOIN districts d ON d.id = c.district_id
+    LEFT JOIN states ss ON ss.id = c.shipping_state
+    WHERE c.id = ?
+  `;
+
+  db.query(sql, [id], (err, results) => {
     if (err) return res.status(500).json({ error: "Database error" });
     if (results.length === 0)
       return res.status(404).json({ error: "Customer not found" });
     res.json(results[0]);
   });
 };
+
 
 // ✅ Create customer
 // ✅ Create customer

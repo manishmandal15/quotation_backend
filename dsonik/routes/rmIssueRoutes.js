@@ -44,3 +44,30 @@ router.delete("/:id", controller.delete.bind(controller));
 
 module.exports = router;
 
+
+
+
+// routes/rmIssueRoutes.js
+// const express = require("express");
+// const router = express.Router();
+// const RMIssueController = require("../controllers/rmIssueController");
+// const rmIssueCtrl = new RMIssueController();
+
+// // ✅ Get all RM Issues
+// router.get("/", (req, res) => rmIssueCtrl.getAll(req, res));
+
+// // ✅ Get RM Issue by ID (prefill for edit)
+// router.get("/:id", (req, res) => rmIssueCtrl.getById(req, res));
+
+// // ✅ Create new RM Issue
+// router.post("/", (req, res) => rmIssueCtrl.create(req, res));
+
+// // ✅ Update RM Issue
+// router.put("/:id", (req, res) => rmIssueCtrl.update(req, res));
+
+// // ✅ Delete RM Issue
+// router.delete("/:id", (req, res) => rmIssueCtrl.delete(req, res));
+
+// module.exports = router;
+
+

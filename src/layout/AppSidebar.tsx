@@ -126,7 +126,7 @@ const AppSidebar: React.FC = () => {
           { name: "Product Issue List", path: "product-issue " },  
           { name: "Row Material Stock", path: "/rmStockmaster" },
           { name: "Row Material Issue Stock", path: "/rmIssue " },
-          // { name: "Row Material Issue Item Stock", path: "/rmIssueItem " },   
+          { name: "Row Material Issue Item Stock", path: "/rmIssueItem " },   
           
          
         ],

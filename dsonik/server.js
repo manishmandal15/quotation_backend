@@ -172,13 +172,7 @@ const rmStockRoutes = require("./routes/rmStockRoutes");
 const rmIssueRoutes = require("./routes/rmIssueRoutes");
 const rmIssueItemRoutes = require("./routes/rmIssueItemRoutes");
 const productIssueRoutes = require("./routes/productIssueRoutes");
-
-
-
-
-
-
-
+const productIssueItemRoutes = require("./routes/productIssueItemroutes");
 
 
 
@@ -226,6 +220,7 @@ app.use("/api/rm-stock", rmStockRoutes);
 app.use("/api/rm-issues", rmIssueRoutes);
 app.use("/api/rm-issue-items", rmIssueItemRoutes);
 app.use("/api/product-issue", productIssueRoutes);
+app.use("/api/product-issue-items", productIssueItemRoutes);
 // ----------------------------
 // ROOT ROUTE
 // ----------------------------

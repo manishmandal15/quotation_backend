@@ -556,10 +556,13 @@ class QuotationController {
     const query = `
       SELECT q.*, 
              c.id AS customer_id, c.name AS customer_name,
-             cu.code AS currency_code,
+             cu.code AS currency_code,s.name AS customer_state_name,
              u.name AS created_by_name, a.name AS approved_by_name
       FROM quotations q
       LEFT JOIN customers c ON c.id = q.customer_id
+      LEFT JOIN states s ON s.id = c.state_id
+    
+
       LEFT JOIN currencies cu ON cu.id = q.currency_id
       LEFT JOIN users u ON u.id = q.created_by
       LEFT JOIN users a ON a.id = q.approved_by
@@ -580,11 +583,13 @@ class QuotationController {
              c.id AS customer_id, c.name AS customer_name,
              c.email AS customer_email, c.phone AS customer_phone,
              c.gst_no AS customer_gst, c.address AS customer_address,
-             c.city AS customer_city, c.state_id AS customer_state,
+             c.city AS customer_city, c.state_id AS customer_state_id,
+       s.name AS customer_state_name,
              c.district_id AS customer_district,
              c.contact_person AS customer_contact_person
       FROM quotations q
       LEFT JOIN customers c ON c.id = q.customer_id
+      LEFT JOIN states s ON s.id = c.state_id
       WHERE q.id = ?
     `;
 
@@ -610,7 +615,8 @@ class QuotationController {
         gst_no: q.customer_gst,
         address: q.customer_address,
         city: q.customer_city,
-        cstate: q.customer_state,
+       state_id: q.customer_state_id,
+  state_name: q.customer_state_name,
         district: q.customer_district,
         contact_person: q.customer_contact_person,
       };
@@ -752,11 +758,13 @@ class QuotationController {
              c.id AS customer_id, c.name AS customer_name,
              c.email AS customer_email, c.phone AS customer_phone,
              c.gst_no AS customer_gst, c.address AS customer_address,
-             c.city AS customer_city, c.state_id AS customer_state,
+             c.city AS customer_city, c.state_id AS customer_state_id,
+       s.name AS customer_state_name,
              c.district_id AS customer_district,
              c.contact_person AS customer_contact_person
       FROM quotations q
       LEFT JOIN customers c ON c.id = q.customer_id
+      LEFT JOIN states s ON s.id = c.state_id
       WHERE q.quotation_no = ?
     `;
 
@@ -782,7 +790,9 @@ class QuotationController {
         gst_no: q.customer_gst,
         address: q.customer_address,
         city: q.customer_city,
-        cstate: q.customer_state,
+        // cstate: q.customer_state,
+        state_id: q.customer_state_id,
+        state_name: q.customer_state_name,
         district: q.customer_district,
         contact_person: q.customer_contact_person,
       };
@@ -836,6 +846,212 @@ delete(req, res) {
 }
 
 module.exports = QuotationController;
+
+
+// const db = require("../config/db");
+
+// class QuotationController {
+
+//   // 🔹 COMMON: Company Settings
+//   getCompanySettings(res, callback) {
+//     const query = `
+//       SELECT
+//         company_name,
+//         address,
+//         email,
+//         phone,
+//         website,
+//         gst_no,
+//         logo_path,
+//         bank_name,
+//         bank_address,
+//         acc_no,
+//         ifsc
+//       FROM company_settings
+//       ORDER BY id ASC
+//       LIMIT 1
+//     `;
+
+//     db.query(query, (err, result) => {
+//       if (err) return res.status(500).json({ error: err.message });
+//       callback(result[0] || {});
+//     });
+//   }
+
+//   // 1️⃣ Get all quotations
+//   getAll(req, res) {
+//     const query = `
+//       SELECT q.*, 
+//              c.id AS customer_id, c.name AS customer_name,
+//              cu.code AS currency_code,
+//              u.name AS created_by_name, a.name AS approved_by_name
+//       FROM quotations q
+//       LEFT JOIN customers c ON c.id = q.customer_id
+//       LEFT JOIN currencies cu ON cu.id = q.currency_id
+//       LEFT JOIN users u ON u.id = q.created_by
+//       LEFT JOIN users a ON a.id = q.approved_by
+//       ORDER BY q.id DESC
+//     `;
+//     db.query(query, (err, results) => {
+//       if (err) return res.status(500).json({ error: err.message });
+//       res.json(results);
+//     });
+//   }
+
+//   // 2️⃣ Get quotation by ID
+//   getById(req, res) {
+//     const { id } = req.params;
+
+//     const quotationQuery = `
+//       SELECT q.*, 
+//              c.id AS customer_id,
+//              c.name AS customer_name,
+//              c.email AS customer_email,
+//              c.phone AS customer_phone,
+//              c.gst_no AS customer_gst,
+//              c.address AS customer_address,
+//              c.city AS customer_city,
+//              c.state_id AS customer_state_id,
+//              s.name AS customer_state_name,
+//              c.district_id AS customer_district_id,
+//              d.name AS customer_district_name,
+//              c.contact_person AS customer_contact_person
+//       FROM quotations q
+//       LEFT JOIN customers c ON c.id = q.customer_id
+//       LEFT JOIN states s ON s.id = c.state_id
+//       LEFT JOIN districts d ON d.id = c.district_id
+//       WHERE q.id = ?
+//     `;
+
+//     const itemsQuery = `
+//       SELECT qi.*, p.name AS product_name, p.description AS product_description
+//       FROM quotation_items qi
+//       LEFT JOIN products p ON p.id = qi.product_id
+//       WHERE qi.quotation_id = ?
+//     `;
+
+//     db.query(quotationQuery, [id], (err, quotation) => {
+//       if (err) return res.status(500).json({ error: err.message });
+//       if (!quotation.length)
+//         return res.status(404).json({ error: "Quotation not found" });
+
+//       const q = quotation[0];
+
+//       const customer = {
+//         id: q.customer_id,
+//         name: q.customer_name,
+//         email: q.customer_email,
+//         phone: q.customer_phone,
+//         gst_no: q.customer_gst,
+//         address: q.customer_address,
+//         city: q.customer_city,
+//         state_id: q.customer_state_id,
+//         state_name: q.customer_state_name,
+//         district_id: q.customer_district_id,
+//         district_name: q.customer_district_name,
+//         contact_person: q.customer_contact_person,
+//       };
+
+//       db.query(itemsQuery, [id], (err2, items) => {
+//         if (err2) return res.status(500).json({ error: err2.message });
+
+//         const products = items.map(item => ({
+//           product_id: item.product_id,
+//           product_name: item.product_name || "Unnamed Product",
+//           description: item.description || item.product_description || "-",
+//           quantity: Number(item.quantity || 0),
+//           unit_price: Number(item.unit_price || 0),
+//           discount: Number(item.discount || 0),
+//           tax_rate: Number(item.tax_rate || 0),
+//           line_total: Number(item.line_total || 0),
+//         }));
+
+//         this.getCompanySettings(res, (company) => {
+//           res.json({ ...q, customer, products, company });
+//         });
+//       });
+//     });
+//   }
+
+//   // 5️⃣ Get quotation by number (PRINT)
+//   getByNumber(req, res) {
+//     const { quotationNo } = req.params;
+
+//     const quotationQuery = `
+//       SELECT q.*, 
+//              c.id AS customer_id,
+//              c.name AS customer_name,
+//              c.email AS customer_email,
+//              c.phone AS customer_phone,
+//              c.gst_no AS customer_gst,
+//              c.address AS customer_address,
+//              c.city AS customer_city,
+//              c.state_id AS customer_state_id,
+//              s.name AS customer_state_name,
+//              c.district_id AS customer_district_id,
+//              d.name AS customer_district_name,
+//              c.contact_person AS customer_contact_person
+//       FROM quotations q
+//       LEFT JOIN customers c ON c.id = q.customer_id
+//       LEFT JOIN states s ON s.id = c.state_id
+//       LEFT JOIN districts d ON d.id = c.district_id
+//       WHERE q.quotation_no = ?
+//     `;
+
+//     const itemsQuery = `
+//       SELECT qi.*, p.name AS product_name, p.description AS product_description
+//       FROM quotation_items qi
+//       LEFT JOIN products p ON p.id = qi.product_id
+//       WHERE qi.quotation_id = (SELECT id FROM quotations WHERE quotation_no = ?)
+//     `;
+
+//     db.query(quotationQuery, [quotationNo], (err, quotation) => {
+//       if (err) return res.status(500).json({ error: err.message });
+//       if (!quotation.length)
+//         return res.status(404).json({ error: "Quotation not found" });
+
+//       const q = quotation[0];
+
+//       const customer = {
+//         id: q.customer_id,
+//         name: q.customer_name,
+//         email: q.customer_email,
+//         phone: q.customer_phone,
+//         gst_no: q.customer_gst,
+//         address: q.customer_address,
+//         city: q.customer_city,
+//         state_id: q.customer_state_id,
+//         state_name: q.customer_state_name,
+//         district_id: q.customer_district_id,
+//         district_name: q.customer_district_name,
+//         contact_person: q.customer_contact_person,
+//       };
+
+//       db.query(itemsQuery, [quotationNo], (err2, items) => {
+//         if (err2) return res.status(500).json({ error: err2.message });
+
+//         const products = items.map(item => ({
+//           product_id: item.product_id,
+//           product_name: item.product_name || "Unnamed Product",
+//           description: item.description || item.product_description || "-",
+//           quantity: Number(item.quantity || 0),
+//           unit_price: Number(item.unit_price || 0),
+//           discount: Number(item.discount || 0),
+//           tax_rate: Number(item.tax_rate || 0),
+//           line_total: Number(item.line_total || 0),
+//         }));
+
+//         this.getCompanySettings(res, (company) => {
+//           res.json({ ...q, customer, products, company });
+//         });
+//       });
+//     });
+//   }
+
+// }
+
+// module.exports = QuotationController;
+
 
 
 
