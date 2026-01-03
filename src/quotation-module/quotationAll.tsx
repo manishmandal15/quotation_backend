@@ -669,7 +669,7 @@ import React, { useEffect, useState } from "react";
 // import { openProductMasterModal } from "/ProductMaster";
 // import { openProductMasterModal } from "./Forms/ProductMaster";
 // import { openProductMasterModal } from "../../pages/Forms/ProductMaster";
-// import { openProductMasterModal } from "../pages/Forms/ProductMaster";
+import { openProductMasterModal } from "../pages/Forms/ProductMaster";
 
 
 
@@ -1397,21 +1397,33 @@ const NewQuotation: React.FC = () => {
                     { required: true, message: "Please select customer" },
                   ]}
                 >
-                  <Select
-                    showSearch
-                    placeholder="Select customer"
-                    onChange={onCustomerChange}
-                    optionFilterProp="label"
-                  >
-                    {customers
-                      .slice()
-                      .sort((a, b) => a.name.localeCompare(b.name))
-                      .map((c) => (
-                        <Select.Option key={c.id} value={c.id} label={c.name}>
-                          {c.name}
-                        </Select.Option>
-                      ))}
-                  </Select>
+                 <Select
+  showSearch
+  placeholder="Select customer"
+  onChange={onCustomerChange}
+  optionFilterProp="label"
+>
+  {customers
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((c) => {
+      const district =
+        c.district_name || c.district || "";
+
+      const labelText = `${c.name}${district ? ", " + district : ""}`;
+
+      return (
+        <Select.Option
+          key={c.id}
+          value={c.id}
+          label={labelText}   // 🔥 search yahi se hoga
+        >
+          {labelText}        {/* 🔥 UI me yahi dikhega */}
+        </Select.Option>
+      );
+    })}
+</Select>
+
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12} md={8} lg={6}>
@@ -1460,12 +1472,7 @@ const NewQuotation: React.FC = () => {
             </Form.Item>
 
             <Title level={5}>Product Details </Title>
-            {/* <Button
-  type="dashed"
-  onClick={() => openProductMasterModal?.()}
->
-  + Add New Product
-</Button> */}
+            
             <Button
               type="dashed"
               onClick={addItem}
@@ -1474,6 +1481,13 @@ const NewQuotation: React.FC = () => {
             >
               Add Item
             </Button>
+
+            <Button
+  type="dashed"
+  onClick={() => openProductMasterModal?.()}
+>
+  + Add New Product
+</Button>
 
             <div style={{ overflowX: "auto" }}>
               <Table

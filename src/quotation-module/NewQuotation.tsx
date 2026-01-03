@@ -1351,20 +1351,32 @@ const NewQuotation: React.FC = () => {
                   ]}
                 >
                   <Select
-                    showSearch
-                    placeholder="Select customer"
-                    onChange={onCustomerChange}
-                    optionFilterProp="label"
-                  >
-                    {customers
-                      .slice()
-                      .sort((a, b) => a.name.localeCompare(b.name))
-                      .map((c) => (
-                        <Select.Option key={c.id} value={c.id} label={c.name}>
-                          {c.name}
-                        </Select.Option>
-                      ))}
-                  </Select>
+  showSearch
+  placeholder="Select customer"
+  onChange={onCustomerChange}
+  optionFilterProp="label"
+>
+  {customers
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((c) => {
+      const district =
+        c.district_name || c.district || "";
+
+      const labelText = `${c.name}${district ? ", " + district : ""}`;
+
+      return (
+        <Select.Option
+          key={c.id}
+          value={c.id}
+          label={labelText}   // 🔥 search yahi se hoga
+        >
+          {labelText}        {/* 🔥 UI me yahi dikhega */}
+        </Select.Option>
+      );
+    })}
+</Select>
+
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12} md={8} lg={6}>
