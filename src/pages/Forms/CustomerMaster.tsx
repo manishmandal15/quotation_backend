@@ -262,11 +262,11 @@ const CustomerMaster: React.FC = () => {
           { title: "GST No", dataIndex: "gst_no" },
           // { title: "PAN No", dataIndex: "pan_no" },
 
-          // {
-          //   title: "Billing State",
-          //   dataIndex: "state_id",
-          //   render: (val) => states.find((s) => s.id == val)?.name || "-",
-          // },
+          {
+            title: "Billing State",
+            dataIndex: "state_id",
+            render: (val) => states.find((s) => s.id == val)?.name || "-",
+          },
           {
             title: "Billing District",
             dataIndex: "district_id",

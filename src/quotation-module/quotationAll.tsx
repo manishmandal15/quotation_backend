@@ -666,6 +666,14 @@
 
 
 import React, { useEffect, useState } from "react";
+// import { openProductMasterModal } from "/ProductMaster";
+// import { openProductMasterModal } from "./Forms/ProductMaster";
+// import { openProductMasterModal } from "../../pages/Forms/ProductMaster";
+// import { openProductMasterModal } from "../pages/Forms/ProductMaster";
+
+
+
+
 import {
   Card,
   Table,
@@ -692,7 +700,7 @@ import {
 } from "@ant-design/icons";
 import axios from "axios";
 import dayjs from "dayjs";
-import QuotationPreview from "./QuotationPreview";       
+import QuotationPreview from "./QuotationPreview";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -719,7 +727,6 @@ const NewQuotation: React.FC = () => {
   const [previewVisible, setPreviewVisible] = useState(false);
   const [selectedPreview, setSelectedPreview] = useState<any>(null);
   const DEFAULT_COMPANY_STATE = "uttar pradesh";
-
 
   useEffect(() => {
     fetchQuotations();
@@ -757,14 +764,7 @@ const NewQuotation: React.FC = () => {
     }
   };
 
-  const normalizeState = (s?: string) =>
-  (s || "").trim().toLowerCase();
-
-  
-
-
-
-
+  const normalizeState = (s?: string) => (s || "").trim().toLowerCase();
 
   const fetchProducts = async () => {
     try {
@@ -824,75 +824,98 @@ const NewQuotation: React.FC = () => {
     );
   };
 
-//   const customerState =
-//   customer.shipping_state_name || customer.state_name;
+  //   const customerState =
+  //   customer.shipping_state_name || customer.state_name;
 
-// console.log("Customer State:", customerState);
+  // console.log("Customer State:", customerState);
 
   const onCustomerChange = (id: number) => {
     const customer = customers.find((c) => c.id === id);
+    //  const customer = customers.find((c) => c.id === id);
+
+    console.log("FULL CUSTOMER OBJECT 👉", customer);
     if (customer) {
       form.setFieldsValue({
         phone: customer.phone,
         gst_no: customer.gst_no,
         cstate: customer.cstate,
-        district: customer.district,
+        // district: customer.district,
+        district: customer.district_name,
         address: customer.address,
         state_id: customer.state_id,
-        state_name: customer.state_name
+        state_name: customer.state_name,
       });
       console.log("Customer state name:", customer.state_name);
+      console.log("Customer district name:", customer.district_name);
     }
   };
 
   const isIntraState = () => {
-  const customerState = form.getFieldValue("state_name");
+    const customerState = form.getFieldValue("state_name");
 
-   console.log("Customer State (from form):", customerState);
-  console.log("Company State:", DEFAULT_COMPANY_STATE);
-  return (
-    normalizeState(customerState) ===
-    normalizeState(DEFAULT_COMPANY_STATE)
-  );
-};
+    console.log("Customer State (from form):", customerState);
+    console.log("Company State:", DEFAULT_COMPANY_STATE);
+    return (
+      normalizeState(customerState) === normalizeState(DEFAULT_COMPANY_STATE)
+    );
+  };
+
+  // const totals = items.reduce(
+  //   (acc, it) => {
+  //     acc.total_amount += Number(it.line_total || 0);
+  //     acc.discount_amount +=
+  //       (Number(it.discount || 0) / 100) *
+  //       (Number(it.quantity || 0) * Number(it.unit_price || 0));
+  //     acc.tax_amount +=
+  //       (Number(it.tax_rate || 0) / 100) *
+  //       (Number(it.quantity || 0) * Number(it.unit_price || 0));
+  //     return acc;
+  //   },
+  //   { total_amount: 0, discount_amount: 0, tax_amount: 0 }
+  // );
 
   const totals = items.reduce(
     (acc, it) => {
+      const qty = Number(it.quantity || 0);
+      const price = Number(it.unit_price || 0);
+      const disc = Number(it.discount || 0);
+      const tax = Number(it.tax_rate || 0);
+
+      const base = qty * price; // Unit Price Total
+
+      acc.unit_price_total += base; // <-- add this
       acc.total_amount += Number(it.line_total || 0);
-      acc.discount_amount +=
-        (Number(it.discount || 0) / 100) *
-        (Number(it.quantity || 0) * Number(it.unit_price || 0));
-      acc.tax_amount +=
-        (Number(it.tax_rate || 0) / 100) *
-        (Number(it.quantity || 0) * Number(it.unit_price || 0));
+      acc.discount_amount += (disc / 100) * base;
+      acc.tax_amount += (tax / 100) * base;
+
       return acc;
     },
-    { total_amount: 0, discount_amount: 0, tax_amount: 0 }
+    { total_amount: 0, discount_amount: 0, tax_amount: 0, unit_price_total: 0 }
   );
 
   const taxBreakup = (() => {
-  const totalTax = totals.tax_amount;
+    const totalTax = totals.tax_amount;
 
-  if (isIntraState()) {
+    if (isIntraState()) {
+      return {
+        cgst: totalTax / 2,
+        sgst: totalTax / 2,
+        igst: 0,
+      };
+    }
+
     return {
-      cgst: totalTax / 2,
-      sgst: totalTax / 2,
-      igst: 0,
+      cgst: 0,
+      sgst: 0,
+      igst: totalTax,
     };
-  }
+  })();
 
-  return {
-    cgst: 0,
-    sgst: 0,
-    igst: totalTax,
-  };
-})();
-
-  const closeForm = () => {     
+  const closeForm = () => {
     form.resetFields();
     setItems([]);
-    setEditId(null);    
-    setIsFormVisible(false);            
+    setEditId(null);
+    setIsFormVisible(false);
   };
 
   const onFinish = async (values: any) => {
@@ -962,8 +985,7 @@ const NewQuotation: React.FC = () => {
       district: record.district,
       address: record.address,
       terms_conditions:
-        record.terms_conditions ||
-        form.getFieldValue("terms_conditions"), // keep default if empty
+        record.terms_conditions || form.getFieldValue("terms_conditions"), // keep default if empty
     });
 
     try {
@@ -1013,20 +1035,32 @@ const NewQuotation: React.FC = () => {
         };
       });
 
-      const customerObj =
-        customers.find((c) => c.id === quotationData.customer_id) || {
-          name: quotationData.customer_name || "N/A",
-          phone: quotationData.phone || "",
-          gst_no: quotationData.gst_no || "",
-          address: quotationData.address || "",
-          cstate: quotationData.cstate || "",
-          district: quotationData.district || "",
-        };
+      const customerObj = customers.find(
+        (c) => c.id === quotationData.customer_id
+      ) || {
+        name: quotationData.customer_name || "N/A",
+        phone: quotationData.phone || "",
+        gst_no: quotationData.gst_no || "",
+        address: quotationData.address || "",
+        cstate: quotationData.cstate || "",
+        district: quotationData.district || "",
+      };
+
+      const calculationSummary = {
+        total: totals.total_amount,
+        discount: totals.discount_amount,
+        tax: totals.tax_amount,
+        cgst: taxBreakup.cgst,
+        sgst: taxBreakup.sgst,
+        igst: taxBreakup.igst,
+        netAmount: totals.total_amount,
+      };
 
       setSelectedPreview({
         ...quotationData,
         products: productsMapped,
         customer: customerObj,
+        calculationSummary,
         terms_conditions: quotationData.terms_conditions || "",
       });
 
@@ -1056,16 +1090,27 @@ const NewQuotation: React.FC = () => {
     {
       title: "Action",
       render: (_: any, rec: any) => {
-        const link = `${window.location.origin}/printpage?quotationNo=${encodeURIComponent(
+        const link = `${
+          window.location.origin
+        }/printpage?quotationNo=${encodeURIComponent(
           rec.quotation_no
         )}&autoPrint=true`;
 
         return (
           <Space>
-            <Button icon={<EyeOutlined />} onClick={() => window.open(link, "_blank")} />
-            <Button icon={<PrinterOutlined />} onClick={() => window.open(link, "_blank")} />
+            <Button
+              icon={<EyeOutlined />}
+              onClick={() => window.open(link, "_blank")}
+            />
+            <Button
+              icon={<PrinterOutlined />}
+              onClick={() => window.open(link, "_blank")}
+            />
             <Button icon={<EditOutlined />} onClick={() => onEdit(rec)} />
-            <Popconfirm title="Delete quotation?" onConfirm={() => onDelete(rec)}>
+            <Popconfirm
+              title="Delete quotation?"
+              onConfirm={() => onDelete(rec)}
+            >
               <Button danger icon={<DeleteOutlined />} />
             </Popconfirm>
 
@@ -1074,7 +1119,9 @@ const NewQuotation: React.FC = () => {
               icon={<img src="https://img.icons8.com/color/20/whatsapp.png" />}
               style={{ background: "#25D366", border: "none" }}
               onClick={() => {
-                const waURL = `https://wa.me/?text=${encodeURIComponent(`Quotation Link: ${link}`)}`;
+                const waURL = `https://wa.me/?text=${encodeURIComponent(
+                  `Quotation Link: ${link}`
+                )}`;
                 window.open(waURL, "_blank");
               }}
             />
@@ -1087,7 +1134,9 @@ const NewQuotation: React.FC = () => {
                 const subject = "Quotation Link";
                 const body = `Dear Customer,\n\nPlease find your quotation link:\n\n${link}\n\nRegards,\nDsonik Group`;
 
-                const mailURL = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                const mailURL = `mailto:?subject=${encodeURIComponent(
+                  subject
+                )}&body=${encodeURIComponent(body)}`;
                 window.location.href = mailURL;
               }}
             />
@@ -1111,65 +1160,164 @@ const NewQuotation: React.FC = () => {
       title: "Product",
       dataIndex: "product_id",
       render: (_: any, record: any) => (
+        // <Select
+        //   value={record.product_id}
+        //   onChange={(v) => {
+        //     const selected = products.find((p) => p.id === v);
+        //     updateItem(record.key, "product_id", v);
+        //     if (selected) {
+        //       updateItem(record.key, "description", selected.description || "");
+        //       updateItem(record.key, "unit_price", selected.price || 0);
+
+        //        updateItem(record.key, "tax_rate", Number(selected.gst_rate) || 0);
+        //     }
+        //   }}
+        //   placeholder="Select product"
+        //   style={{ minWidth: 300 }}
+        // >
+        //   {products.map((p) => (
+        //     <Option key={p.id} value={p.id}>
+        //       {p.name}
+        //     </Option>
+        //   ))}
+        // </Select>
+
+        // <Select
+        //   showSearch
+        //   value={record.product_id}
+        //   placeholder="Select product"
+        //   style={{ minWidth: 300 }}
+        //   optionFilterProp="label"
+        //   onChange={(v) => {
+        //     const selected = products.find((p) => p.id === v);
+
+        //     updateItem(record.key, "product_id", v);
+
+        //     if (selected) {
+        //       updateItem(record.key, "description", selected.description || "");
+        //       updateItem(record.key, "unit_price", selected.price || 0);
+        //       updateItem(
+        //         record.key,
+        //         "tax_rate",
+        //         Number(selected.gst_rate) || 0
+        //       );
+        //     }
+        //   }}
+        // >
+        //   {products.map((p) => (
+        //     <Select.Option
+        //       key={p.id}
+        //       value={p.id}
+        //       label={p.name} // 👈 IMPORTANT for search
+        //     >
+        //       {p.name}
+        //     </Select.Option>
+        //   ))}
+        // </Select>
+
         <Select
+          showSearch
           value={record.product_id}
+          placeholder="Select product"
+          style={{ minWidth: 300 }}
+          optionFilterProp="label"
           onChange={(v) => {
             const selected = products.find((p) => p.id === v);
+
             updateItem(record.key, "product_id", v);
+
             if (selected) {
               updateItem(record.key, "description", selected.description || "");
               updateItem(record.key, "unit_price", selected.price || 0);
-
-
-
-               updateItem(record.key, "tax_rate", Number(selected.gst_rate) || 0);
+              updateItem(
+                record.key,
+                "tax_rate",
+                Number(selected.gst_rate) || 0
+              );
             }
           }}
-          placeholder="Select product"
-          style={{ minWidth: 120 }}
         >
-          {products.map((p) => (
-            <Option key={p.id} value={p.id}>
-              {p.name}
-            </Option>
-          ))}
+          {products
+            .slice() // ✅ original array mutate na ho
+            .sort((a, b) => a.name.localeCompare(b.name)) // ✅ ORDER BY name ASC
+            .map((p) => (
+              <Select.Option
+                key={p.id}
+                value={p.id}
+                label={p.name} // 👈 search ke liye
+              >
+                {p.name}
+              </Select.Option>
+            ))}
         </Select>
       ),
     },
     {
       title: "Description",
       dataIndex: "description",
-      render: (_: any, r: any) => <Input value={r.description} onChange={(e) => updateItem(r.key, "description", e.target.value)} />,
+      render: (_: any, r: any) => (
+        <Input
+          value={r.description}
+          onChange={(e) => updateItem(r.key, "description", e.target.value)}
+        />
+      ),
     },
     {
       title: "Qty",
       dataIndex: "quantity",
-      render: (_: any, r: any) => <InputNumber min={1} value={r.quantity} onChange={(v) => updateItem(r.key, "quantity", v)} />,
+      render: (_: any, r: any) => (
+        <InputNumber
+          min={1}
+          value={r.quantity}
+          onChange={(v) => updateItem(r.key, "quantity", v)}
+        />
+      ),
     },
     {
       title: "Unit Price",
       dataIndex: "unit_price",
-      render: (_: any, r: any) => <InputNumber min={0} value={r.unit_price} onChange={(v) => updateItem(r.key, "unit_price", v)} />,
+      render: (_: any, r: any) => (
+        <InputNumber
+          min={0}
+          value={r.unit_price}
+          onChange={(v) => updateItem(r.key, "unit_price", v)}
+        />
+      ),
     },
     {
       title: "Discount (%)",
       dataIndex: "discount",
-      render: (_: any, r: any) => <InputNumber min={0} value={r.discount} onChange={(v) => updateItem(r.key, "discount", v)} />,
+      render: (_: any, r: any) => (
+        <InputNumber
+          min={0}
+          value={r.discount}
+          onChange={(v) => updateItem(r.key, "discount", v)}
+        />
+      ),
     },
     {
       title: "Tax (%)",
       dataIndex: "tax_rate",
-      render: (_: any, r: any) => <InputNumber min={0} value={r.tax_rate} onChange={(v) => updateItem(r.key, "tax_rate", v)} />,
+      render: (_: any, r: any) => (
+        <InputNumber
+          min={0}
+          value={r.tax_rate}
+          onChange={(v) => updateItem(r.key, "tax_rate", v)}
+        />
+      ),
     },
     {
-      title: "Line Total",
+      title: " Total",
       dataIndex: "line_total",
       render: (val: any) => `₹ ${Number(val || 0).toFixed(2)}`,
     },
     {
       title: "Action",
       render: (_: any, record: any) => (
-        <Popconfirm title="Remove item?" onConfirm={() => removeItem(record.key)}>
+        <Popconfirm
+          title="Remove item?"
+          onConfirm={() => removeItem(record.key)}
+        >
           <Button danger icon={<DeleteOutlined />} />
         </Popconfirm>
       ),
@@ -1182,7 +1330,7 @@ const NewQuotation: React.FC = () => {
         <>
           <div className="flex justify-between flex-wrap mb-4 gap-2">
             <Title level={4} style={{ margin: 0 }}>
-              🗂 Quotation Desk
+              🗂 Quotation Desk 
             </Title>
 
             <div className="flex items-center gap-2">
@@ -1194,13 +1342,22 @@ const NewQuotation: React.FC = () => {
                 style={{ width: 280 }}
               />
 
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsFormVisible(true)}>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setIsFormVisible(true)}
+              >
                 Add Quotation
               </Button>
             </div>
           </div>
 
-          <Table dataSource={filteredQuotations} columns={listColumns} rowKey="id" scroll={{ x: 800 }} />
+          <Table
+            dataSource={filteredQuotations}
+            columns={listColumns}
+            rowKey="id"
+            scroll={{ x: 800 }}
+          />
         </>
       ) : (
         <>
@@ -1214,18 +1371,46 @@ const NewQuotation: React.FC = () => {
             {/* --- Form content unchanged --- */}
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12} md={8} lg={6}>
-                <Form.Item label="Quotation No" name="quotation_no" rules={[{ required: true }]}>
+                <Form.Item
+                  label="Quotation No"
+                  name="quotation_no"
+                  rules={[{ required: true }]}
+                >
                   <Input placeholder="Enter quotation number" />
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12} md={8} lg={6}>
-                <Form.Item label="Customer" name="customer_id" rules={[{ required: true }]}>
+                {/* <Form.Item label="Customer" name="customer_id" rules={[{ required: true }]}>
                   <Select placeholder="Select customer" onChange={onCustomerChange}>
                     {customers.map((c) => (
                       <Option key={c.id} value={c.id}>
                         {c.name}
                       </Option>
                     ))}
+                  </Select>
+                </Form.Item> */}
+
+                <Form.Item
+                  label="Customer"
+                  name="customer_id"
+                  rules={[
+                    { required: true, message: "Please select customer" },
+                  ]}
+                >
+                  <Select
+                    showSearch
+                    placeholder="Select customer"
+                    onChange={onCustomerChange}
+                    optionFilterProp="label"
+                  >
+                    {customers
+                      .slice()
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((c) => (
+                        <Select.Option key={c.id} value={c.id} label={c.name}>
+                          {c.name}
+                        </Select.Option>
+                      ))}
                   </Select>
                 </Form.Item>
               </Col>
@@ -1259,7 +1444,7 @@ const NewQuotation: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12} md={6}>
-                <Form.Item label="State" name="cstate">
+                <Form.Item label="State" name="state_name">
                   <Input disabled />
                 </Form.Item>
               </Col>
@@ -1274,22 +1459,40 @@ const NewQuotation: React.FC = () => {
               <Input.TextArea rows={2} disabled />
             </Form.Item>
 
-            <Title level={5}>Product Details</Title>
-            <Button type="dashed" onClick={addItem} icon={<PlusOutlined />} style={{ marginBottom: 10 }}>
+            <Title level={5}>Product Details </Title>
+            {/* <Button
+  type="dashed"
+  onClick={() => openProductMasterModal?.()}
+>
+  + Add New Product
+</Button> */}
+            <Button
+              type="dashed"
+              onClick={addItem}
+              icon={<PlusOutlined />}
+              style={{ marginBottom: 10 }}
+            >
               Add Item
             </Button>
 
             <div style={{ overflowX: "auto" }}>
-              <Table dataSource={items} columns={itemColumns} pagination={false} rowKey="key" scroll={{ x: 800 }} />
+              <Table
+                dataSource={items}
+                columns={itemColumns}
+                pagination={false}
+                rowKey="key"
+                scroll={{ x: 800 }}
+              />
             </div>
 
             <Row justify="end" style={{ marginTop: 20 }}>
               <Col xs={24} sm={12} md={8} lg={6}>
                 <div style={{ textAlign: "left", marginLeft: "80px" }}>
-                  <p>Total  : ₹{totals.total_amount.toFixed(2)}</p>
-                  <p>CGST   : ₹{taxBreakup.cgst.toFixed(2)}</p>
-                  <p>SGST   : ₹{taxBreakup.sgst.toFixed(2)}</p>
-                  <p>IGST   : ₹{taxBreakup.igst.toFixed(2)}</p>
+                  {/* <p>Total Amount  : ₹{totals.total_amount.toFixed(2)}</p> */}
+                  <p>Total Amount: ₹{totals.unit_price_total.toFixed(2)}</p>
+                  <p>CGST : ₹{taxBreakup.cgst.toFixed(2)}</p>
+                  <p>SGST : ₹{taxBreakup.sgst.toFixed(2)}</p>
+                  <p>IGST : ₹{taxBreakup.igst.toFixed(2)}</p>
                   <p>Total Tax: ₹{totals.tax_amount.toFixed(2)}</p>
                   <p>Discount : ₹{totals.discount_amount.toFixed(2)}</p>
                   <h3>Net Amount: ₹{totals.total_amount.toFixed(2)}</h3>
@@ -1322,7 +1525,12 @@ const NewQuotation: React.FC = () => {
               <Input.TextArea rows={2} placeholder="Enter delivery terms" />
             </Form.Item>
 
-            <Button type="primary" htmlType="submit" loading={loading} style={{ marginTop: 10 }}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              style={{ marginTop: 10 }}
+            >
               {editId ? "Update Quotation" : "Create Quotation"}
             </Button>
           </Form>
@@ -1330,7 +1538,11 @@ const NewQuotation: React.FC = () => {
       )}
 
       {previewVisible && selectedPreview && (
-        <QuotationPreview visible={previewVisible} onClose={() => setPreviewVisible(false)} previewData={selectedPreview} />
+        <QuotationPreview
+          visible={previewVisible}
+          onClose={() => setPreviewVisible(false)}
+          previewData={selectedPreview}
+        />
       )}
     </Card>
   );

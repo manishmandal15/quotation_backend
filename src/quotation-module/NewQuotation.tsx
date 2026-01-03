@@ -619,6 +619,14 @@
 // export default NewQuotation;
 
 import React, { useEffect, useState } from "react";
+// import { openProductMasterModal } from "/ProductMaster";
+// import { openProductMasterModal } from "./Forms/ProductMaster";
+// import { openProductMasterModal } from "../../pages/Forms/ProductMaster";
+// import { openProductMasterModal } from "../pages/Forms/ProductMaster";
+
+
+
+
 import {
   Card,
   Table,
@@ -778,21 +786,20 @@ const NewQuotation: React.FC = () => {
     const customer = customers.find((c) => c.id === id);
     //  const customer = customers.find((c) => c.id === id);
 
-  console.log("FULL CUSTOMER OBJECT 👉", customer);
+    console.log("FULL CUSTOMER OBJECT 👉", customer);
     if (customer) {
       form.setFieldsValue({
         phone: customer.phone,
         gst_no: customer.gst_no,
         cstate: customer.cstate,
         // district: customer.district,
-         district: customer.district_name,
+        district: customer.district_name,
         address: customer.address,
         state_id: customer.state_id,
         state_name: customer.state_name,
       });
       console.log("Customer state name:", customer.state_name);
       console.log("Customer district name:", customer.district_name);
-
     }
   };
 
@@ -1161,43 +1168,41 @@ const NewQuotation: React.FC = () => {
         //   ))}
         // </Select>
 
-
         <Select
-  showSearch
-  value={record.product_id}
-  placeholder="Select product"
-  style={{ minWidth: 300 }}
-  optionFilterProp="label"
-  onChange={(v) => {
-    const selected = products.find((p) => p.id === v);
+          showSearch
+          value={record.product_id}
+          placeholder="Select product"
+          style={{ minWidth: 300 }}
+          optionFilterProp="label"
+          onChange={(v) => {
+            const selected = products.find((p) => p.id === v);
 
-    updateItem(record.key, "product_id", v);
+            updateItem(record.key, "product_id", v);
 
-    if (selected) {
-      updateItem(record.key, "description", selected.description || "");
-      updateItem(record.key, "unit_price", selected.price || 0);
-      updateItem(
-        record.key,
-        "tax_rate",
-        Number(selected.gst_rate) || 0
-      );
-    }
-  }}
->
-  {products
-    .slice() // ✅ original array mutate na ho
-    .sort((a, b) => a.name.localeCompare(b.name)) // ✅ ORDER BY name ASC
-    .map((p) => (
-      <Select.Option
-        key={p.id}
-        value={p.id}
-        label={p.name} // 👈 search ke liye
-      >
-        {p.name}
-      </Select.Option>
-    ))}
-</Select>
-
+            if (selected) {
+              updateItem(record.key, "description", selected.description || "");
+              updateItem(record.key, "unit_price", selected.price || 0);
+              updateItem(
+                record.key,
+                "tax_rate",
+                Number(selected.gst_rate) || 0
+              );
+            }
+          }}
+        >
+          {products
+            .slice() // ✅ original array mutate na ho
+            .sort((a, b) => a.name.localeCompare(b.name)) // ✅ ORDER BY name ASC
+            .map((p) => (
+              <Select.Option
+                key={p.id}
+                value={p.id}
+                label={p.name} // 👈 search ke liye
+              >
+                {p.name}
+              </Select.Option>
+            ))}
+        </Select>
       ),
     },
     {
@@ -1278,7 +1283,7 @@ const NewQuotation: React.FC = () => {
         <>
           <div className="flex justify-between flex-wrap mb-4 gap-2">
             <Title level={4} style={{ margin: 0 }}>
-              🗂 Quotation Desk
+              🗂 Quotation Desk 
             </Title>
 
             <div className="flex items-center gap-2">
@@ -1339,27 +1344,28 @@ const NewQuotation: React.FC = () => {
                 </Form.Item> */}
 
                 <Form.Item
-  label="Customer"
-  name="customer_id"
-  rules={[{ required: true, message: "Please select customer" }]}
->
-  <Select
-    showSearch
-    placeholder="Select customer"
-    onChange={onCustomerChange}
-    optionFilterProp="label"
-  >
-    {customers
-      .slice()
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map((c) => (
-        <Select.Option key={c.id} value={c.id} label={c.name}>
-          {c.name}
-        </Select.Option>
-      ))}
-  </Select>
-</Form.Item>
-
+                  label="Customer"
+                  name="customer_id"
+                  rules={[
+                    { required: true, message: "Please select customer" },
+                  ]}
+                >
+                  <Select
+                    showSearch
+                    placeholder="Select customer"
+                    onChange={onCustomerChange}
+                    optionFilterProp="label"
+                  >
+                    {customers
+                      .slice()
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((c) => (
+                        <Select.Option key={c.id} value={c.id} label={c.name}>
+                          {c.name}
+                        </Select.Option>
+                      ))}
+                  </Select>
+                </Form.Item>
               </Col>
               <Col xs={24} sm={12} md={8} lg={6}>
                 <Form.Item label="Currency" name="currency_id">
@@ -1406,7 +1412,13 @@ const NewQuotation: React.FC = () => {
               <Input.TextArea rows={2} disabled />
             </Form.Item>
 
-            <Title level={5}>Product Details</Title>
+            <Title level={5}>Product Details </Title>
+            {/* <Button
+  type="dashed"
+  onClick={() => openProductMasterModal?.()}
+>
+  + Add New Product
+</Button> */}
             <Button
               type="dashed"
               onClick={addItem}

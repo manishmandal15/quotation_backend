@@ -14,6 +14,10 @@ import {
 import { UploadOutlined, EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import axios from "axios";
 
+// 👇 ye dusre pages ko modal open karne dega
+export let openProductMasterModal: (() => void) | null = null;
+
+
 const { Option } = Select;
 
 interface Product {
@@ -79,6 +83,18 @@ const ProductMaster = () => {
   useEffect(() => {
     fetchProducts();
     fetchGst();
+
+    // 🔥 expose modal opener for other pages
+  openProductMasterModal = () => {
+    form.resetFields();
+    setEditId(null);
+    setFileList([]);
+    setOpen(true);
+  };
+
+  return () => {
+    openProductMasterModal = null;
+  };
   }, []);
 
   const handleSearch = (text: string) => {
