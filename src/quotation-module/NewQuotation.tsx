@@ -1029,6 +1029,11 @@ const NewQuotation: React.FC = () => {
     { title: "Quotation No", dataIndex: "quotation_no" },
     { title: "Customer", dataIndex: "customer_name" },
     {
+  title: "District",
+  dataIndex: "customer_district_name",
+  render: (v: string) => v || "-"
+},
+    {
       title: "Created At",
       dataIndex: "created_at",
       render: (v: string | null) => (v ? dayjs(v).format("DD-MM-YYYY ") : "-"),
@@ -1039,6 +1044,8 @@ const NewQuotation: React.FC = () => {
       render: (v: string | null) => (v ? dayjs(v).format("DD-MM-YYYY ") : "-"),
     },
     { title: "Net Amount", dataIndex: "net_amount" },
+    
+
     { title: "Status", dataIndex: "status" },
     {
       title: "Action",
