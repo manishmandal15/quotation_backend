@@ -45,7 +45,9 @@ import RawMaterialMaster from "./pages/Forms/RawMaterialMaster";
 import RmStockMaster from "./pages/Forms/RmStockMaster"; 
 import RmIssueMaster from "./pages/Forms/RmIssueMaster";  
 import RmIssueItemMaster from "./pages/Forms/RmIssueItemMaster";  
-import ProductIssue from "./pages/Forms/ProductIssue";    
+import ProductIssue from "./pages/Forms/ProductIssue"; 
+import AddCustomer  from "./quotation-module/addcustomer"; 
+
 
 export default function App() {
   return (
@@ -93,12 +95,13 @@ export default function App() {
         <Route path="/warehouse-locations" element={<WarehouseLocations />} />
         <Route path="/product-stock" element={<ProductStock />} />
         <Route path="/product-stock-entry" element={<ProductStockEntryMaster />} /> 
-         <Route path="/suppliers" element={<SupplierMaster />} />
-         <Route path="/raw-material" element={<RawMaterialMaster />} /> 
-         <Route path="/rmStockmaster" element={<RmStockMaster />} />   
-         <Route path="/rmIssue" element={<RmIssueMaster />} /> 
-         <Route path="/rmIssueItem" element={<RmIssueItemMaster />} />  
-          <Route path="/product-issue" element={<ProductIssue />} />   
+        <Route path="/suppliers" element={<SupplierMaster />} />
+        <Route path="/raw-material" element={<RawMaterialMaster />} /> 
+        <Route path="/rmStockmaster" element={<RmStockMaster />} />   
+        <Route path="/rmIssue" element={<RmIssueMaster />} /> 
+        <Route path="/rmIssueItem" element={<RmIssueItemMaster />} />  
+        <Route path="/product-issue" element={<ProductIssue />} /> 
+        <Route path="/quotation/add-customer" element={<AddCustomer open={true} onClose={() => {}} />} />     
           {/* Tables */}
           <Route path="/basic-tables" element={<BasicTables />} />
 

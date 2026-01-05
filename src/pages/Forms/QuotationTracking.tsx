@@ -60,7 +60,9 @@ type User = {
   name: string;
 };
 
-const loggedInUser = "CurrentUser";
+// const loggedInUser = "CurrentUser";
+const loggedInUser = JSON.parse(localStorage.getItem("user") || "{}");
+
 
 const DispatchFormFields = {
   DISPATCH_THROUGH: "dispatched_through",
@@ -163,12 +165,20 @@ const QuotationTracking: React.FC = () => {
     dispatchForm.resetFields();
 
     // set sensible defaults: if users present set first user's id else fallback to loggedInUser
+    // setTimeout(() => {
+    //   dispatchForm.setFieldsValue({
+    //     [DispatchFormFields.DISPATCHED_BY]: users?.[0]?.id ?? loggedInUser,
+    //     [DispatchFormFields.DISPATCH_THROUGH]: "Email",
+    //   });
+    // }, 0);
+
     setTimeout(() => {
-      dispatchForm.setFieldsValue({
-        [DispatchFormFields.DISPATCHED_BY]: users?.[0]?.id ?? loggedInUser,
-        [DispatchFormFields.DISPATCH_THROUGH]: "Email",
-      });
-    }, 0);
+  dispatchForm.setFieldsValue({
+    [DispatchFormFields.DISPATCHED_BY]: loggedInUser.id,
+    [DispatchFormFields.DISPATCH_THROUGH]: "Email",
+  });
+}, 0);
+
   };
 
   const handleDispatchSave = async (values: any) => {
@@ -200,11 +210,24 @@ const QuotationTracking: React.FC = () => {
     }
   };
 
+  // const openFollowupModal = (row: Quotation) => {
+  //   setCurrentFollowupRow(row);
+  //   setIsFollowupOpen(true);
+  //   followupForm.resetFields();
+  // };
+
   const openFollowupModal = (row: Quotation) => {
-    setCurrentFollowupRow(row);
-    setIsFollowupOpen(true);
-    followupForm.resetFields();
-  };
+  setCurrentFollowupRow(row);
+  setIsFollowupOpen(true);
+  followupForm.resetFields();
+
+  setTimeout(() => {
+    followupForm.setFieldsValue({
+      user_id: loggedInUser.id,
+    });
+  }, 0);
+};
+
 
   const handleFollowupSave = async (values: any) => {
     if (!currentFollowupRow) return;
@@ -528,55 +551,67 @@ const QuotationTracking: React.FC = () => {
 
       {/* Dispatch Modal */}
       <Modal
-        title={`Dispatch Quotation ${currentDispatchRow?.quotation_no ?? ""}`}
-        open={isDispatchOpen}
-        onCancel={() => setIsDispatchOpen(false)}
-        footer={null}
-        destroyOnClose
+  title={`Dispatch Quotation ${currentDispatchRow?.quotation_no ?? ""}`}
+  open={isDispatchOpen}
+  onCancel={() => setIsDispatchOpen(false)}
+  footer={null}
+  destroyOnClose
+>
+  <Form
+    layout="vertical"
+    form={dispatchForm}
+    onFinish={handleDispatchSave}
+  >
+    <Form.Item
+      label="Dispatch Through"
+      name={DispatchFormFields.DISPATCH_THROUGH}
+      rules={[{ required: true }]}
+    >
+      <Select>
+        <Select.Option value="Email">Email</Select.Option>
+        <Select.Option value="SMS">SMS</Select.Option>
+        <Select.Option value="Post">Post</Select.Option>
+        <Select.Option value="Manual">Manual</Select.Option>
+      </Select>
+    </Form.Item>
+
+    <Form.Item
+      label="Dispatch Date"
+      name={DispatchFormFields.DISPATCH_DATE}
+      rules={[{ required: true }]}
+    >
+      <DatePicker showTime style={{ width: "100%" }} />
+    </Form.Item>
+
+    {/* 🔒 LOCKED LOGGED-IN USER */}
+    <Form.Item
+      label="Dispatched By"
+      name={DispatchFormFields.DISPATCHED_BY}
+      rules={[{ required: true }]}
+    >
+      <Select disabled>
+        <Select.Option value={loggedInUser.id}>
+          {loggedInUser.name}
+        </Select.Option>
+      </Select>
+    </Form.Item>
+
+    <div style={{ textAlign: "right" }}>
+      <Button
+        onClick={() => setIsDispatchOpen(false)}
+        style={{ marginRight: 8 }}
       >
-        <Form layout="vertical" form={dispatchForm} onFinish={handleDispatchSave}>
-          <Form.Item
-            label="Dispatch Through"
-            name={DispatchFormFields.DISPATCH_THROUGH}
-            rules={[{ required: true }]}
-          >
-            <Select>
-              <Select.Option value="Email">Email</Select.Option>
-              <Select.Option value="SMS">SMS</Select.Option>
-              <Select.Option value="Post">Post</Select.Option>
-              <Select.Option value="Manual">Manual</Select.Option>
-            </Select>
-          </Form.Item>
+        Cancel
+      </Button>
+      <Button type="primary" htmlType="submit">
+        Save
+      </Button>
+    </div>
+  </Form>
+</Modal>
 
-          <Form.Item
-            label="Dispatch Date"
-            name={DispatchFormFields.DISPATCH_DATE}
-            rules={[{ required: true }]}
-          >
-            <DatePicker showTime style={{ width: "100%" }} />
-          </Form.Item>
 
-          <Form.Item
-            label="Dispatched By"
-            name={DispatchFormFields.DISPATCHED_BY}
-            rules={[{ required: true }]}
-          >
-            <Select
-              placeholder="Select User"
-              options={users.map((u) => ({ label: u.name, value: u.id }))}
-            />
-          </Form.Item>
-
-          <div style={{ textAlign: "right" }}>
-            <Button onClick={() => setIsDispatchOpen(false)} style={{ marginRight: 8 }}>
-              Cancel
-            </Button>
-            <Button type="primary" htmlType="submit">
-              Save
-            </Button>
-          </div>
-        </Form>
-      </Modal>
+    
 
       {/* Follow-Up Modal */}
       <Modal
@@ -618,12 +653,20 @@ const QuotationTracking: React.FC = () => {
             <DatePicker showTime style={{ width: "100%" }} />
           </Form.Item>
 
-          <Form.Item label="User" name="user_id" rules={[{ required: true }]}>
-            <Select
-              placeholder="Select User"
-              options={users.map((u) => ({ label: u.name, value: u.id }))}
-            />
-          </Form.Item>
+         <Form.Item label="User" name="user_id" rules={[{ required: true }]}>
+  <Select placeholder="Select User">
+    {users.map((u) => (
+      <Select.Option
+        key={u.id}
+        value={u.id}
+        disabled={u.id === loggedInUser.id}
+      >
+        {u.name}
+      </Select.Option>
+    ))}
+  </Select>
+</Form.Item>
+
 
           <div style={{ textAlign: "right" }}>
             <Button onClick={() => setIsFollowupOpen(false)} style={{ marginRight: 8 }}>
@@ -638,56 +681,75 @@ const QuotationTracking: React.FC = () => {
 
       {/* View Modal */}
       <Modal
-        title={`Quotation Details ${viewRow?.quotation_no ?? ""}`}
-        open={isViewOpen}
-        onCancel={() => setIsViewOpen(false)}
-        footer={[
-          <Button key="close" onClick={() => setIsViewOpen(false)}>
-            Close
-          </Button>,
-        ]}
+  title={`Follow-Up - Quotation ${currentFollowupRow?.quotation_no ?? ""}`}
+  open={isFollowupOpen}
+  onCancel={() => setIsFollowupOpen(false)}
+  footer={null}
+  destroyOnClose
+>
+  <Form
+    layout="vertical"
+    form={followupForm}
+    onFinish={handleFollowupSave}
+  >
+    <Form.Item
+      label="Is Deal Finalised?"
+      name="is_deal_finalised"
+      rules={[{ required: true }]}
+    >
+      <Select>
+        <Select.Option value="Yes">Yes</Select.Option>
+        <Select.Option value="No">No</Select.Option>
+      </Select>
+    </Form.Item>
+
+    <Form.Item label="Invoice No" name="invoice_no">
+      <Input />
+    </Form.Item>
+
+    <Form.Item
+      label="Customer Wants Time?"
+      name="customer_wants_time"
+      rules={[{ required: true }]}
+    >
+      <Select>
+        <Select.Option value="Yes">Yes</Select.Option>
+        <Select.Option value="No">No</Select.Option>
+        <Select.Option value="Not Interested">Not Interested</Select.Option>
+      </Select>
+    </Form.Item>
+
+    <Form.Item label="Next Follow-Up Date" name="next_followup_date">
+      <DatePicker showTime style={{ width: "100%" }} />
+    </Form.Item>
+
+    {/* 🔒 LOCKED LOGGED-IN USER */}
+    <Form.Item
+      label="Follow-Up By"
+      name="user_id"
+      rules={[{ required: true }]}
+    >
+      <Select disabled>
+        <Select.Option value={loggedInUser.id}>
+          {loggedInUser.name}
+        </Select.Option>
+      </Select>
+    </Form.Item>
+
+    <div style={{ textAlign: "right" }}>
+      <Button
+        onClick={() => setIsFollowupOpen(false)}
+        style={{ marginRight: 8 }}
       >
-        {viewRow && (
-          <div>
-            <p>
-              <strong>Quotation No:</strong> {viewRow.quotation_no}
-            </p>
-            <p>
-              <strong>Customer:</strong> {viewRow.customer_name}
-            </p>
-            <p>
-              <strong>Quotation Date:</strong> {viewRow.quotation_date}
-            </p>
-            <p>
-              <strong>Net Amount:</strong> {viewRow.net_amount}
-            </p>
-            <p>
-              <strong>Approved By:</strong> {viewRow.approved_by}
-            </p>
-            <p>
-              <strong>Approved Date:</strong> {viewRow.approved_date}
-            </p>
-            <p>
-              <strong>Dispatched:</strong> {viewRow.is_dispatched ? "Yes" : "No"}
-            </p>
-            <p>
-              <strong>Dispatched Date:</strong> {viewRow.dispatched_date}
-            </p>
-            <p>
-              <strong>Dispatched Through:</strong> {viewRow.dispatched_through}
-            </p>
-            <p>
-              <strong>Deal Status:</strong> {viewRow.deal_status}
-            </p>
-            <p>
-              <strong>Deal Finalised:</strong> {viewRow.is_deal_finalised === "Yes" ? "Yes" : "No"}
-            </p>
-            <p>
-              <strong>Follow Up Date:</strong> {viewRow.followup_date ?? viewRow.follow_up_date ?? "-"}
-            </p>
-          </div>
-        )}
-      </Modal>
+        Cancel
+      </Button>
+      <Button type="primary" htmlType="submit">
+        Save
+      </Button>
+    </div>
+  </Form>
+</Modal>
+
     </div>
   );
 };

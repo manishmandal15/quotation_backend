@@ -21,6 +21,8 @@ import {
 import axios from "axios";
 import type { ColumnsType } from "antd/es/table";
 
+
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const API = axios.create({
@@ -30,6 +32,9 @@ const API = axios.create({
 const Api = axios.create({
   baseURL: BASE_URL,
 });
+const loggedInUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+
 
 type Quotation = {
   id: number;
@@ -57,7 +62,7 @@ type User = {
   name: string;
 };
 
-const loggedInUser = "CurrentUser";
+// const loggedInUser = "CurrentUser";
 
 const DispatchFormFields = {
   DISPATCH_THROUGH: "dispatched_through",
@@ -107,7 +112,7 @@ const QuotationFollowupReminder: React.FC = () => {
 
       const tracking = trackRes.data || [];
 
-      const merged = tracking.map((t: any) => ({
+      const merged = tracking.map((t: any) => ({ 
         id: t.id,
         quotation_id: t.id,
         quotation_no: t.quotation_no ?? "-",
@@ -192,11 +197,21 @@ const QuotationFollowupReminder: React.FC = () => {
     }
   };
 
+  // const openFollowupModal = (row: Quotation) => {
+  //   setCurrentFollowupRow(row);
+  //   setIsFollowupOpen(true);
+  //   followupForm.resetFields();
+  // };
   const openFollowupModal = (row: Quotation) => {
-    setCurrentFollowupRow(row);
-    setIsFollowupOpen(true);
-    followupForm.resetFields();
-  };
+  setCurrentFollowupRow(row);
+  setIsFollowupOpen(true);
+  followupForm.resetFields();
+
+  followupForm.setFieldsValue({
+    user_id: loggedInUser.id,
+  });
+};
+
 
   const handleFollowupSave = async (values: any) => {
     if (!currentFollowupRow) return;
@@ -489,20 +504,17 @@ const QuotationFollowupReminder: React.FC = () => {
           </Form.Item>
 
           <Form.Item
-            label="User"
-            name="user_id"
-            rules={[{ required: true }]}
-          >
-            <Select
-              placeholder="Select User"
-              showSearch
-              optionFilterProp="label"
-              options={users.map((u) => ({
-                label: u.name,
-                value: u.id,
-              }))}
-            />
-          </Form.Item>
+  label="Followup By"
+  name="user_id"
+  rules={[{ required: true }]}
+>
+  <Select disabled>
+    <Select.Option value={loggedInUser.id}>
+      {loggedInUser.name}
+    </Select.Option>
+  </Select>
+</Form.Item>
+
 
           <div className="flex justify-end mt-4">
             <Button onClick={() => setIsFollowupOpen(false)} style={{ marginRight: 8 }}>
