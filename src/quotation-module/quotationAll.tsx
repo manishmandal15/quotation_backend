@@ -1653,14 +1653,23 @@ const NewQuotation: React.FC = () => {
     }
   };
 
-  const fetchCurrencies = async () => {
-    try {
-      const res = await CURRENCY_API.get("/");
-      setCurrencies(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      console.error(err);
+ const fetchCurrencies = async () => {
+  try {
+    const res = await CURRENCY_API.get("/");
+    const data = Array.isArray(res.data) ? res.data : [];
+
+    setCurrencies(data);
+
+    // 👉 Default INR set karo (only if not already selected)
+    const inr = data.find((c: any) => c.name === "INR");
+    if (inr && !form.getFieldValue("currency_id")) {
+      form.setFieldsValue({ currency_id: inr.id });
     }
-  };
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 
   const normalizeState = (s?: string) => (s || "").trim().toLowerCase();
 
@@ -2295,10 +2304,10 @@ const NewQuotation: React.FC = () => {
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
       <span>Customer</span>
       <Button
-        type="link"
+        type="dashed"
         size="small"
         onClick={() => setCustomerModalOpen(true)}
-        style={{ padding: 0 }}
+        style={{ padding: 3,marginLeft:40 }}
       >
         + Add New Customer
       </Button>
@@ -2334,18 +2343,23 @@ const NewQuotation: React.FC = () => {
                 
               </Col>
               <Col xs={24} sm={12} md={8} lg={6}>
-                <Form.Item label="Currency" name="currency_id">
-                  <Select placeholder="Select currency">
-                    {currencies.map((c) => (
-                      <Option key={c.id} value={c.id}>
-                        {c.name}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
+               <Form.Item
+  label="Currency"
+  name="currency_id"
+  rules={[{ required: true, message: "Currency is required" }]}
+>
+  <Select placeholder="Select currency">
+    {currencies.map((c) => (
+      <Select.Option key={c.id} value={c.id}>
+        {c.name}
+      </Select.Option>
+    ))}
+  </Select>
+</Form.Item>
+
               </Col>
               <Col xs={24} sm={12} md={8} lg={6}>
-                <Form.Item label="Validity Date" name="validity_date">
+                <Form.Item label="Validity Date" name="validity_date" rules={[{required: true,message:"date is required"}]}>
                   <DatePicker style={{ width: "100%" }} />
                 </Form.Item>
               </Col>
