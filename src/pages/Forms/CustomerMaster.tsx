@@ -58,6 +58,9 @@ const CustomerMaster: React.FC = () => {
   const [editId, setEditId] = useState<number | null>(null);
   const [searchText, setSearchText] = useState("");
   const [filteredDistricts, setFilteredDistricts] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+const [pageSize, setPageSize] = useState(5); // kyunki pageSize = 5 hai
+
   const [filteredShippingDistricts, setFilteredShippingDistricts] = useState<
     any[]
   >([]);
@@ -249,75 +252,72 @@ const CustomerMaster: React.FC = () => {
       </div>
 
       <Table
-        dataSource={filteredCustomers}
-        rowKey="id"
-        bordered
-        pagination={{ pageSize: 5 }}
-        columns={[
-          { title: "Sno", key: "sno", render: (_t, _r, i) => i + 1, width: 60 },
-          { title: "Customer Name", dataIndex: "name" },
-          { title: "Contact Person", dataIndex: "contact_person" },
-          { title: "Email", dataIndex: "email" },
-          { title: "Phone", dataIndex: "phone" },
-          { title: "GST No", dataIndex: "gst_no" },
-          // { title: "PAN No", dataIndex: "pan_no" },
+  dataSource={filteredCustomers}
+  rowKey="id"
+  bordered
+  pagination={{
+    current: currentPage,
+    pageSize: pageSize,
+    onChange: (page, size) => {
+      setCurrentPage(page);
+      setPageSize(size || 5);
+    },
+  }}
+  columns={[
+    {
+      title: "Sno",
+      key: "sno",
+      width: 60,
+      render: (_t, _r, index) =>
+        (currentPage - 1) * pageSize + index + 1,
+    },
+    { title: "Customer Name", dataIndex: "name" },
+    { title: "Contact Person", dataIndex: "contact_person" },
+    { title: "Email", dataIndex: "email" },
+    { title: "Phone", dataIndex: "phone" },
+    { title: "GST No", dataIndex: "gst_no" },
+    {
+      title: "Billing State",
+      dataIndex: "state_id",
+      render: (val) => states.find((s) => s.id == val)?.name || "-",
+    },
+    {
+      title: "Billing District",
+      dataIndex: "district_id",
+      render: (val) => districts.find((d) => d.id == val)?.name || "-",
+    },
+    { title: "Country", dataIndex: "country" },
+    {
+      title: "Status",
+      dataIndex: "is_active",
+      render: (v) =>
+        v === 1 ? (
+          <span style={{ color: "green" }}>Active</span>
+        ) : (
+          <span style={{ color: "red" }}>Inactive</span>
+        ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_: any, record: Customer) => (
+        <div style={{ display: "flex", gap: 8 }}>
+          <Button
+            icon={<EditOutlined style={{ color: "#1677ff" }} />}
+            onClick={() => handleEdit(record)}
+          />
+          <Popconfirm
+            title="Are you sure to delete this customer?"
+            onConfirm={() => handleDelete(record.id)}
+          >
+            <Button icon={<DeleteOutlined style={{ color: "red" }} />} />
+          </Popconfirm>
+        </div>
+      ),
+    },
+  ]}
+/>
 
-          {
-            title: "Billing State",
-            dataIndex: "state_id",
-            render: (val) => states.find((s) => s.id == val)?.name || "-",
-          },
-          {
-            title: "Billing District",
-            dataIndex: "district_id",
-            render: (val) => districts.find((d) => d.id == val)?.name || "-",
-          },
-          // {
-          //   title: "Shipping State",
-          //   dataIndex: "shipping_state",
-          //   render: (val) => states.find((s) => s.id == val)?.name || "-",
-          // },
-          // {
-          //   title: "Shipping District",
-          //   dataIndex: "shipping_district",
-          //   render: (val) => districts.find((d) => d.id == val)?.name || "-",
-          // },
-
-          { title: "Country", dataIndex: "country" },
-          {
-            title: "Status",
-            dataIndex: "is_active",
-            render: (v) =>
-              v === 1 ? (
-                <span style={{ color: "green" }}>Active</span>
-              ) : (
-                <span style={{ color: "red" }}>Inactive</span>
-              ),
-          },
-          {
-            title: "Actions",
-            key: "actions",
-            render: (_: any, record: Customer) => (
-              <div style={{ display: "flex", gap: 8 }}>
-                <Button
-                  type="default"
-                  icon={<EditOutlined style={{ color: "#1677ff" }} />}
-                  onClick={() => handleEdit(record)}
-                />
-                <Popconfirm
-                  title="Are you sure to delete this customer?"
-                  onConfirm={() => handleDelete(record.id)}
-                >
-                  <Button
-                    type="default"
-                    icon={<DeleteOutlined style={{ color: "red" }} />}
-                  />
-                </Popconfirm>
-              </div>
-            ),
-          },
-        ]}
-      />
 
       <Modal
         title={editId ? "Edit Customer" : "Add New Customer"}

@@ -57,6 +57,9 @@ const ProductMaster = () => {
   const [searchText, setSearchText] = useState("");
   const [fileList, setFileList] = useState<any[]>([]);
   const [gstList, setGstList] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+const [pageSize, setPageSize] = useState(10);
+
 
   // Fetch all products
   const fetchProducts = async () => {
@@ -178,7 +181,13 @@ const ProductMaster = () => {
   };
 
   const columns = [
-    { title: "SNo", key: "sno", render: (_t: any, _r: any, index: number) => index + 1, width: 60 },
+    {
+  title: "S.No",
+  key: "sno",
+  width: 60,
+  render: (_t: any, _r: any, index: number) =>
+    (currentPage - 1) * pageSize + index + 1,
+},
     { title: "Code", dataIndex: "product_code" },
     { title: "Name", dataIndex: "name" },
     { title: "Unit", dataIndex: "unit" },
@@ -248,7 +257,21 @@ const ProductMaster = () => {
       </div>
 
       {/* Products Table */}
-      <Table dataSource={filteredProducts} rowKey="id" bordered pagination={{ pageSize: 5 }} columns={columns} />
+    <Table
+  dataSource={filteredProducts}
+  rowKey="id"
+  bordered
+  columns={columns}
+  pagination={{
+    current: currentPage,
+    pageSize: pageSize,
+    onChange: (page, size) => {
+      setCurrentPage(page);
+      setPageSize(size || 5);
+    },
+  }}
+/>
+
 
       {/* Add/Edit Modal */}
       <Modal title={editId ? "Edit Product" : "Add New Product"} open={open} destroyOnClose onCancel={() => setOpen(false)} footer={null} width={1000}>
@@ -309,7 +332,7 @@ const ProductMaster = () => {
             <Form.Item name="watt" label="Watt">
               <Input placeholder="Enter watt" />
             </Form.Item>
-            <Form.Item name="is_active" label="Status">
+            <Form.Item name="is_active" label="Status" initialValue={1}>
               <Select>
                 <Option value={1}>Active</Option>
                 <Option value={0}>Inactive</Option>

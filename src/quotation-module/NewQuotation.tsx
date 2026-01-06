@@ -1571,6 +1571,10 @@ const { Title } = Typography;
 const { Option } = Select;
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const GST_API = axios.create({ baseURL: `${BASE_URL}/gst-master` });
+
+
+
 
 const QUOTATION_API = axios.create({ baseURL: `${BASE_URL}/quotations` });
 const CUSTOMER_API = axios.create({ baseURL: `${BASE_URL}/customers` });
@@ -1595,6 +1599,12 @@ const NewQuotation: React.FC = () => {
   const [productForm] = Form.useForm();
   const [productFileList, setProductFileList] = useState<any[]>([]);
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
+  const [gstList, setGstList] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+const pageSize = 10;
+
+
+
   const DEFAULT_COMPANY_STATE = "uttar pradesh";
 
   useEffect(() => {
@@ -1602,6 +1612,8 @@ const NewQuotation: React.FC = () => {
     fetchCustomers();
     fetchCurrencies();
     fetchProducts();
+    fetchGstList();
+    
   }, []);
 
   const fetchQuotations = async () => {
@@ -1615,6 +1627,16 @@ const NewQuotation: React.FC = () => {
     }
   };
 
+  const fetchGstList = async () => {
+  try {
+    const res = await GST_API.get("/");
+    setGstList(Array.isArray(res.data) ? res.data : []);
+  } catch (err) {
+    console.error("GST fetch failed", err);
+  }
+};
+
+
   const fetchCustomers = async () => {
     try {
       const res = await CUSTOMER_API.get("/");
@@ -1624,14 +1646,23 @@ const NewQuotation: React.FC = () => {
     }
   };
 
-  const fetchCurrencies = async () => {
-    try {
-      const res = await CURRENCY_API.get("/");
-      setCurrencies(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      console.error(err);
+ const fetchCurrencies = async () => {
+  try {
+    const res = await CURRENCY_API.get("/");
+    const data = Array.isArray(res.data) ? res.data : [];
+
+    setCurrencies(data);
+
+    // 👉 Default INR set karo (only if not already selected)
+    const inr = data.find((c: any) => c.name === "INR");
+    if (inr && !form.getFieldValue("currency_id")) {
+      form.setFieldsValue({ currency_id: inr.id });
     }
-  };
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 
   const normalizeState = (s?: string) => (s || "").trim().toLowerCase();
 
@@ -1652,6 +1683,7 @@ const NewQuotation: React.FC = () => {
         q.quotation_no?.toLowerCase().includes(value.toLowerCase()) ||
         q.customer_name?.toLowerCase().includes(value.toLowerCase())
     );
+    
     setFilteredQuotations(filtered);
   };
 
@@ -1941,7 +1973,14 @@ const NewQuotation: React.FC = () => {
   };
 
   const listColumns = [
-    { title: "S.No", render: (_: any, __: any, i: number) => i + 1 },
+    {
+  title: "Sno",
+  key: "sno",
+  width: 60,
+  render: (_t, _r, index) =>
+    (currentPage - 1) * pageSize + index + 1,
+},
+
     { title: "Quotation No", dataIndex: "quotation_no" },
     { title: "Customer", dataIndex: "customer_name" },
     {
@@ -2221,12 +2260,20 @@ const NewQuotation: React.FC = () => {
             </div>
           </div>
 
-          <Table
-            dataSource={filteredQuotations}
-            columns={listColumns}
-            rowKey="id"
-            scroll={{ x: 800 }}
-          />
+         <Table
+  dataSource={filteredQuotations}
+  rowKey="id"
+  columns={listColumns}
+  pagination={{
+    current: currentPage,      // 🔥 bind page
+    pageSize: pageSize,        // 🔥 fixed size
+    onChange: (page) => {
+      setCurrentPage(page);    // 🔥 update state
+    },
+  }}
+/>
+
+
         </>
       ) : (
         <>
@@ -2260,72 +2307,72 @@ const NewQuotation: React.FC = () => {
                 </Form.Item> */}
 
                 <Form.Item
-                  name="customer_id"
-                  rules={[{ required: true, message: "Please select customer" }]}
-                  label={
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span>Customer</span>
-                      <Button
-                        type="dashed"
-                        size="small"
-                        onClick={() => setCustomerModalOpen(true)}
-                        style={{ padding: 3,marginLeft:40 }}
-                      >
-                        + Add New Customer
-                      </Button>
-                    </div>
-                  }
-                >
-                  <Select
-                    showSearch
-                    placeholder="Select customer"
-                    onChange={onCustomerChange}
-                    optionFilterProp="label"
-                  >
-                    {customers
-                      .slice()
-                      .sort((a, b) => a.name.localeCompare(b.name))
-                      .map((c) => {
-                        const district = c.district_name || c.district || "";
-                        const labelText = `${c.name}${district ? ", " + district : ""}`;
+  name="customer_id"
+  rules={[{ required: true, message: "Please select customer" }]}
+  label={
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <span>Customer</span>
+      <Button
+        type="dashed"
+        size="small"
+        onClick={() => setCustomerModalOpen(true)}
+        style={{ padding: 3,marginLeft:40 }}
+      >
+        + Add New Customer
+      </Button>
+    </div>
+  }
+>
+  <Select
+    showSearch
+    placeholder="Select customer"
+    onChange={onCustomerChange}
+    optionFilterProp="label"
+  >
+    {customers
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((c) => {
+        const district = c.district_name || c.district || "";
+        const labelText = `${c.name}${district ? ", " + district : ""}`;
+
+        return (
+          <Select.Option
+            key={c.id}
+            value={c.id}
+            label={labelText}
+          >
+            {labelText}
+          </Select.Option>
+        );
+      })}
+  </Select>
+</Form.Item>
+
                 
-                        return (
-                          <Select.Option
-                            key={c.id}
-                            value={c.id}
-                            label={labelText}
-                          >
-                            {labelText}
-                          </Select.Option>
-                        );
-                      })}
-                  </Select>
+              </Col>
+              <Col xs={24} sm={12} md={8} lg={6}>
+               <Form.Item
+  label="Currency"
+  name="currency_id"
+  rules={[{ required: true, message: "Currency is required" }]}
+>
+  <Select placeholder="Select currency">
+    {currencies.map((c) => (
+      <Select.Option key={c.id} value={c.id}>
+        {c.name}
+      </Select.Option>
+    ))}
+  </Select>
+</Form.Item>
+
+              </Col>
+              <Col xs={24} sm={12} md={8} lg={6}>
+                <Form.Item label="Validity Date" name="validity_date" rules={[{required: true,message:"date is required"}]}>
+                  <DatePicker style={{ width: "100%" }} />
                 </Form.Item>
-                
-                                
-                              </Col>
-                              <Col xs={24} sm={12} md={8} lg={6}>
-                               <Form.Item
-                  label="Currency"
-                  name="currency_id"
-                  rules={[{ required: true, message: "Currency is required" }]}
-                >
-                  <Select placeholder="Select currency">
-                    {currencies.map((c) => (
-                      <Select.Option key={c.id} value={c.id}>
-                        {c.name}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-                
-                              </Col>
-                              <Col xs={24} sm={12} md={8} lg={6}>
-                                <Form.Item label="Validity Date" name="validity_date" rules={[{required: true,message:"date is required"}]}>
-                                  <DatePicker style={{ width: "100%" }} />
-                                </Form.Item>
-                              </Col>
-                            </Row>
+              </Col>
+            </Row>
 
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12} md={6}>
@@ -2528,15 +2575,20 @@ const NewQuotation: React.FC = () => {
                 <Option value={3}>Warranty</Option>
               </Select>
             </Form.Item>
-            {/* <Form.Item name="gst" label="GST">
-              <Select placeholder="Select GST" allowClear>
-                {gstList.map((g) => (
-                  <Option key={g.gst_id} value={g.gst_id}>
-                    {g.gst_name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item> */}
+            <Form.Item
+  name="gst_id"
+  label="GST"
+  rules={[{ required: true, message: "GST is required" }]}
+>
+  <Select placeholder="Select GST">
+    {gstList.map((g) => (
+      <Option key={g.gst_id} value={g.gst_id}>
+        {g.gst_name}
+      </Option>
+    ))}
+  </Select>
+</Form.Item>
+
             <Form.Item name="model" label="Model">
               <Input placeholder="Enter model" />
             </Form.Item>
@@ -2546,7 +2598,7 @@ const NewQuotation: React.FC = () => {
             <Form.Item name="watt" label="Watt">
               <Input placeholder="Enter watt" />
             </Form.Item>
-            <Form.Item name="is_active" label="Status">
+            <Form.Item name="is_active" label="Status" initialValue={1}>
               <Select>
                 <Option value={1}>Active</Option>
                 <Option value={0}>Inactive</Option>
@@ -2584,4 +2636,3 @@ const NewQuotation: React.FC = () => {
 };
 
 export default NewQuotation;
-

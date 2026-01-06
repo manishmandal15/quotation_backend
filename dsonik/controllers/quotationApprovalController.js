@@ -77,31 +77,83 @@ const QuotationApprovalController = {
 
   // 🔹 Update approval (approve / reject)
   update: (req, res) => {
-    const { status, comments } = req.body;
+  const { status, comments } = req.body;
+  const approvalId = req.params.id;
 
-    const sql = `
-      UPDATE quotation_approvals
-      SET status = ?, comments = ?, approved_at = ?
-      WHERE id = ?
-    `;
+  // valid status check
+  if (!["approved", "rejected", "pending"].includes(status)) {
+    return res.status(400).json({ message: "Invalid status" });
+  }
 
-    // ✅ approved_at backend handle करे
-    const approvedAt = status === "approved" ? new Date() : null;
+  const approvedAt = status === "approved" ? new Date() : null;
 
-    const values = [status, comments || null, approvedAt, req.params.id];
+  // 1️⃣ Pehle approval update
+  const updateApprovalSql = `
+    UPDATE quotation_approvals
+    SET status = ?, comments = ?, approved_at = ?
+    WHERE id = ?
+  `;
 
-    db.query(sql, values, (err, result) => {
+  db.query(
+    updateApprovalSql,
+    [status, comments || null, approvedAt, approvalId],
+    (err, result) => {
       if (err) {
-        console.error("DB Update Error:", err); // ❗ debugging
+        console.error("Approval Update Error:", err);
         return res.status(500).json({ error: err.message });
       }
 
-      if (result.affectedRows === 0)
+      if (result.affectedRows === 0) {
         return res.status(404).json({ message: "Approval not found" });
+      }
 
-      res.json({ message: "Approval updated successfully" });
-    });
-  },
+      // 2️⃣ quotation_id nikaalo
+      const getQuotationSql = `
+        SELECT quotation_id
+        FROM quotation_approvals
+        WHERE id = ?
+      `;
+
+      db.query(getQuotationSql, [approvalId], (err2, rows) => {
+        if (err2) {
+          console.error("Fetch Quotation Error:", err2);
+          return res.status(500).json({ error: err2.message });
+        }
+
+        const quotationId = rows[0].quotation_id;
+
+        // 3️⃣ quotation status map
+        let quotationStatus = "pending";
+        if (status === "approved") quotationStatus = "approved";
+        if (status === "rejected") quotationStatus = "rejected";
+
+        // 4️⃣ quotation table update
+        const updateQuotationSql = `
+          UPDATE quotations
+          SET status = ?
+          WHERE id = ?
+        `;
+
+        db.query(
+          updateQuotationSql,
+          [quotationStatus, quotationId],
+          (err3) => {
+            if (err3) {
+              console.error("Quotation Update Error:", err3);
+              return res.status(500).json({ error: err3.message });
+            }
+
+            res.json({
+              message: "Approval updated & quotation status synced",
+              quotation_status: quotationStatus,
+            });
+          }
+        );
+      });
+    }
+  );
+},
+
 
   // 🔹 Delete approval
   delete: (req, res) => {
