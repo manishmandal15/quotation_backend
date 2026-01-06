@@ -2260,67 +2260,72 @@ const NewQuotation: React.FC = () => {
                 </Form.Item> */}
 
                 <Form.Item
-  name="customer_id"
-  rules={[{ required: true, message: "Please select customer" }]}
-  label={
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <span>Customer</span>
-      <Button
-        type="link"
-        size="small"
-        onClick={() => setCustomerModalOpen(true)}
-        style={{ padding: 0 }}
-      >
-        + Add New Customer
-      </Button>
-    </div>
-  }
->
-  <Select
-    showSearch
-    placeholder="Select customer"
-    onChange={onCustomerChange}
-    optionFilterProp="label"
-  >
-    {customers
-      .slice()
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map((c) => {
-        const district = c.district_name || c.district || "";
-        const labelText = `${c.name}${district ? ", " + district : ""}`;
-
-        return (
-          <Select.Option
-            key={c.id}
-            value={c.id}
-            label={labelText}
-          >
-            {labelText}
-          </Select.Option>
-        );
-      })}
-  </Select>
-</Form.Item>
-
+                  name="customer_id"
+                  rules={[{ required: true, message: "Please select customer" }]}
+                  label={
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span>Customer</span>
+                      <Button
+                        type="dashed"
+                        size="small"
+                        onClick={() => setCustomerModalOpen(true)}
+                        style={{ padding: 3,marginLeft:40 }}
+                      >
+                        + Add New Customer
+                      </Button>
+                    </div>
+                  }
+                >
+                  <Select
+                    showSearch
+                    placeholder="Select customer"
+                    onChange={onCustomerChange}
+                    optionFilterProp="label"
+                  >
+                    {customers
+                      .slice()
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((c) => {
+                        const district = c.district_name || c.district || "";
+                        const labelText = `${c.name}${district ? ", " + district : ""}`;
                 
-              </Col>
-              <Col xs={24} sm={12} md={8} lg={6}>
-                <Form.Item label="Currency" name="currency_id">
+                        return (
+                          <Select.Option
+                            key={c.id}
+                            value={c.id}
+                            label={labelText}
+                          >
+                            {labelText}
+                          </Select.Option>
+                        );
+                      })}
+                  </Select>
+                </Form.Item>
+                
+                                
+                              </Col>
+                              <Col xs={24} sm={12} md={8} lg={6}>
+                               <Form.Item
+                  label="Currency"
+                  name="currency_id"
+                  rules={[{ required: true, message: "Currency is required" }]}
+                >
                   <Select placeholder="Select currency">
                     {currencies.map((c) => (
-                      <Option key={c.id} value={c.id}>
+                      <Select.Option key={c.id} value={c.id}>
                         {c.name}
-                      </Option>
+                      </Select.Option>
                     ))}
                   </Select>
                 </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={8} lg={6}>
-                <Form.Item label="Validity Date" name="validity_date">
-                  <DatePicker style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-            </Row>
+                
+                              </Col>
+                              <Col xs={24} sm={12} md={8} lg={6}>
+                                <Form.Item label="Validity Date" name="validity_date" rules={[{required: true,message:"date is required"}]}>
+                                  <DatePicker style={{ width: "100%" }} />
+                                </Form.Item>
+                              </Col>
+                            </Row>
 
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12} md={6}>
@@ -2402,15 +2407,15 @@ const NewQuotation: React.FC = () => {
               label="Terms & Conditions"
               name="terms_conditions"
               initialValue={`1. Price : Ex works
-                            2. GST : 18% Extra 
-                            3. Packaging : NA for Delhi NCR
-                            4. Freight : Extra as actual
-                            5. Insurance : NA for Delhi NCR
-                            6. Payment : 50% Advance along with commercial order, 50% against proforma invoice before dispatch
-                            7. Delivery : 15 to 20 working days after receiving purchase order and advance
-                            8. I &C : NA for Delhi NCR
-                            9. Warranty : 1 year standard warranty except consumables
-                            10. Cancellation : 50% order cancellation charge plus 18% GST in case of order cancellation`}
+2. GST : 18% Extra 
+3. Packaging : NA for Delhi NCR
+4. Freight : Extra as actual
+5. Insurance : NA for Delhi NCR
+6. Payment : 50% Advance along with commercial order, 50% against proforma invoice before dispatch
+7. Delivery : 15 to 20 working days after receiving purchase order and advance
+8. I &C : NA for Delhi NCR
+9. Warranty : 1 year standard warranty except consumables
+10. Cancellation : 50% order cancellation charge plus 18% GST in case of order cancellation`}
             >
               <Input.TextArea rows={6} placeholder="Enter terms & conditions" />
             </Form.Item>

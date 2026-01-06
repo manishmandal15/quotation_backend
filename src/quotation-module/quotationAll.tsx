@@ -2445,15 +2445,15 @@ const NewQuotation: React.FC = () => {
               label="Terms & Conditions"
               name="terms_conditions"
               initialValue={`1. Price : Ex works
-                            2. GST : 18% Extra 
-                            3. Packaging : NA for Delhi NCR
-                            4. Freight : Extra as actual
-                            5. Insurance : NA for Delhi NCR
-                            6. Payment : 50% Advance along with commercial order, 50% against proforma invoice before dispatch
-                            7. Delivery : 15 to 20 working days after receiving purchase order and advance
-                            8. I &C : NA for Delhi NCR
-                            9. Warranty : 1 year standard warranty except consumables
-                            10. Cancellation : 50% order cancellation charge plus 18% GST in case of order cancellation`}
+2. GST : 18% Extra 
+3. Packaging : NA for Delhi NCR
+4. Freight : Extra as actual
+5. Insurance : NA for Delhi NCR
+6. Payment : 50% Advance along with commercial order, 50% against proforma invoice before dispatch
+7. Delivery : 15 to 20 working days after receiving purchase order and advance
+8. I &C : NA for Delhi NCR
+9. Warranty : 1 year standard warranty except consumables
+10. Cancellation : 50% order cancellation charge plus 18% GST in case of order cancellation`}
             >
               <Input.TextArea rows={6} placeholder="Enter terms & conditions" />
             </Form.Item>
