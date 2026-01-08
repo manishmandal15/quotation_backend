@@ -53,6 +53,8 @@ exports.getProducts = (req, res) => {
       g.gst AS gst_rate
     FROM products p
     LEFT JOIN gst_master g ON g.gst_id = p.gst
+    WHERE p.is_active = 1
+    ORDER BY p.id DESC
   `, (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
@@ -60,10 +62,11 @@ exports.getProducts = (req, res) => {
 };
 
 
+
 // Get Single Product
 exports.getProductById = (req, res) => {
   const { id } = req.params;
-  db.query("SELECT * FROM products WHERE id = ?", [id], (err, result) => {
+  db.query("SELECT * FROM products WHERE id = ? AND is_active = 1", [id], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     if (result.length === 0) return res.status(404).json({ message: "Product not found" });
     res.json(result[0]);
@@ -94,7 +97,7 @@ exports.updateProduct = (req, res) => {
   const image = req.file ? req.file.filename : null;
 
   // First, get old image to delete
-  db.query("SELECT image FROM products WHERE id = ?", [id], (err, result) => {
+  db.query("SELECT image FROM products WHERE id = ? AND is_active = 1", [id], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     if (!result.length) return res.status(404).json({ message: "Product not found" });
 
@@ -106,7 +109,7 @@ exports.updateProduct = (req, res) => {
 
     const sql = `UPDATE products SET 
       product_code=?, name=?, description=?, unit=?, price=?, hsn_no=?, sale_price=?, specification=?, min_level=?, max_level=?, image=?, product_service_type=?, gst=?, model=?, frequency=?, watt=?
-      WHERE id=?`;
+      WHERE id=? AND is_active = 1`;
 
     db.query(sql, [product_code, name, description, unit, price, hsn_no, sale_price, specification, min_level, max_level, image || result[0].image, product_service_type, gst, model, frequency, watt, id],
       (err, result) => {
@@ -119,20 +122,30 @@ exports.updateProduct = (req, res) => {
 // Delete Product
 exports.deleteProduct = (req, res) => {
   const { id } = req.params;
-  db.query("SELECT image FROM products WHERE id = ?", [id], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!result.length) return res.status(404).json({ message: "Product not found" });
 
-    // Delete image
-    if (result[0].image) {
-      fs.unlink(path.join("uploads", result[0].image), (err) => {
-        if (err) console.log("Failed to delete image:", err.message);
-      });
-    }
-
-    db.query("DELETE FROM products WHERE id = ?", [id], (err, result) => {
+  db.query(
+    "SELECT image FROM products WHERE id = ? AND is_active = 1",
+    [id],
+    (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.json({ message: "Product deleted successfully" });
-    });
-  });
+      if (!result.length)
+        return res
+          .status(404)
+          .json({ message: "Product not found or already deleted" });
+
+      // ❌ DO NOT delete image on soft delete
+      // image future restore ke kaam aa sakti hai
+
+      db.query(
+        "UPDATE products SET is_active = 0 WHERE id = ?",
+        [id],
+        (err2) => {
+          if (err2) return res.status(500).json({ error: err2.message });
+
+          res.json({ message: "Product deactivated successfully" });
+        }
+      );
+    }
+  );
 };
+

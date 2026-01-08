@@ -580,31 +580,68 @@ const QuotationsApproval: React.FC = () => {
     setIsModalVisible(true);
   };
 
-  const handleSave = async () => {
-    try {
-      const values = await form.validateFields();
-      const payload = {
-        quotation_id: selectedQuotation.id,
-        approver_id: values.approver_id,
-        status: actionType,
-        comments: values.comments || null,
-      };
+  // const handleSave = async () => {
+  //   try {
+  //     const values = await form.validateFields();
+  //     const payload = {
+  //       quotation_id: selectedQuotation.id,
+  //       approver_id: values.approver_id,
+  //       status: actionType,
+  //       comments: values.comments || null,
+  //     };
 
-      const existingApproval = approvals.find(a => a.quotation_id === selectedQuotation.id);
-      if (existingApproval) {
-        await axios.put(`${BASE_URL}/quotation-approvals/${existingApproval.id}`, payload);
-      } else {
-        await axios.post(`${BASE_URL}/quotation-approvals`, payload);
-      }
+  //     const existingApproval = approvals.find(a => a.quotation_id === selectedQuotation.id);
+  //     if (existingApproval) {
+  //       await axios.put(`${BASE_URL}/quotation-approvals/${existingApproval.id}`, payload);
+  //     } else {
+  //       await axios.post(`${BASE_URL}/quotation-approvals`, payload);
+  //     }
 
-      message.success(`Quotation ${actionType} successfully!`);
-      setIsModalVisible(false);
-      fetchData();
-    } catch (err) {
-      console.error(err);
-      message.error("Failed to save approval");
+  //     message.success(`Quotation ${actionType} successfully!`);
+  //     setIsModalVisible(false);
+  //     fetchData();
+  //   } catch (err) {
+  //     console.error(err);
+  //     message.error("Failed to save approval");
+  //   }
+  // };
+
+  // --- inside handleSave ---
+const handleSave = async () => {
+  try {
+    const values = await form.validateFields();
+    const payload = {
+      quotation_id: selectedQuotation.id,
+      approver_id: values.approver_id,
+      status: actionType,
+      comments: values.comments || null,
+    };
+
+    const existingApproval = approvals.find(a => a.quotation_id === selectedQuotation.id);
+    if (existingApproval) {
+      await axios.put(`${BASE_URL}/quotation-approvals/${existingApproval.id}`, payload);
+    } else {
+      await axios.post(`${BASE_URL}/quotation-approvals`, payload);
     }
-  };
+
+    message.success(`Quotation ${actionType} successfully!`);
+    setIsModalVisible(false);
+
+    // ✅ Refresh current approval list
+    await fetchData();
+
+    // ✅ Trigger refresh in NewQuotation list
+    // Assuming you have a global event emitter or simple window-level trigger
+    // If not, we can use a custom hook or state in parent
+    const event = new CustomEvent("quotationUpdated");
+    window.dispatchEvent(event);
+
+  } catch (err) {
+    console.error(err);
+    message.error("Failed to save approval");
+  }
+};
+
 
   const handlePreview = async (quotation: any) => {
     try {

@@ -1998,11 +1998,14 @@ const pageSize = 10;
     {
       title: "Action",
       render: (_: any, rec: any) => {
-        const link = `${
-          window.location.origin
-        }/printpage?quotationNo=${encodeURIComponent(
-          rec.quotation_no
-        )}&autoPrint=true`;
+        // const link = `${
+        //   window.location.origin
+        // }/printpage?quotationNo=${encodeURIComponent(
+        //   rec.quotation_no
+        // )}&autoPrint=true`;
+
+        const link = `${window.location.origin}/printpage?id=${rec.id}&autoPrint=true`;
+
 
         return (
           <Space>

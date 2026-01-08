@@ -400,11 +400,158 @@
 
 
 
+// const db = require("../config/db");
+
+// /* ================= GET ALL ================= */
+// exports.getAll = (req, res) => {
+//   const sql = `SELECT * FROM gst_master WHERE status = 'Active' ORDER BY gst_id DESC`;
+//   db.query(sql, (err, results) => {
+//     if (err) {
+//       console.error("GET GST ERROR:", err);
+//       return res.status(500).json({ error: err.message });
+//     }
+//     res.json(results);
+//   });
+// };
+
+// /* ================= CREATE ================= */
+// exports.create = (req, res) => {
+//   const {
+//     gst_name,
+//     gst,
+//     cgst,
+//     sgst,
+//     igst,
+//     effective_from,
+//     effective_to,
+//     status,
+//   } = req.body;
+
+//   if (
+//     !gst_name ||
+//     gst === undefined ||
+//     cgst === undefined ||
+//     sgst === undefined ||
+//     igst === undefined ||
+//     !effective_from
+//   ) {
+//     return res.status(400).json({ message: "Missing required fields" });
+//   }
+
+//   const sql = `
+//     INSERT INTO gst_master
+//     (gst_name, gst, cgst, sgst, igst, effective_from, effective_to, status)
+//     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+//   `;
+
+//   const values = [
+//     gst_name,
+//     gst,
+//     cgst,
+//     sgst,
+//     igst,
+//     effective_from,
+//     effective_to || null,
+//     status || "Active",
+//   ];
+
+//   db.query(sql, values, (err, result) => {
+//     if (err) {
+//       console.error("CREATE GST ERROR:", err);
+//       return res.status(500).json({ error: err.message });
+//     }
+//     res.status(201).json({
+//       message: "GST created successfully",
+//       id: result.insertId,
+//     });
+//   });
+// };
+
+// /* ================= UPDATE ================= */
+// exports.update = (req, res) => {
+//   const { id } = req.params;
+//   const {
+//     gst_name,
+//     gst,
+//     cgst,
+//     sgst,
+//     igst,
+//     effective_from,
+//     effective_to,
+//     status,
+//   } = req.body;
+
+//   const sql = `
+//     UPDATE gst_master SET
+//       gst_name = ?,
+//       gst = ?,
+//       cgst = ?,
+//       sgst = ?,
+//       igst = ?,
+//       effective_from = ?,
+//       effective_to = ?,
+//       status = Active
+//     WHERE gst_id = ?
+//   `;
+
+//   db.query(
+//     sql,
+//     [
+//       gst_name,
+//       gst,
+//       cgst,
+//       sgst,
+//       igst,
+//       effective_from,
+//       effective_to || null,
+//       status,
+//       id,
+//     ],
+//     (err, result) => {
+//       if (err) {
+//         console.error("UPDATE GST ERROR:", err);
+//         return res.status(500).json({ error: err.message });
+//       }
+//       if (result.affectedRows === 0) {
+//         return res.status(404).json({ message: "GST not found" });
+//       }
+//       res.json({ message: "GST updated successfully" });
+//     }
+//   );
+// };
+
+// /* ================= DELETE ================= */
+// exports.delete = (req, res) => {
+//   const { id } = req.params;
+
+//   db.query(
+//     "DELETE FROM gst_master WHERE gst_id = ?",
+//     [id],
+//     (err, result) => {
+//       if (err) {
+//         console.error("DELETE GST ERROR:", err);
+//         return res.status(500).json({ error: err.message });
+//       }
+//       if (result.affectedRows === 0) {
+//         return res.status(404).json({ message: "GST not found" });
+//       }
+//       res.json({ message: "GST deleted successfully" });
+//     }
+//   );
+// };
+
+
 const db = require("../config/db");
 
-/* ================= GET ALL ================= */
+/* ================= GET ALL (ONLY ACTIVE) ================= */
 exports.getAll = (req, res) => {
-  const sql = `SELECT * FROM gst_master ORDER BY gst_id DESC`;
+  const sql = `
+    SELECT *
+    FROM gst_master
+    WHERE status = 'Active'
+    ORDER BY gst_id DESC
+  `;
+
   db.query(sql, (err, results) => {
     if (err) {
       console.error("GET GST ERROR:", err);
@@ -444,30 +591,32 @@ exports.create = (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  const values = [
-    gst_name,
-    gst,
-    cgst,
-    sgst,
-    igst,
-    effective_from,
-    effective_to || null,
-    status || "Active",
-  ];
-
-  db.query(sql, values, (err, result) => {
-    if (err) {
-      console.error("CREATE GST ERROR:", err);
-      return res.status(500).json({ error: err.message });
+  db.query(
+    sql,
+    [
+      gst_name,
+      gst,
+      cgst,
+      sgst,
+      igst,
+      effective_from,
+      effective_to || null,
+      status || "Active",
+    ],
+    (err, result) => {
+      if (err) {
+        console.error("CREATE GST ERROR:", err);
+        return res.status(500).json({ error: err.message });
+      }
+      res.status(201).json({
+        message: "GST created successfully",
+        id: result.insertId,
+      });
     }
-    res.status(201).json({
-      message: "GST created successfully",
-      id: result.insertId,
-    });
-  });
+  );
 };
 
-/* ================= UPDATE ================= */
+/* ================= UPDATE (ONLY ACTIVE) ================= */
 exports.update = (req, res) => {
   const { id } = req.params;
   const {
@@ -490,8 +639,9 @@ exports.update = (req, res) => {
       igst = ?,
       effective_from = ?,
       effective_to = ?,
-      status = ?
-    WHERE gst_id = ?
+      status = ?,
+      updated_at = NOW()
+    WHERE gst_id = ? AND status = 'Active'
   `;
 
   db.query(
@@ -504,7 +654,7 @@ exports.update = (req, res) => {
       igst,
       effective_from,
       effective_to || null,
-      status,
+      status || "Active",
       id,
     ],
     (err, result) => {
@@ -513,30 +663,38 @@ exports.update = (req, res) => {
         return res.status(500).json({ error: err.message });
       }
       if (result.affectedRows === 0) {
-        return res.status(404).json({ message: "GST not found" });
+        return res
+          .status(404)
+          .json({ message: "GST not found or inactive" });
       }
       res.json({ message: "GST updated successfully" });
     }
   );
 };
 
-/* ================= DELETE ================= */
+/* ================= SOFT DELETE ================= */
 exports.delete = (req, res) => {
   const { id } = req.params;
 
-  db.query(
-    "DELETE FROM gst_master WHERE gst_id = ?",
-    [id],
-    (err, result) => {
-      if (err) {
-        console.error("DELETE GST ERROR:", err);
-        return res.status(500).json({ error: err.message });
-      }
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ message: "GST not found" });
-      }
-      res.json({ message: "GST deleted successfully" });
+  const sql = `
+    UPDATE gst_master
+    SET status = 'Inactive',
+        updated_at = NOW()
+    WHERE gst_id = ? AND status = 'Active'
+  `;
+
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error("DELETE GST ERROR:", err);
+      return res.status(500).json({ error: err.message });
     }
-  );
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ message: "GST not found or already inactive" });
+    }
+    res.json({ message: "GST deactivated successfully" });
+  });
 };
+
 

@@ -2,7 +2,10 @@ const db = require("../config/db");
 
 // ➤ Get All Warehouse Locations
 exports.getLocations = (req, res) => {
-  const sql = "SELECT * FROM warehouses_location";
+  const sql = `SELECT * FROM warehouses_location 
+                        WHERE is_active=1 
+                        ORDER BY location_id DESC
+  `;
 
   db.query(sql, (err, result) => {
     if (err) return res.status(500).json({ error: err });
@@ -14,7 +17,7 @@ exports.getLocations = (req, res) => {
 exports.getLocationById = (req, res) => {
   const locationId = req.params.id;
 
-  const sql = "SELECT * FROM warehouses_location WHERE location_id = ?";
+  const sql = "SELECT * FROM warehouses_location WHERE location_id = ?  WHERE is_active=1  ";
   db.query(sql, [locationId], (err, result) => {
     if (err) return res.status(500).json({ error: err });
     if (result.length === 0) return res.status(404).json({ msg: "Location not found" });
@@ -62,7 +65,7 @@ exports.updateLocation = (req, res) => {
   const sql = `
     UPDATE warehouses_location 
     SET seller_id=?, location_name=?, address_line1=?, address_line2=?, city=?, state=?, postal_code=?, country=?
-    WHERE location_id=?
+    WHERE location_id=? is_active=1
   `;
 
   const values = [
@@ -85,13 +88,34 @@ exports.updateLocation = (req, res) => {
 };
 
 // ➤ Delete Location
+// exports.deleteLocation = (req, res) => {
+//   const locationId = req.params.id;
+
+//   const sql = "UPDATE FROM warehouses_location SET is_active =0 WHERE location_id = ?";
+//   db.query(sql, [locationId], (err) => {
+//     if (err) return res.status(500).json({ error: err });
+
+//     res.json({ msg: "Location Deactivated" });
+//   });
+// };
+
 exports.deleteLocation = (req, res) => {
   const locationId = req.params.id;
 
-  const sql = "DELETE FROM warehouses_location WHERE location_id = ?";
-  db.query(sql, [locationId], (err) => {
+  const sql = `
+    UPDATE warehouses_location
+    SET is_active = 0
+    WHERE location_id = ?
+  `;
+
+  db.query(sql, [locationId], (err, result) => {
     if (err) return res.status(500).json({ error: err });
 
-    res.json({ msg: "Location Deleted" });
+    if (!result.affectedRows) {
+      return res.status(404).json({ msg: "Location not found" });
+    }
+
+    res.json({ msg: "Location deleted (soft delete)" });
   });
 };
+

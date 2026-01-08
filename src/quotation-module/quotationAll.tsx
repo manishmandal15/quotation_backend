@@ -1645,6 +1645,14 @@ const pageSize = 10;
     
   }, []);
 
+  useEffect(() => {
+  const handleUpdate = () => fetchQuotations(); // tumhara existing fetch function
+  window.addEventListener("quotationUpdated", handleUpdate);
+
+  return () => window.removeEventListener("quotationUpdated", handleUpdate);
+}, []);
+
+
   const fetchQuotations = async () => {
     try {
       const res = await QUOTATION_API.get("/");

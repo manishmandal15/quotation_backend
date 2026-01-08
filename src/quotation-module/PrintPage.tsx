@@ -1119,14 +1119,28 @@ export default function PrintPage() {
 const COMPANY_STATE = "uttar pradesh";
 
 
+  // useEffect(() => {
+  //   const params = new URLSearchParams(window.location.search);
+  //   const q = params.get("quotationNo") || "";
+  //   const auto = params.get("autoPrint") === "true";
+  //   setQuotationNo(q);
+  //   setAutoPrint(auto);
+  //   if (q) loadQuotation(q, auto);
+  // }, []);
+
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const q = params.get("quotationNo") || "";
-    const auto = params.get("autoPrint") === "true";
-    setQuotationNo(q);
-    setAutoPrint(auto);
-    if (q) loadQuotation(q, auto);
-  }, []);
+  const params = new URLSearchParams(window.location.search);
+
+  const id = params.get("id");              // 👈 NEW
+  const auto = params.get("autoPrint") === "true";
+
+  setAutoPrint(auto);
+
+  if (id) {
+    loadQuotationById(id, auto);             // 👈 NEW
+  }
+}, []);
+
 
   
 
@@ -1201,19 +1215,37 @@ const COMPANY_STATE = "uttar pradesh";
     return words + " Only";
   };
 
-  const loadQuotation = async (q: string, shouldAutoPrint?: boolean) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await getQuotationByNumber(q);
-      setData(res?.data ?? res);
-      if (shouldAutoPrint) setTimeout(() => handlePrint(), 500);
-    } catch (err) {
-      setError("Failed to load quotation");
-    } finally {
-      setLoading(false);
+  // const loadQuotation = async (q: string, shouldAutoPrint?: boolean) => {
+  //   setLoading(true);
+  //   setError(null);
+  //   try {
+  //     const res = await getQuotationByNumber(q);
+  //     setData(res?.data ?? res);
+  //     if (shouldAutoPrint) setTimeout(() => handlePrint(), 500);
+  //   } catch (err) {
+  //     setError("Failed to load quotation");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const loadQuotationById = async (id: string, shouldAutoPrint?: boolean) => {
+  setLoading(true);
+  setError(null);
+  try {
+    const res = await QUOTATION_API.get(`/${id}`); // 👈 ID based API
+    setData(res.data);
+
+    if (shouldAutoPrint) {
+      setTimeout(() => handlePrint(), 500);
     }
-  };
+  } catch (err) {
+    setError("Failed to load quotation");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handlePrint = () => {
     if (!printRef.current) return;
