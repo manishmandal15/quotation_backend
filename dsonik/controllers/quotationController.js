@@ -1939,7 +1939,7 @@ class QuotationController {
     const updateQuery = `
       UPDATE quotations SET
         quotation_no=?, customer_id=?, currency_id=?, validity_date=?,
-        payment_terms=?, delivery_terms=?, terms_conditions=?, status=?,
+        payment_terms=?, delivery_terms=?, terms_conditions=?, status = COALESCE(NULLIF(?, ''), status),
         total_amount=?, discount_amount=?, tax_amount=?, net_amount=?
       WHERE id = ? AND is_active = 1
 

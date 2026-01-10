@@ -5,31 +5,55 @@ const dotenv = require("dotenv");
 const path = require("path");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const cluster = require("cluster");
+const os = require("os");
+const http = require("http");
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5001;
+const numCPUs = os.cpus().length;
 
 // ----------------------------
-// GLOBAL MIDDLEWARE
+// SECURITY & GLOBAL MIDDLEWARE
 // ----------------------------
-app.use(helmet());
-app.use(cors());
-app.use(express.urlencoded({ extended: true }));
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }, // 🔥 allows images
+  })
+);
+
+app.use(
+  cors({
+    origin: "http://localhost:5173", // your frontend
+    credentials: true,
+  })
+);
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Optional: rate limiting
+// ----------------------------
+// RATE LIMITING
+// ----------------------------
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP
+  windowMs: 15 * 60 * 1000,
+  max: 100,
 });
 app.use(limiter);
 
 // ----------------------------
-// STATIC FILES
+// STATIC FILES (UPLOADS)
 // ----------------------------
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"), {
+    setHeaders: (res) => {
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin"); // 🔥 CORP for images
+    },
+  })
+);
 
 // ----------------------------
 // IMPORT ROUTES
@@ -138,21 +162,8 @@ app.use((err, req, res, next) => {
 });
 
 // ----------------------------
-// PORT CONFIGURATION
+// CLUSTER & SERVER
 // ----------------------------
-const PORT = process.env.PORT || 5003;
-
-// server.js
-//const { app, PORT } = require("./app");
-
-
-
-const cluster = require("cluster");
-const os = require("os");
-const http = require("http");
-
-const numCPUs = os.cpus().length;
-
 if (cluster.isPrimary) {
   console.log(`🚀 Master ${process.pid} running`);
 
@@ -166,24 +177,14 @@ if (cluster.isPrimary) {
   });
 } else {
   const server = http.createServer(app);
-
-  // Increase concurrent connections
   server.maxConnections = 10000;
 
   server.listen(PORT, "0.0.0.0", () => {
-    console.log(`✅ Worker ${process.pid} listening on ${PORT}`);
+    console.log(`✅ Worker ${process.pid} listening on port ${PORT}`);
   });
 
-  // Graceful shutdown
   process.on("SIGTERM", () => {
-    server.close(() => {
-      process.exit(0);
-    });
+    server.close(() => process.exit(0));
   });
 }
-
-
-
-
-
 

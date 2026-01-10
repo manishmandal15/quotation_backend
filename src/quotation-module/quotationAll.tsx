@@ -2575,37 +2575,37 @@ const pageSize = 10;
           }}
         >
           <div className="grid grid-cols-3 gap-4">
-            <Form.Item name="product_code" label="Product Code">
+            <Form.Item name="product_code" label="Product Code" rules={[{ required: true }]}>
               <Input placeholder="Enter product code" />
             </Form.Item>
             <Form.Item name="name" label="Name" rules={[{ required: true }]}>
               <Input placeholder="Enter product name" />
             </Form.Item>
-            <Form.Item name="description" label="Description">
+            <Form.Item name="description" label="Description" rules={[{ required: true }]}>
               <Input placeholder="Enter description" />
             </Form.Item>
-            <Form.Item name="unit" label="Unit">
+            <Form.Item name="unit" label="Unit" rules={[{ required: true }]}>
               <Input placeholder="Enter unit" />
             </Form.Item>
-            <Form.Item name="price" label="Price">
+            <Form.Item name="price" label="Price" rules={[{ required: true }]}>
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item name="sale_price" label="Sale Price">
+            <Form.Item name="sale_price" label="Sale Price" rules={[{ required: true }]}>
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item name="hsn_no" label="HSN No">
+            <Form.Item name="hsn_no" label="HSN No" rules={[{ required: true }]}>
               <Input placeholder="Enter HSN number" />
             </Form.Item>
-            <Form.Item name="specification" label="Specification">
+            <Form.Item name="specification" label="Specification" rules={[{ required: true }]}>
               <Input placeholder="Enter specification" />
             </Form.Item>
-            <Form.Item name="min_level" label="Min Level">
+            <Form.Item name="min_level" label="Min Level" rules={[{ required: true }]}>
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item name="max_level" label="Max Level">
+            <Form.Item name="max_level" label="Max Level" rules={[{ required: true }]}>
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item name="product_service_type" label="Product/Service Type">
+            <Form.Item name="product_service_type" label="Product/Service Type" rules={[{ required: true }]}>
               <Select placeholder="Select type" allowClear>
                 <Option value={1}>Product</Option>
                 <Option value={2}>Service</Option>
@@ -2626,16 +2626,16 @@ const pageSize = 10;
   </Select>
 </Form.Item>
 
-            <Form.Item name="model" label="Model">
+            <Form.Item name="model" label="Model" rules={[{ required: true }]}>
               <Input placeholder="Enter model" />
             </Form.Item>
-            <Form.Item name="frequency" label="Frequency">
+            <Form.Item name="frequency" label="Frequency" rules={[{ required: true }]}>
               <Input placeholder="Enter frequency" />
             </Form.Item>
-            <Form.Item name="watt" label="Watt">
+            <Form.Item name="watt" label="Watt" rules={[{ required: true }]}>
               <Input placeholder="Enter watt" />
             </Form.Item>
-            <Form.Item name="is_active" label="Status" initialValue={1}>
+            <Form.Item name="is_active" label="Status" initialValue={1} rules={[{ required: true }]}>
               <Select>
                 <Option value={1}>Active</Option>
                 <Option value={0}>Inactive</Option>
