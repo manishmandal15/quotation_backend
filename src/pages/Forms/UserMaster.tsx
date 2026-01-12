@@ -130,7 +130,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
       width: 60,
     },
     { title: "Name", dataIndex: "name", key: "name" },
-    { title: "Email", dataIndex: "email", key: "email" },
+    { title: "User Id", dataIndex: "email", key: "email" },
     { title: "Phone", dataIndex: "phone", key: "phone" },
     { title: "Role", dataIndex: "rolename", key: "rolename" },
     {
@@ -225,10 +225,10 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
             <Form.Item
               name="email"
-              label="Email"
-              rules={[{ required: true, message: "Please enter email" }]}
+              label="User ID"
+              rules={[{ required: true, message: "Please enter user id" }]}
             >
-              <Input type="email" placeholder="Enter email" />
+              <Input type="normal" placeholder="Enter User id" />
             </Form.Item>
 
             {!editId && (
@@ -249,6 +249,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
               name="is_active"
               label="Status"
               rules={[{ required: true, message: "Please select status" }]}
+              initialValue={1}
             >
               <Select>
                 <Option value={1}>Active</Option>

@@ -1534,7 +1534,11 @@ const grandTotal = subTotal - totalDiscount + totalTax;
                 <tr key={i}>
                   <td style={td}>{i + 1}</td>
                   <td style={td}>{item.product_name}</td>
-                  <td style={td}>{item.description}</td>
+                  {/* <td style={td}>{item.description}</td> */}
+                  <td style={{ ...td, whiteSpace: "pre-line" }}>
+  {item.description}
+</td>
+
                   <td style={td}>{item.quantity}</td>
                   <td style={td}>{item.unit_price?.toFixed(2)}</td>
                   <td style={td}>{item.discount}</td>

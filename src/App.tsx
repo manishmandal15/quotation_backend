@@ -47,6 +47,8 @@ import RmIssueMaster from "./pages/Forms/RmIssueMaster";
 import RmIssueItemMaster from "./pages/Forms/RmIssueItemMaster";  
 import ProductIssue from "./pages/Forms/ProductIssue"; 
 import AddCustomer  from "./quotation-module/addcustomer"; 
+import ReferenceMaster from "./pages/Forms/ReferenceMaster";
+
 
 
 export default function App() {
@@ -101,6 +103,7 @@ export default function App() {
         <Route path="/rmIssue" element={<RmIssueMaster />} /> 
         <Route path="/rmIssueItem" element={<RmIssueItemMaster />} />  
         <Route path="/product-issue" element={<ProductIssue />} /> 
+        <Route path="/refference" element={<ReferenceMaster />} /> 
         <Route path="/quotation/add-customer" element={<AddCustomer open={true} onClose={() => {}} />} />     
           {/* Tables */}
           <Route path="/basic-tables" element={<BasicTables />} />

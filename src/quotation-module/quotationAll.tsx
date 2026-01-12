@@ -1601,6 +1601,9 @@ const { Option } = Select;
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const GST_API = axios.create({ baseURL: `${BASE_URL}/gst-master` });
+const REFERENCE_API = axios.create({
+  baseURL: `${BASE_URL}/references`,
+});
 
 
 
@@ -1630,6 +1633,8 @@ const NewQuotation: React.FC = () => {
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [gstList, setGstList] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [references, setReferences] = useState<any[]>([]);
+
 const pageSize = 10;
 
 
@@ -1642,6 +1647,7 @@ const pageSize = 10;
     fetchCurrencies();
     fetchProducts();
     fetchGstList();
+    fetchReferences();
     
   }, []);
 
@@ -1651,6 +1657,18 @@ const pageSize = 10;
 
   return () => window.removeEventListener("quotationUpdated", handleUpdate);
 }, []);
+
+const fetchReferences = async () => {
+  try {
+    const res = await REFERENCE_API.get("/");
+    const data = Array.isArray(res.data) ? res.data : [];
+
+    // sirf active references
+    setReferences(data.filter((r: any) => r.is_active === 1));
+  } catch (err) {
+    console.error("Reference fetch failed", err);
+  }
+};
 
 
   const fetchQuotations = async () => {
@@ -1863,6 +1881,7 @@ const pageSize = 10;
     }
 
     const payload = {
+      reference_id: values.reference_id, 
       quotationNo: values.quotation_no,
       customerId: values.customer_id,
       currencyId: values.currency_id,
@@ -1913,6 +1932,7 @@ const pageSize = 10;
     setIsFormVisible(true);
     setEditId(record.id);
     form.setFieldsValue({
+      reference_id: record.reference_id,
       quotation_no: record.quotation_no,
       validity_date: record.validity_date ? dayjs(record.validity_date) : null,
       currency_id: record.currency_id,
@@ -2197,16 +2217,31 @@ const pageSize = 10;
         </Select>
       ),
     },
+    // {
+    //   title: "Description",
+    //   dataIndex: "description",
+    //   render: (_: any, r: any) => (
+    //     <Input
+    //       value={r.description}
+    //       onChange={(e) => updateItem(r.key, "description", e.target.value)}
+    //     />
+    //   ),
+    // },
     {
-      title: "Description",
-      dataIndex: "description",
-      render: (_: any, r: any) => (
-        <Input
-          value={r.description}
-          onChange={(e) => updateItem(r.key, "description", e.target.value)}
-        />
-      ),
-    },
+  title: "Description",
+  dataIndex: "description",
+  render: (_: any, r: any) => (
+    <Input.TextArea
+      value={r.description}
+      rows={3}
+      autoSize={{ minRows: 1, maxRows: 6 }}
+      onChange={(e) =>
+        updateItem(r.key, "description", e.target.value)
+      }
+    />
+  ),
+},
+
     {
       title: "Qty",
       dataIndex: "quantity",
@@ -2511,6 +2546,28 @@ const pageSize = 10;
             <Form.Item label="Delivery Terms" name="delivery_terms">
               <Input.TextArea rows={2} placeholder="Enter delivery terms" />
             </Form.Item>
+            <Form.Item
+  label="Reference"
+  name="reference_id"
+  rules={[{ required: true, message: "Please select reference" }]}
+>
+  <Select
+    placeholder="Select reference"
+    showSearch
+    optionFilterProp="label"
+  >
+    {references.map((r) => (
+      <Select.Option
+        key={r.id}
+        value={r.id}
+        label={r.reference}
+      >
+        {r.reference}
+      </Select.Option>
+    ))}
+  </Select>
+</Form.Item>
+
 
             <Button
               type="primary"

@@ -2167,9 +2167,13 @@ const pageSize = 10;
       title: "Description",
       dataIndex: "description",
       render: (_: any, r: any) => (
-        <Input
+        <Input.TextArea
           value={r.description}
-          onChange={(e) => updateItem(r.key, "description", e.target.value)}
+          rows={3}
+          autoSize={{ minRows: 1, maxRows: 6 }}
+          onChange={(e) =>
+            updateItem(r.key, "description", e.target.value)
+          }
         />
       ),
     },

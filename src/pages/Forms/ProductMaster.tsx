@@ -283,28 +283,23 @@ const [pageSize, setPageSize] = useState(10);
             <Form.Item name="name" label="Name" rules={[{ required: true }]}>
               <Input placeholder="Enter product name" />
             </Form.Item>
-            <Form.Item name="description" label="Description" rules={[{ required: true }]}>
-              <Input placeholder="Enter description" />
-            </Form.Item>
             <Form.Item name="unit" label="Unit" rules={[{ required: true }]}>
               <Input placeholder="Enter unit" />
             </Form.Item>
-            <Form.Item name="price" label="Price" rules={[{ required: true }]}>
+            <Form.Item name="price" label="Price" >
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item name="sale_price" label="Sale Price" rules={[{ required: true }]}>
+            <Form.Item name="sale_price" label="Sale Price" >
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
             <Form.Item name="hsn_no" label="HSN No" rules={[{ required: true }]}>
               <Input placeholder="Enter HSN number" />
             </Form.Item>
-            <Form.Item name="specification" label="Specification" rules={[{ required: true }]}>
-              <Input placeholder="Enter specification" />
-            </Form.Item>
-            <Form.Item name="min_level" label="Min Level" rules={[{ required: true }]}>
+            
+            <Form.Item name="min_level" label="Min Level" >
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item name="max_level" label="Max Level" rules={[{ required: true }]}>
+            <Form.Item name="max_level" label="Max Level" >
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
             <Form.Item name="product_service_type" label="Product/Service Type" rules={[{ required: true }]}>
@@ -314,22 +309,22 @@ const [pageSize, setPageSize] = useState(10);
                 <Option value={3}>Warranty</Option>
               </Select>
             </Form.Item>
-            <Form.Item name="gst" label="GST" rules={[{ required: true }]}>
+            <Form.Item name="gst" label="GST" >
               <Select placeholder="Select GST" allowClear>
-                {gstList.map((g) => (
+                {gstList.map((g) => ( 
                   <Option key={g.gst_id} value={g.gst_id}>
                     {g.gst_name}
                   </Option>
                 ))}
               </Select>
             </Form.Item>
-            <Form.Item name="model" label="Model" rules={[{ required: true }]}>
+            <Form.Item name="model" label="Model" >
               <Input placeholder="Enter model" />
             </Form.Item>
-            <Form.Item name="frequency" label="Frequency" rules={[{ required: true }]}>
+            <Form.Item name="frequency" label="Frequency" >
               <Input placeholder="Enter frequency" />
             </Form.Item>
-            <Form.Item name="watt" label="Watt" rules={[{ required: true }]}>
+            <Form.Item name="watt" label="Watt" >
               <Input placeholder="Enter watt" />
             </Form.Item>
             <Form.Item name="is_active" label="Status" initialValue={1} rules={[{ required: true }]}>
@@ -338,11 +333,25 @@ const [pageSize, setPageSize] = useState(10);
                 <Option value={0}>Inactive</Option>
               </Select>
             </Form.Item>
-            <Form.Item label="Image" rules={[{ required: true }]}>
+           <Form.Item label="Image" rules={[{ required: true }]}>
               <Upload fileList={fileList} beforeUpload={() => false} onChange={({ fileList }) => setFileList(fileList)}>
                 <Button icon={<UploadOutlined />}>Select Image</Button>
               </Upload>
             </Form.Item>
+            <Form.Item
+  name="description"
+  label="Description"
+  
+>
+  <Input.TextArea
+    placeholder="Enter description"
+    rows={2}   // jitni height chahiye
+  />
+</Form.Item>
+            <Form.Item name="specification" label="Specification">
+              <Input.TextArea placeholder="Enter specification" rows={2} />
+            </Form.Item>
+              
           </div>
           <div className="flex justify-end mt-4">
             <Button onClick={() => setOpen(false)} style={{ marginRight: 8 }}>

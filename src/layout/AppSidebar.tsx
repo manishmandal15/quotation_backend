@@ -144,7 +144,8 @@ const AppSidebar: React.FC = () => {
           { name: "User Master", path: "/forms/users" },
           { name: "Menu Master", path: "/forms/menu-master" },
           { name: "Role Menu Master", path: "/forms/Role-menu-master" },
-          { name: "Module Menu Master", path: "/forms/module-menu-master" },  
+          { name: "Module Menu Master", path: "/forms/module-menu-master" }, 
+          { name: "Refference Master", path: "/refference " } 
         ],
       },
 
