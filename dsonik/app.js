@@ -15,18 +15,23 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const numCPUs = os.cpus().length;
 
+// -------------------------------------------------
+// ✅ TRUST PROXY (REQUIRED for VPS / Nginx / cPanel)
+// -------------------------------------------------
+app.set("trust proxy", 1);
+
 // ----------------------------
 // SECURITY & GLOBAL MIDDLEWARE
 // ----------------------------
 app.use(
   helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }, // 🔥 allows images
+    crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // your frontend
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );
@@ -40,6 +45,8 @@ app.use(express.urlencoded({ extended: true }));
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use(limiter);
 
@@ -50,7 +57,7 @@ app.use(
   "/uploads",
   express.static(path.join(__dirname, "uploads"), {
     setHeaders: (res) => {
-      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin"); // 🔥 CORP for images
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
     },
   })
 );
@@ -95,6 +102,7 @@ const rmIssueRoutes = require("./routes/rmIssueRoutes");
 const rmIssueItemRoutes = require("./routes/rmIssueItemRoutes");
 const productIssueRoutes = require("./routes/productIssueRoutes");
 const productIssueItemRoutes = require("./routes/productIssueItemroutes");
+const referenceRoutes = require("./routes/referenceRoutes");
 
 // ----------------------------
 // REGISTER ROUTES
@@ -136,6 +144,7 @@ app.use("/api/rm-issues", rmIssueRoutes);
 app.use("/api/rm-issue-items", rmIssueItemRoutes);
 app.use("/api/product-issue", productIssueRoutes);
 app.use("/api/product-issue-items", productIssueItemRoutes);
+app.use("/api/references", referenceRoutes);
 
 // ----------------------------
 // ROOT ROUTE

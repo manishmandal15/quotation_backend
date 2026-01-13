@@ -1607,7 +1607,6 @@ const REFERENCE_API = axios.create({
 
 
 
-
 const QUOTATION_API = axios.create({ baseURL: `${BASE_URL}/quotations` });
 const CUSTOMER_API = axios.create({ baseURL: `${BASE_URL}/customers` });
 const CURRENCY_API = axios.create({ baseURL: `${BASE_URL}/currencies` });
@@ -1633,8 +1632,7 @@ const NewQuotation: React.FC = () => {
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [gstList, setGstList] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [references, setReferences] = useState<any[]>([]);
-
+   const [references, setReferences] = useState<any[]>([]);
 const pageSize = 10;
 
 
@@ -1648,17 +1646,16 @@ const pageSize = 10;
     fetchProducts();
     fetchGstList();
     fetchReferences();
-    
   }, []);
 
   useEffect(() => {
-  const handleUpdate = () => fetchQuotations(); // tumhara existing fetch function
-  window.addEventListener("quotationUpdated", handleUpdate);
+    const handleUpdate = () => fetchQuotations(); // tumhara existing fetch function
+    window.addEventListener("quotationUpdated", handleUpdate);
+  
+    return () => window.removeEventListener("quotationUpdated", handleUpdate);
+  }, []);
 
-  return () => window.removeEventListener("quotationUpdated", handleUpdate);
-}, []);
-
-const fetchReferences = async () => {
+  const fetchReferences = async () => {
   try {
     const res = await REFERENCE_API.get("/");
     const data = Array.isArray(res.data) ? res.data : [];
@@ -1669,7 +1666,6 @@ const fetchReferences = async () => {
     console.error("Reference fetch failed", err);
   }
 };
-
 
   const fetchQuotations = async () => {
     try {
@@ -2055,11 +2051,14 @@ const fetchReferences = async () => {
     {
       title: "Action",
       render: (_: any, rec: any) => {
-        const link = `${
-          window.location.origin
-        }/printpage?quotationNo=${encodeURIComponent(
-          rec.quotation_no
-        )}&autoPrint=true`;
+        // const link = `${
+        //   window.location.origin
+        // }/printpage?quotationNo=${encodeURIComponent(
+        //   rec.quotation_no
+        // )}&autoPrint=true`;
+
+        const link = `${window.location.origin}/printpage?id=${rec.id}&autoPrint=true`;
+
 
         return (
           <Space>
@@ -2184,7 +2183,7 @@ const fetchReferences = async () => {
           showSearch
           value={record.product_id}
           placeholder="Select product"
-          style={{ minWidth: 300 }}
+          style={{ minWidth: 275 }}
           optionFilterProp="label"
           onChange={(v) => {
             const selected = products.find((p) => p.id === v);
@@ -2217,80 +2216,73 @@ const fetchReferences = async () => {
         </Select>
       ),
     },
-    // {
-    //   title: "Description",
-    //   dataIndex: "description",
-    //   render: (_: any, r: any) => (
-    //     <Input
-    //       value={r.description}
-    //       onChange={(e) => updateItem(r.key, "description", e.target.value)}
-    //     />
-    //   ),
-    // },
     {
-  title: "Description",
-  dataIndex: "description",
-  render: (_: any, r: any) => (
-    <Input.TextArea
-      value={r.description}
-      rows={3}
-      autoSize={{ minRows: 1, maxRows: 6 }}
-      onChange={(e) =>
-        updateItem(r.key, "description", e.target.value)
-      }
-    />
-  ),
-},
-
-    {
-      title: "Qty",
-      dataIndex: "quantity",
+      title: "Description",
+      dataIndex: "description",
+       width: 150,
       render: (_: any, r: any) => (
-        <InputNumber
-          min={1}
-          value={r.quantity}
-          onChange={(v) => updateItem(r.key, "quantity", v)}
+        <Input.TextArea
+          value={r.description}
+          rows={1}
+          // autoSize={{ minRows: 1, maxRows: 6 }}
+          onChange={(e) =>
+            updateItem(r.key, "description", e.target.value)
+          }
         />
       ),
     },
-    {
-      title: "Unit Price",
-      dataIndex: "unit_price",
-      render: (_: any, r: any) => (
-        <InputNumber
-          min={0}
-          value={r.unit_price}
-          onChange={(v) => updateItem(r.key, "unit_price", v)}
-        />
-      ),
-    },
-    {
-      title: "Discount (%)",
-      dataIndex: "discount",
-      render: (_: any, r: any) => (
-        <InputNumber
-          min={0}
-          value={r.discount}
-          onChange={(v) => updateItem(r.key, "discount", v)}
-        />
-      ),
-    },
-    {
-      title: "Tax (%)",
-      dataIndex: "tax_rate",
-      render: (_: any, r: any) => (
-        <InputNumber
-          min={0}
-          value={r.tax_rate}
-          onChange={(v) => updateItem(r.key, "tax_rate", v)}
-        />
-      ),
-    },
-    {
-      title: " Total",
-      dataIndex: "line_total",
-      render: (val: any) => `₹ ${Number(val || 0).toFixed(2)}`,
-    },
+    
+        {
+          title: "Qty",
+          dataIndex: "quantity",
+          render: (_: any, r: any) => (
+            <InputNumber
+              min={1}
+              value={r.quantity}
+              onChange={(v) => updateItem(r.key, "quantity", v)}
+            />
+          ),
+        },
+        {
+          title: "Unit Price",
+          dataIndex: "unit_price",
+          render: (_: any, r: any) => (
+            <InputNumber
+              min={0}
+              value={r.unit_price}
+              onChange={(v) => updateItem(r.key, "unit_price", v)}
+            />
+          ),
+        },
+        {
+          title: "Disc.(%)",
+          dataIndex: "discount",
+          render: (_: any, r: any) => (
+            <InputNumber
+              min={0}
+              value={r.discount}
+              onChange={(v) => updateItem(r.key, "discount", v)}
+            />
+          ),
+        },
+        {
+          title: "Tax(%)",
+          dataIndex: "tax_rate",
+          render: (_: any, r: any) => (
+            <InputNumber
+              min={0}
+              value={r.tax_rate}
+              onChange={(v) => updateItem(r.key, "tax_rate", v)}
+            />
+          ),
+        },
+        {
+          title: " Total",
+          dataIndex: "line_total",
+          width: 160, // 👈 yaha width set karo
+      // align: "right",
+          render: (val: any) => `₹ ${Number(val || 0).toFixed(1)}`,
+        },
     {
       title: "Action",
       render: (_: any, record: any) => (
@@ -2539,35 +2531,35 @@ const fetchReferences = async () => {
               <Input.TextArea rows={6} placeholder="Enter terms & conditions" />
             </Form.Item>
 
-            <Form.Item label="Payment Terms" name="payment_terms">
+            {/* <Form.Item label="Payment Terms" name="payment_terms">
               <Input.TextArea rows={2} placeholder="Enter payment terms" />
             </Form.Item>
 
             <Form.Item label="Delivery Terms" name="delivery_terms">
               <Input.TextArea rows={2} placeholder="Enter delivery terms" />
-            </Form.Item>
-            <Form.Item
-  label="Reference"
-  name="reference_id"
-  rules={[{ required: true, message: "Please select reference" }]}
->
-  <Select
-    placeholder="Select reference"
-    showSearch
-    optionFilterProp="label"
-  >
-    {references.map((r) => (
-      <Select.Option
-        key={r.id}
-        value={r.id}
-        label={r.reference}
-      >
-        {r.reference}
-      </Select.Option>
-    ))}
-  </Select>
-</Form.Item>
+            </Form.Item> */}
 
+            <Form.Item
+              label="Reference"
+              name="reference_id"
+              rules={[{ required: true, message: "Please select reference" }]}
+            >
+              <Select
+                placeholder="Select reference"
+                showSearch
+                optionFilterProp="label"
+              >
+                {references.map((r) => (
+                  <Select.Option
+                    key={r.id}
+                    value={r.id}
+                    label={r.reference}
+                  >
+                    {r.reference}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
 
             <Button
               type="primary"
@@ -2632,37 +2624,37 @@ const fetchReferences = async () => {
           }}
         >
           <div className="grid grid-cols-3 gap-4">
-            <Form.Item name="product_code" label="Product Code" rules={[{ required: true }]}>
+            <Form.Item name="product_code" label="Product Code">
               <Input placeholder="Enter product code" />
             </Form.Item>
             <Form.Item name="name" label="Name" rules={[{ required: true }]}>
               <Input placeholder="Enter product name" />
             </Form.Item>
-            <Form.Item name="description" label="Description" rules={[{ required: true }]}>
+            <Form.Item name="description" label="Description">
               <Input placeholder="Enter description" />
             </Form.Item>
-            <Form.Item name="unit" label="Unit" rules={[{ required: true }]}>
+            <Form.Item name="unit" label="Unit">
               <Input placeholder="Enter unit" />
             </Form.Item>
-            <Form.Item name="price" label="Price" rules={[{ required: true }]}>
+            <Form.Item name="price" label="Price">
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item name="sale_price" label="Sale Price" rules={[{ required: true }]}>
+            <Form.Item name="sale_price" label="Sale Price">
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item name="hsn_no" label="HSN No" rules={[{ required: true }]}>
+            <Form.Item name="hsn_no" label="HSN No">
               <Input placeholder="Enter HSN number" />
             </Form.Item>
-            <Form.Item name="specification" label="Specification" rules={[{ required: true }]}>
+            <Form.Item name="specification" label="Specification">
               <Input placeholder="Enter specification" />
             </Form.Item>
-            <Form.Item name="min_level" label="Min Level" rules={[{ required: true }]}>
+            <Form.Item name="min_level" label="Min Level">
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item name="max_level" label="Max Level" rules={[{ required: true }]}>
+            <Form.Item name="max_level" label="Max Level">
               <InputNumber style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item name="product_service_type" label="Product/Service Type" rules={[{ required: true }]}>
+            <Form.Item name="product_service_type" label="Product/Service Type">
               <Select placeholder="Select type" allowClear>
                 <Option value={1}>Product</Option>
                 <Option value={2}>Service</Option>
@@ -2683,16 +2675,16 @@ const fetchReferences = async () => {
   </Select>
 </Form.Item>
 
-            <Form.Item name="model" label="Model" rules={[{ required: true }]}>
+            <Form.Item name="model" label="Model">
               <Input placeholder="Enter model" />
             </Form.Item>
-            <Form.Item name="frequency" label="Frequency" rules={[{ required: true }]}>
+            <Form.Item name="frequency" label="Frequency">
               <Input placeholder="Enter frequency" />
             </Form.Item>
-            <Form.Item name="watt" label="Watt" rules={[{ required: true }]}>
+            <Form.Item name="watt" label="Watt">
               <Input placeholder="Enter watt" />
             </Form.Item>
-            <Form.Item name="is_active" label="Status" initialValue={1} rules={[{ required: true }]}>
+            <Form.Item name="is_active" label="Status" initialValue={1}>
               <Select>
                 <Option value={1}>Active</Option>
                 <Option value={0}>Inactive</Option>

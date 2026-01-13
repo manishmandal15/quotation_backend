@@ -145,7 +145,7 @@ const AppSidebar: React.FC = () => {
           { name: "Menu Master", path: "/forms/menu-master" },
           { name: "Role Menu Master", path: "/forms/Role-menu-master" },
           { name: "Module Menu Master", path: "/forms/module-menu-master" }, 
-          { name: "Refference Master", path: "/refference " } 
+          
         ],
       },
 
@@ -161,6 +161,7 @@ const AppSidebar: React.FC = () => {
           { name: "Product Master", path: "/forms/products" },
           { name: "GST Master", path: "/forms/gst-master" },  
           { name: "Location/Warehouse", path: "/warehouse-locations" }, 
+          { name: "Reference Master", path: "/refference " } 
           // { name: "Prouct stock Entry", path: "/product-stock-entry" },  
          
         ],

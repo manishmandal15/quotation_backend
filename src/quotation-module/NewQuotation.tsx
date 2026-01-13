@@ -1572,7 +1572,9 @@ const { Option } = Select;
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const GST_API = axios.create({ baseURL: `${BASE_URL}/gst-master` });
-
+const REFERENCE_API = axios.create({
+  baseURL: `${BASE_URL}/references`,
+});
 
 
 
@@ -1601,6 +1603,7 @@ const NewQuotation: React.FC = () => {
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [gstList, setGstList] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+   const [references, setReferences] = useState<any[]>([]);
 const pageSize = 10;
 
 
@@ -1613,8 +1616,27 @@ const pageSize = 10;
     fetchCurrencies();
     fetchProducts();
     fetchGstList();
-    
+    fetchReferences();
   }, []);
+
+  useEffect(() => {
+    const handleUpdate = () => fetchQuotations(); // tumhara existing fetch function
+    window.addEventListener("quotationUpdated", handleUpdate);
+  
+    return () => window.removeEventListener("quotationUpdated", handleUpdate);
+  }, []);
+
+  const fetchReferences = async () => {
+  try {
+    const res = await REFERENCE_API.get("/");
+    const data = Array.isArray(res.data) ? res.data : [];
+
+    // sirf active references
+    setReferences(data.filter((r: any) => r.is_active === 1));
+  } catch (err) {
+    console.error("Reference fetch failed", err);
+  }
+};
 
   const fetchQuotations = async () => {
     try {
@@ -1826,6 +1848,7 @@ const pageSize = 10;
     }
 
     const payload = {
+      reference_id: values.reference_id, 
       quotationNo: values.quotation_no,
       customerId: values.customer_id,
       currencyId: values.currency_id,
@@ -1876,6 +1899,7 @@ const pageSize = 10;
     setIsFormVisible(true);
     setEditId(record.id);
     form.setFieldsValue({
+      reference_id: record.reference_id,
       quotation_no: record.quotation_no,
       validity_date: record.validity_date ? dayjs(record.validity_date) : null,
       currency_id: record.currency_id,
@@ -2130,7 +2154,7 @@ const pageSize = 10;
           showSearch
           value={record.product_id}
           placeholder="Select product"
-          style={{ minWidth: 300 }}
+          style={{ minWidth: 275 }}
           optionFilterProp="label"
           onChange={(v) => {
             const selected = products.find((p) => p.id === v);
@@ -2166,66 +2190,70 @@ const pageSize = 10;
     {
       title: "Description",
       dataIndex: "description",
+       width: 150,
       render: (_: any, r: any) => (
         <Input.TextArea
           value={r.description}
-          rows={3}
-          autoSize={{ minRows: 1, maxRows: 6 }}
+          rows={1}
+          // autoSize={{ minRows: 1, maxRows: 6 }}
           onChange={(e) =>
             updateItem(r.key, "description", e.target.value)
           }
         />
       ),
     },
-    {
-      title: "Qty",
-      dataIndex: "quantity",
-      render: (_: any, r: any) => (
-        <InputNumber
-          min={1}
-          value={r.quantity}
-          onChange={(v) => updateItem(r.key, "quantity", v)}
-        />
-      ),
-    },
-    {
-      title: "Unit Price",
-      dataIndex: "unit_price",
-      render: (_: any, r: any) => (
-        <InputNumber
-          min={0}
-          value={r.unit_price}
-          onChange={(v) => updateItem(r.key, "unit_price", v)}
-        />
-      ),
-    },
-    {
-      title: "Discount (%)",
-      dataIndex: "discount",
-      render: (_: any, r: any) => (
-        <InputNumber
-          min={0}
-          value={r.discount}
-          onChange={(v) => updateItem(r.key, "discount", v)}
-        />
-      ),
-    },
-    {
-      title: "Tax (%)",
-      dataIndex: "tax_rate",
-      render: (_: any, r: any) => (
-        <InputNumber
-          min={0}
-          value={r.tax_rate}
-          onChange={(v) => updateItem(r.key, "tax_rate", v)}
-        />
-      ),
-    },
-    {
-      title: " Total",
-      dataIndex: "line_total",
-      render: (val: any) => `₹ ${Number(val || 0).toFixed(2)}`,
-    },
+    
+        {
+          title: "Qty",
+          dataIndex: "quantity",
+          render: (_: any, r: any) => (
+            <InputNumber
+              min={1}
+              value={r.quantity}
+              onChange={(v) => updateItem(r.key, "quantity", v)}
+            />
+          ),
+        },
+        {
+          title: "Unit Price",
+          dataIndex: "unit_price",
+          render: (_: any, r: any) => (
+            <InputNumber
+              min={0}
+              value={r.unit_price}
+              onChange={(v) => updateItem(r.key, "unit_price", v)}
+            />
+          ),
+        },
+        {
+          title: "Disc.(%)",
+          dataIndex: "discount",
+          render: (_: any, r: any) => (
+            <InputNumber
+              min={0}
+              value={r.discount}
+              onChange={(v) => updateItem(r.key, "discount", v)}
+            />
+          ),
+        },
+        {
+          title: "Tax(%)",
+          dataIndex: "tax_rate",
+          render: (_: any, r: any) => (
+            <InputNumber
+              min={0}
+              value={r.tax_rate}
+              onChange={(v) => updateItem(r.key, "tax_rate", v)}
+            />
+          ),
+        },
+        {
+          title: " Total",
+          dataIndex: "line_total",
+          width: 160, // 👈 yaha width set karo
+      // align: "right",
+          render: (val: any) => `₹ ${Number(val || 0).toFixed(1)}`,
+        },
     {
       title: "Action",
       render: (_: any, record: any) => (
@@ -2474,12 +2502,34 @@ const pageSize = 10;
               <Input.TextArea rows={6} placeholder="Enter terms & conditions" />
             </Form.Item>
 
-            <Form.Item label="Payment Terms" name="payment_terms">
+            {/* <Form.Item label="Payment Terms" name="payment_terms">
               <Input.TextArea rows={2} placeholder="Enter payment terms" />
             </Form.Item>
 
             <Form.Item label="Delivery Terms" name="delivery_terms">
               <Input.TextArea rows={2} placeholder="Enter delivery terms" />
+            </Form.Item> */}
+
+            <Form.Item
+              label="Reference"
+              name="reference_id"
+              rules={[{ required: true, message: "Please select reference" }]}
+            >
+              <Select
+                placeholder="Select reference"
+                showSearch
+                optionFilterProp="label"
+              >
+                {references.map((r) => (
+                  <Select.Option
+                    key={r.id}
+                    value={r.id}
+                    label={r.reference}
+                  >
+                    {r.reference}
+                  </Select.Option>
+                ))}
+              </Select>
             </Form.Item>
 
             <Button
