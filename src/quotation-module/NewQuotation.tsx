@@ -1575,6 +1575,10 @@ const GST_API = axios.create({ baseURL: `${BASE_URL}/gst-master` });
 const REFERENCE_API = axios.create({
   baseURL: `${BASE_URL}/references`,
 });
+const USER_API = axios.create({ baseURL: `${BASE_URL}/users` });
+
+
+
 
 
 
@@ -1604,6 +1608,7 @@ const NewQuotation: React.FC = () => {
   const [gstList, setGstList] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
    const [references, setReferences] = useState<any[]>([]);
+   const [users, setUsers] = useState<any[]>([]);
 const pageSize = 10;
 
 
@@ -1617,7 +1622,21 @@ const pageSize = 10;
     fetchProducts();
     fetchGstList();
     fetchReferences();
+    fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+  try {
+    const res = await USER_API.get("/");
+    const data = Array.isArray(res.data) ? res.data : [];
+
+    // ✅ sirf active users
+    setUsers(data.filter((u: any) => u.is_active === 1));
+  } catch (err) {
+    console.error("Users fetch failed", err);
+  }
+};
+
 
   useEffect(() => {
     const handleUpdate = () => fetchQuotations(); // tumhara existing fetch function
@@ -1859,6 +1878,9 @@ const pageSize = 10;
       paymentTerms: values.payment_terms,
       deliveryTerms: values.delivery_terms,
       status: values.status,
+      // deal_handled_by: values.deal_handled_by,
+      deal_handled_by: values.deal_handled_by?.value || null,
+
       totalAmount: totals.total_amount,
       discountAmount: totals.discount_amount,
       taxAmount: totals.tax_amount,
@@ -1904,6 +1926,15 @@ const pageSize = 10;
       validity_date: record.validity_date ? dayjs(record.validity_date) : null,
       currency_id: record.currency_id,
       customer_id: record.customer_id,
+      // deal_handled_by: record.deal_handled_by,
+      deal_handled_by: record.deal_handled_by
+  ? {
+      value: record.deal_handled_by,        // id
+      label: record.deal_handled_by_name,   // 🔥 name
+    }
+  : null,
+
+      // deal_handled_by: record.deal_handled_by_id,
       phone: record.phone,
       gst_no: record.gst_no,
       cstate: record.cstate,
@@ -2531,6 +2562,35 @@ const pageSize = 10;
                 ))}
               </Select>
             </Form.Item>
+
+            <Form.Item
+  label="Deal handled By"
+  name="deal_handled_by"
+  rules={[{ required: true, message: "Please select user" }]}
+>
+  <Select
+    showSearch
+    placeholder="Select user"
+    optionFilterProp="label"
+    labelInValue   // 🔥 VERY IMPORTANT
+  >
+    {users
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((u) => (
+        <Select.Option
+          key={u.id}
+          value={u.id}
+          label={u.name}
+        >
+          {u.name}
+        </Select.Option>
+      ))}
+  </Select>
+</Form.Item>
+
+
+
 
             <Button
               type="primary"

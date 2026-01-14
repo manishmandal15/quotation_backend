@@ -1654,7 +1654,7 @@ class QuotationController {
              c.id AS customer_id, c.name AS customer_name,
              cu.code AS currency_code,s.name AS customer_state_name,
              u.name AS created_by_name, a.name AS approved_by_name,d.name AS customer_district_name,
-             r.id AS reference_id,r.reference AS reference_name
+             r.id AS reference_id,r.reference AS reference_name,du.name AS deal_handled_by_name
 
       FROM quotations q
       LEFT JOIN customers c ON c.id = q.customer_id
@@ -1665,6 +1665,8 @@ class QuotationController {
       LEFT JOIN users u ON u.id = q.created_by
       LEFT JOIN users a ON a.id = q.approved_by
       LEFT JOIN reference_mst r ON r.id = q.reference_id
+      LEFT JOIN users du ON du.id = q.deal_handled_by
+
       WHERE q.is_active = 1
       ORDER BY q.id DESC
     `;
@@ -1771,13 +1773,16 @@ class QuotationController {
 
       c.contact_person AS customer_contact_person,
       r.id AS reference_id,
-      r.reference AS reference_name
+      r.reference AS reference_name,
+      du.name AS deal_handled_by_name
+
 
     FROM quotations q
     LEFT JOIN customers c ON c.id = q.customer_id
     LEFT JOIN states s ON s.id = c.state_id
     LEFT JOIN districts d ON d.id = c.district_id
     LEFT JOIN reference_mst r ON r.id = q.reference_id
+    LEFT JOIN users du ON du.id = q.deal_handled_by
     WHERE q.id = ? AND q.is_active = 1
 
   `;
@@ -1927,6 +1932,7 @@ class QuotationController {
     taxAmount,
     netAmount,
     createdBy,
+    deal_handled_by,
     products,
   } = req.body;
 
@@ -1936,8 +1942,8 @@ class QuotationController {
     INSERT INTO quotations
     (quotation_no, customer_id, currency_id, validity_date,
      payment_terms, delivery_terms, terms_conditions, reference_id, status,
-     total_amount, discount_amount, tax_amount, net_amount, created_by)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     total_amount, discount_amount, tax_amount, net_amount, created_by,deal_handled_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
@@ -1957,6 +1963,7 @@ class QuotationController {
       taxAmount || 0,
       netAmount || 0,
       createdBy || 1,
+      deal_handled_by || null,
     ],
     (err, result) => {
       if (err) {
@@ -2020,6 +2027,7 @@ class QuotationController {
     discountAmount,
     taxAmount,
     netAmount,
+     deal_handled_by,
     products,
   } = req.body;
 
@@ -2035,6 +2043,7 @@ class QuotationController {
       delivery_terms = ?,
       terms_conditions = ?,
       reference_id = COALESCE(?, reference_id),
+      deal_handled_by = COALESCE(?, deal_handled_by),
       status = COALESCE(NULLIF(?, ''), status),
       total_amount = ?,
       discount_amount = ?,
@@ -2053,12 +2062,14 @@ class QuotationController {
       paymentTerms,
       deliveryTerms,
       terms_conditions || "",
-      reference_id || null,   // 🔹 yahan save/update hoga
+      reference_id || null, 
+      deal_handled_by || null,  // 🔹 yahan save/update hoga
       status,
       totalAmount || 0,
       discountAmount || 0,
       taxAmount || 0,
       netAmount || 0,
+      
       id,
     ],
     (err) => {
