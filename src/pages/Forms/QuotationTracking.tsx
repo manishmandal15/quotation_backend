@@ -95,6 +95,9 @@ const QuotationTracking: React.FC = () => {
   const [isFollowupOpen, setIsFollowupOpen] = useState(false);
   const [followupForm] = Form.useForm();
   const [currentFollowupRow, setCurrentFollowupRow] = useState<Quotation | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+const [pageSize, setPageSize] = useState(10);
+
 
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [viewRow, setViewRow] = useState<Quotation | null>(null);
@@ -105,6 +108,7 @@ const QuotationTracking: React.FC = () => {
       const [quotRes, trackRes] = await Promise.all([
         axios.get(`${BASE_URL}/quotations`),
         axios.get(`${BASE_URL}/quotation-tracking`),
+        
       ]);
 
       const quotationsFromMaster = (quotRes.data || []).map((q: any) => ({
@@ -136,6 +140,7 @@ const QuotationTracking: React.FC = () => {
 
       // Optionally merge master and tracking by quotation_no if needed (kept minimal)
       setQuotations(merged);
+      setCurrentPage(1);
     } catch (err) {
       console.error(err);
       message.error("Failed to fetch quotations");
@@ -175,40 +180,53 @@ const QuotationTracking: React.FC = () => {
     setTimeout(() => {
   dispatchForm.setFieldsValue({
     [DispatchFormFields.DISPATCHED_BY]: loggedInUser.id,
-    [DispatchFormFields.DISPATCH_THROUGH]: "Email",
+    [DispatchFormFields.DISPATCH_THROUGH]: "email",
   });
 }, 0);
 
   };
 
   const handleDispatchSave = async (values: any) => {
-    if (!currentDispatchRow) return;
-    try {
-      const dispatchedDate =
-        values[DispatchFormFields.DISPATCH_DATE]?.format?.("YYYY-MM-DD HH:mm:ss") ??
-        values[DispatchFormFields.DISPATCH_DATE];
+  if (!currentDispatchRow) return;
 
-      // convert dispatched_by to number if possible, else send as-is
-      const sentByRaw = values[DispatchFormFields.DISPATCHED_BY];
-      const sentBy = Number.isNaN(Number(sentByRaw)) ? sentByRaw : Number(sentByRaw);
+  if (!loggedInUser?.id) {
+    message.error("User not logged in");
+    return;
+  }
 
-      const payload = {
-        quotation_id: currentDispatchRow.id,
-        sent_by: sentBy,
-        method: String(values[DispatchFormFields.DISPATCH_THROUGH] ?? "email").toLowerCase(),
-        sent_at: dispatchedDate || new Date().toISOString().slice(0, 19).replace("T", " "),
-        sent_to_email: currentDispatchRow.customer_email ?? "customer@example.com",
-      };
+  const method = String(
+    values[DispatchFormFields.DISPATCH_THROUGH]
+  ).toLowerCase();
 
-      await Api.post("/quotation-dispatches", payload);
-      message.success("Dispatched successfully ✅");
-      setIsDispatchOpen(false);
-      fetchQuotations();
-    } catch (err) {
-      console.error(err);
-      message.error("Error while dispatching");
-    }
+  const payload: any = {
+    quotation_id: currentDispatchRow.id,
+    sent_by: loggedInUser.id,
+    method,
   };
+
+  if (method === "email") {
+    if (!currentDispatchRow.customer_email) {
+      message.error("Customer email not available");
+      return;
+    }
+    payload.sent_to_email = currentDispatchRow.customer_email;
+  }
+
+  console.log("DISPATCH PAYLOAD 👉", payload);
+
+  try {
+    await Api.post("/quotation-dispatches", payload);
+    message.success("Dispatched successfully ✅");
+    setIsDispatchOpen(false);
+    fetchQuotations();
+  } catch (err: any) {
+    console.error(err);
+    message.error(err?.response?.data?.message || "Dispatch failed ❌");
+  }
+};
+
+
+
 
   // const openFollowupModal = (row: Quotation) => {
   //   setCurrentFollowupRow(row);
@@ -268,11 +286,13 @@ const QuotationTracking: React.FC = () => {
 
   const columns: ColumnsType<Quotation> = [
     {
-      title: "S.No",
-      key: "sno",
-      render: (_text, _record, index) => index + 1,
-      width: 60,
-    },
+  title: "S.No",
+  key: "sno",
+  width: 60,
+  render: (_text, _record, index) =>
+    (currentPage - 1) * pageSize + index + 1,
+},
+
     { title: "Quotation No", dataIndex: "quotation_no", key: "quotation_no" },
     { title: "Customer", dataIndex: "customer_name", key: "customer_name" },
     { title: "Quotation Date", dataIndex: "quotation_date", key: "quotation_date" },
@@ -354,15 +374,14 @@ const QuotationTracking: React.FC = () => {
       fixed: "right",
       width: 240,
       render: (_text, record) => {
-        const link = `${window.location.origin}/printpage?quotationNo=${encodeURIComponent(
-          record.quotation_no
-        )}&autoPrint=true`;
+        const link = `${window.location.origin}/printpage?id=${record.id}&autoPrint=true`;
 
         return (
           <Space>
             {/* View */}
             <Tooltip title="View">
-              <Button icon={<EyeOutlined />} onClick={() => openViewModal(record)} />
+              <Button icon={<EyeOutlined />} onClick={() => window.open(link,"_blank")} />
+              
             </Tooltip>
 
             {/* Dispatch */}
@@ -487,7 +506,11 @@ const QuotationTracking: React.FC = () => {
           <Input
             placeholder="Search quotation..."
             value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
+            onChange={(e) => {
+  setSearchText(e.target.value);
+  setCurrentPage(1);
+}}
+
             style={{ width: 320 }}
             allowClear
           />
@@ -503,7 +526,7 @@ const QuotationTracking: React.FC = () => {
     
         </div>
       </div>
-      <Table
+      {/* <Table
         columns={columns}
         dataSource={filteredData}
         rowKey="id"
@@ -547,11 +570,58 @@ const QuotationTracking: React.FC = () => {
 
           return { style };
         }}
-      />
+      /> */}
+
+      <Table
+  columns={columns}
+  dataSource={filteredData}
+  rowKey="id"
+  loading={loading}
+  pagination={{
+    current: currentPage,
+    pageSize: pageSize,
+    showSizeChanger: true,
+    pageSizeOptions: ["10", "20", "50"],
+    onChange: (page, size) => {
+      setCurrentPage(page);
+      setPageSize(size || 10);
+    },
+  }}
+  onRow={(record) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const nextDate = record.nextfollowup_date
+      ? (() => {
+          const parts = record.nextfollowup_date.split("-");
+          if (parts.length === 3) {
+            const [day, month, year] = parts;
+            const dt = new Date(`${year}-${month}-${day}`);
+            return isNaN(dt.getTime()) ? null : dt;
+          }
+          const dt = new Date(record.nextfollowup_date);
+          return isNaN(dt.getTime()) ? null : dt;
+        })()
+      : null;
+
+    let style: React.CSSProperties = {};
+
+    if (record.is_deal_finalised === "Yes") {
+      style = { backgroundColor: "#ccffcc", color: "#000" };
+    } else if (record.is_deal_finalised === "No" && nextDate) {
+      if (nextDate.getTime() <= today.getTime()) {
+        style = { backgroundColor: "#ffcccc", color: "#000" };
+      }
+    }
+
+    return { style };
+  }}
+/>
+
 
       {/* Dispatch Modal */}
       <Modal
-  title={`Dispatch Quotation ${currentDispatchRow?.quotation_no ?? ""}`}
+  title={`Dispatch Quotation No. ${currentDispatchRow?.quotation_no ?? ""}`}
   open={isDispatchOpen}
   onCancel={() => setIsDispatchOpen(false)}
   footer={null}
@@ -568,10 +638,11 @@ const QuotationTracking: React.FC = () => {
       rules={[{ required: true }]}
     >
       <Select>
-        <Select.Option value="Email">Email</Select.Option>
-        <Select.Option value="SMS">SMS</Select.Option>
-        <Select.Option value="Post">Post</Select.Option>
-        <Select.Option value="Manual">Manual</Select.Option>
+       <Select.Option value="email">Email</Select.Option>
+<Select.Option value="sms">SMS</Select.Option>
+<Select.Option value="post">Post</Select.Option>
+<Select.Option value="manual">Manual</Select.Option>
+
       </Select>
     </Form.Item>
 

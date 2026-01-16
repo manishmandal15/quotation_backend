@@ -96,6 +96,9 @@ const QuotationFollowupReminder: React.FC = () => {
 
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [viewRow, setViewRow] = useState<Quotation | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+const [pageSize, setPageSize] = useState(8);
+
 
   const fetchQuotations = async () => {
     setLoading(true);
@@ -255,11 +258,12 @@ const QuotationFollowupReminder: React.FC = () => {
 
   const columns: ColumnsType<Quotation> = [
     {
-      title: "Sno",
-      key: "sno",
-      render: (_t, _r, index) => index + 1,
-      width: 60,
-    },
+  title: "S.No",
+  width: 60,
+  render: (_: any, __: any, index: number) =>
+    (currentPage - 1) * pageSize + index + 1,
+},
+
     { title: "Quotation No.", dataIndex: "quotation_no", key: "quotation_no" },
     { title: "Customer Name", dataIndex: "customer_name", key: "customer_name" },
     {
@@ -290,43 +294,36 @@ const QuotationFollowupReminder: React.FC = () => {
     { title: "Next Followup", dataIndex: "nextfollowup_date", key: "nextfollowup_date" },
 
     {
-      title: "Action",
-      key: "actions",
-      fixed: "right",
-      width: 120,
-      render: (_text, record) => (
-        <Space>
-          <Tooltip title="View">
-            <Button
-              type="default"
-              icon={<EyeOutlined />}
-              onClick={() => openViewModal(record)}
-              style={{ borderRadius: 4 }}
-            />
-          </Tooltip>
+  title: "Action",
+  key: "actions",
+  fixed: "right",
+  width: 160,
+  render: (_text, record) => {
+    const link = `${window.location.origin}/printpage?id=${record.id}&autoPrint=true`;
 
-          <Tooltip
-            title={
-              !record.approved_by || record.approved_by === "-"
-                ? "Approve first"
-                : !record.is_dispatched
-                ? "Dispatch first"
-                : record.has_followup
-                ? "Already done"
-                : "Add Follow-up"
-            }
-          >
-            <Button
-              type="default"
-              icon={<ClockCircleOutlined />}
-              onClick={() => openFollowupModal(record)}
-              disabled={!record.followup_date || record.followup_date === "-"}
-              style={{ borderRadius: 4 }}
-            />
-          </Tooltip>
-        </Space>
-      ),
-    },
+    return (
+      <Space>
+        {/* VIEW */}
+        <Tooltip title="View">
+          <Button
+            icon={<EyeOutlined />}
+            onClick={() => window.open(link,"_blank")}
+          />
+        </Tooltip>
+
+        {/* FOLLOW UP */}
+        <Tooltip title="Add Follow-up">
+          <Button
+            icon={<ClockCircleOutlined />}
+            onClick={() => openFollowupModal(record)}
+            disabled={!record.followup_date || record.followup_date === "-"}
+          />
+        </Tooltip>
+      </Space>
+    );
+  },
+}
+
   ];
 
   // 🔍 FIXED SEARCH (filteredData used below)
@@ -377,7 +374,10 @@ const QuotationFollowupReminder: React.FC = () => {
         rowKey={(r) => r.id ?? r.quotation_id ?? 0}
         loading={loading}
         bordered
-        pagination={{ pageSize: 8 }}
+        pagination={{
+    current: currentPage,
+    pageSize: pageSize,
+    onChange: (page, size) => {setCurrentPage(page);setPageSize(size);}}}
         scroll={{ x: 1200 }}
         onRow={(record) => {
           const today = new Date();

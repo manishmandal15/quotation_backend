@@ -182,32 +182,184 @@ exports.getDispatchById = (req, res) => {
 /**
  * ✅ CREATE Dispatch
  */
+// exports.createDispatch = (req, res) => {
+//   const { quotation_id, sent_by, sent_to_email, method } = req.body;
+
+//   if (!quotation_id || !sent_by || !method) {
+//     return res.status(400).json({
+//       message: "quotation_id, sent_by, method are required",
+//     });
+//   }
+
+//   // 🔎 Step 1: check if dispatch already exists for this quotation
+//   const checkSql = `
+//     SELECT id FROM quotation_dispatches
+//     WHERE quotation_id = ?
+//     LIMIT 1
+//   `;
+
+//   db.query(checkSql, [quotation_id], (err, rows) => {
+//     if (err) {
+//       console.error("❌ Check dispatch error:", err);
+//       return res.status(500).json({ message: "Database error" });
+//     }
+
+//     // 🟢 DISPATCH EXISTS → UPDATE
+//     if (rows.length > 0) {
+//       const dispatchId = rows[0].id;
+
+//       const updateSql = `
+//         UPDATE quotation_dispatches
+//         SET 
+//           sent_by = ?,
+//           sent_to_email = ?,
+//           method = ?,
+//           sent_at = NOW()
+//         WHERE id = ?
+//       `;
+
+//       db.query(
+//         updateSql,
+//         [sent_by, sent_to_email || null, method, dispatchId],
+//         (err2) => {
+//           if (err2) {
+//             console.error("❌ Update dispatch error:", err2);
+//             return res.status(500).json({ message: "Failed to update dispatch" });
+//           }
+
+//           return res.json({
+//             message: "Dispatch updated successfully",
+//             action: "updated",
+//             id: dispatchId,
+//           });
+//         }
+//       );
+
+//     } 
+//     // 🟢 DISPATCH NOT EXISTS → CREATE
+//     else {
+//       const insertSql = `
+//         INSERT INTO quotation_dispatches
+//         (quotation_id, sent_by, sent_to_email, method)
+//         VALUES (?, ?, ?, ?)
+//       `;
+
+//       db.query(
+//         insertSql,
+//         [quotation_id, sent_by, sent_to_email || null, method],
+//         (err3, result) => {
+//           if (err3) {
+//             console.error("❌ Insert dispatch error:", err3);
+//             return res.status(500).json({ message: "Failed to create dispatch" });
+//           }
+
+//           return res.status(201).json({
+//             message: "Dispatch created successfully",
+//             action: "created",
+//             id: result.insertId,
+//           });
+//         }
+//       );
+//     }
+//   });
+// };
+
 exports.createDispatch = (req, res) => {
-  const { quotation_id, sent_by, sent_to_email, method } = req.body;
+  const { quotation_id, sent_by } = req.body;
+  let { sent_to_email, method } = req.body; // 👈 let use kiya
 
   if (!quotation_id || !sent_by || !method) {
     return res.status(400).json({
-      message: "Missing required fields: quotation_id, sent_by, method",
+      message: "quotation_id, sent_by, method are required",
     });
   }
 
-  const sql = `
-    INSERT INTO quotation_dispatches (quotation_id, sent_by, sent_to_email, method)
-    VALUES (?, ?, ?, ?)
+  // ✅ normalize method
+  const dispatchMethod = String(method).toLowerCase();
+
+  // ✅ email validation
+  if (dispatchMethod === "email") {
+    if (!sent_to_email) {
+      return res.status(400).json({
+        message: "Email is required for email dispatch",
+      });
+    }
+  } else {
+    sent_to_email = null; // SMS case
+  }
+
+  const checkSql = `
+    SELECT id FROM quotation_dispatches
+    WHERE quotation_id = ?
+    LIMIT 1
   `;
 
-  db.query(sql, [quotation_id, sent_by, sent_to_email || null, method], (err, result) => {
+  db.query(checkSql, [quotation_id], (err, rows) => {
     if (err) {
-      console.error("❌ Insert Error:", err);
-      return res.status(500).json({ message: "Failed to insert dispatch", error: err });
+      console.error(err);
+      return res.status(500).json({ message: "Database error" });
     }
 
-    res.status(201).json({
-      message: "Dispatch created successfully",
-      id: result.insertId,
-    });
+    // 🔁 UPDATE
+    if (rows.length > 0) {
+      const dispatchId = rows[0].id;
+
+      const updateSql = `
+        UPDATE quotation_dispatches
+        SET 
+          sent_by = ?, 
+          sent_to_email = ?, 
+          method = ?, 
+          sent_at = NOW()
+        WHERE id = ?
+      `;
+
+      db.query(
+        updateSql,
+        [sent_by, sent_to_email, dispatchMethod, dispatchId],
+        (err2) => {
+          if (err2) {
+            console.error(err2);
+            return res.status(500).json({ message: "Failed to update dispatch" });
+          }
+
+          return res.json({
+            message: "Dispatch updated successfully",
+            action: "updated",
+          });
+        }
+      );
+    }
+    // ➕ INSERT
+    else {
+      const insertSql = `
+        INSERT INTO quotation_dispatches
+        (quotation_id, sent_by, sent_to_email, method)
+        VALUES (?, ?, ?, ?)
+      `;
+
+      db.query(
+        insertSql,
+        [quotation_id, sent_by, sent_to_email, dispatchMethod],
+        (err3, result) => {
+          if (err3) {
+            console.error(err3);
+            return res.status(500).json({ message: "Failed to create dispatch" });
+          }
+
+          return res.status(201).json({
+            message: "Dispatch created successfully",
+            action: "created",
+            id: result.insertId,
+          });
+        }
+      );
+    }
   });
 };
+
+
+
 
 /**
  * ✅ UPDATE Dispatch

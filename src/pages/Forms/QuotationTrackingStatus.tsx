@@ -856,6 +856,9 @@ const QuotationTrackingStatus: React.FC = () => {
   
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [viewRow, setViewRow] = useState<Quotation | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+const [pageSize, setPageSize] = useState(8);
+
 
 
 //   const fetchQuotations = async () => {
@@ -1240,11 +1243,13 @@ const handleFollowupSave = async (values: any) => {
   // Table columns
   const columns: ColumnsType<Quotation> = [
     {
-      title: "Sno",
-      key: "sno",
-      render: (_text, _record, index) => index + 1,
-      width: 60,
-    },
+  title: "S.No",
+  key: "sno",
+  width: 60,
+  render: (_text, _record, index) =>
+    (currentPage - 1) * pageSize + index + 1,
+},
+
     { title: "Quotation No.", dataIndex: "quotation_no", key: "quotation_no" },
     { title: "Customer Name", dataIndex: "customer_name", key: "customer_name" },
     {
@@ -1455,7 +1460,14 @@ const handleFollowupSave = async (values: any) => {
   rowKey={(r) => r.id ?? r.quotation_id ?? 0}
   loading={loading}
   bordered
-  pagination={{ pageSize: 8 }}
+  pagination={{
+  current: currentPage,
+  pageSize: pageSize,
+  onChange: (page, size) => {
+    setCurrentPage(page);
+    setPageSize(size || 8);
+  },
+}}
   scroll={{ x: 1200 }}
   onRow={(record) => {
     const today = new Date();

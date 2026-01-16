@@ -531,6 +531,9 @@ const QuotationsApproval: React.FC = () => {
   const [form] = Form.useForm();
   const [actionType, setActionType] = useState<"approved" | "rejected">("approved");
   const [searchText, setSearchText] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+const [pageSize, setPageSize] = useState(10);
+
 
   // Fetch all data
   const fetchData = async () => {
@@ -673,6 +676,7 @@ const handleSave = async () => {
   // --- Search handler ---
   const handleSearch = (value: string) => {
     setSearchText(value);
+    setCurrentPage(1);
     const filtered = quotations.filter(
       (q) =>
         q.quotation_no?.toLowerCase().includes(value.toLowerCase()) ||
@@ -682,7 +686,13 @@ const handleSave = async () => {
   };
 
   const columns = [
-    { title: "S.No", render: (_: any, __: any, i: number) => i + 1, width: 60 },
+    {
+  title: "S.No",
+  width: 60,
+  render: (_: any, __: any, index: number) =>
+    (currentPage - 1) * pageSize + index + 1,
+},
+
     { title: "Quotation No", dataIndex: "quotation_no", key: "quotation_no" },
     {
       title: "Customer Name",
@@ -711,9 +721,10 @@ const handleSave = async () => {
     { title: "Actions", key: "actions",
       render: (_: any, record: any) => {
         const status = getApproval(record.id).status || "pending";
+          const link = `${window.location.origin}/printpage?id=${record.id}&autoPrint=true`;
         return (
           <Space>
-            <Button icon={<EyeOutlined />} type="default" onClick={() => handlePreview(record)} />
+            <Button icon={<EyeOutlined />} type="default" onClick={() => window.open(link, "_blank")} />
             <Button icon={<CheckOutlined />} type="primary" disabled={status === "approved"} onClick={() => openModal(record, "approved")} />
             <Button icon={<CloseOutlined />} type="default" danger disabled={status === "rejected"} onClick={() => openModal(record, "rejected")} />
           </Space>
@@ -721,6 +732,7 @@ const handleSave = async () => {
       }
     }
   ];
+
 
   return (
     <div style={{ padding: 20 }}>
@@ -738,13 +750,21 @@ const handleSave = async () => {
 
 
       <Table
-        dataSource={filteredQuotations}
-        columns={columns}
-        rowKey="id"
-        loading={loading}
-        bordered
-        pagination={{ pageSize: 10 }}
-      />
+  dataSource={filteredQuotations}
+  columns={columns}
+  rowKey="id"
+  loading={loading}
+  bordered
+  pagination={{
+    current: currentPage,
+    pageSize: pageSize,
+    onChange: (page, size) => {
+      setCurrentPage(page);
+      setPageSize(size);
+    },
+  }}
+/>
+
 
       {/* Approve / Reject Modal */}
       <Modal

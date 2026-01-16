@@ -1662,7 +1662,8 @@ const pageSize = 10;
       const res = await QUOTATION_API.get("/");
       const data = Array.isArray(res.data) ? res.data : [];
       setQuotations(data);
-      setFilteredQuotations(data); // show all initially
+      setFilteredQuotations(data);
+      setCurrentPage(1); // show all initially
     } catch (err) {
       console.error(err);
     }
@@ -1719,6 +1720,7 @@ const pageSize = 10;
   // --- Search handler ---
   const handleSearch = (value: string) => {
     setSearchText(value);
+    setCurrentPage(1);
     const filtered = quotations.filter(
       (q) =>
         q.quotation_no?.toLowerCase().includes(value.toLowerCase()) ||
@@ -2299,7 +2301,12 @@ const pageSize = 10;
   ];
 
   return (
-    <Card bodyStyle={{ padding: 16 }}>
+    <Card bodyStyle={{ padding: 16 }}
+    style={{
+      position: "relative",
+      zIndex: 1,     // 👈 HEADER se neeche
+      marginTop: 64, // 👈 header ki height (agar header 64px ka hai)
+    }}>
       {!isFormVisible ? (
         <>
           <div className="flex justify-between flex-wrap mb-4 gap-2">

@@ -43,6 +43,7 @@ LEFT JOIN (
 ) AS qf ON q.id = qf.quotation_id
 
 WHERE qa.status = 'approved'
+AND q.is_active = 1 
 ORDER BY q.id DESC;
 `;
 
