@@ -37,6 +37,7 @@ interface Company {
   bank_address?: string;
   acc_no?: string;
   ifsc?: string;
+  member_details?: string;
 }
 
 const CompanyMaster: React.FC = () => {
@@ -61,74 +62,113 @@ const CompanyMaster: React.FC = () => {
   }, []);
 
   // ✅ Save or Update company
+  // const handleSave = async (values: any) => {
+  //   try {
+  //     const formData = new FormData();
+  //     Object.keys(values).forEach((key) => {
+  //       formData.append(key, values[key]);
+  //     });
+
+  //     if (fileList.length > 0) {
+  //       formData.append("logo", fileList[0].originFileObj);
+  //     }
+
+  //     if (editId) {
+  //       await API.put(`/${editId}`, formData, {
+  //         headers: { "Content-Type": "multipart/form-data" },
+  //       });
+  //       message.success("Company updated successfully!");
+  //     } else {
+  //       await API.post("/", formData, {
+  //         headers: { "Content-Type": "multipart/form-data" },
+  //       });
+  //       message.success("Company added successfully!");
+  //     }
+
+  //     fetchCompanies();
+  //     setOpen(false);
+  //     form.resetFields();
+  //     setEditId(null);
+  //     setFileList([]);
+  //   } catch (err) {
+  //     console.error(err);
+  //     message.error("Error saving company");
+  //   }
+  // };
+
   const handleSave = async (values: any) => {
-    try {
-      const formData = new FormData();
-      Object.keys(values).forEach((key) => {
-        formData.append(key, values[key]);
-      });
+  try {
+    const formData = new FormData();
 
-      if (fileList.length > 0) {
-        formData.append("logo", fileList[0].originFileObj);
-      }
+    // Convert all values to string to avoid nulls
+    Object.keys(values).forEach((key) => {
+      formData.append(key, values[key] ?? "");
+    });
 
-      if (editId) {
-        await API.put(`/${editId}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        message.success("Company updated successfully!");
-      } else {
-        await API.post("/", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        message.success("Company added successfully!");
-      }
-
-      fetchCompanies();
-      setOpen(false);
-      form.resetFields();
-      setEditId(null);
-      setFileList([]);
-    } catch (err) {
-      console.error(err);
-      message.error("Error saving company");
+    // Add logo if uploaded
+    if (fileList.length > 0) {
+      formData.append("logo", fileList[0].originFileObj);
     }
-  };
+
+    if (editId) {
+      await API.put(`/${editId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      message.success("Company updated successfully!");
+    } else {
+      await API.post("/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      message.success("Company added successfully!");
+    }
+
+    fetchCompanies();
+    setOpen(false);
+    form.resetFields();
+    setEditId(null);
+    setFileList([]);
+  } catch (err) {
+    console.error(err);
+    message.error("Error saving company");
+  }
+};
+
+
 
   // ✅ Edit company
   const handleEdit = (record: Company) => {
-    setEditId(record.id);
-    form.setFieldsValue({
-      company_name: record.company_name,
-      email: record.email,
-      phone: record.phone,
-      website: record.website,
-      address: record.address,
-      gst_no: record.gst_no,
-      pan_no: record.pan_no,
+  setEditId(record.id);
+  form.setFieldsValue({
+    company_name: record.company_name,
+    email: record.email,
+    phone: record.phone,
+    website: record.website,
+    address: record.address,
+    gst_no: record.gst_no,
+    pan_no: record.pan_no,
+    bank_name: record.bank_name,
+    bank_address: record.bank_address,
+    acc_no: record.acc_no,
+    ifsc: record.ifsc,
+    member_details: record.member_details || "", // ✅ ensures string
+  });
 
-      // 🏦 Bank details
-      bank_name: record.bank_name,
-      bank_address: record.bank_address,
-      acc_no: record.acc_no,
-      ifsc: record.ifsc,
-    });
+  if (record.logo_path) {
+    setFileList([
+      {
+        uid: "-1",
+        name: "logo.png",
+        status: "done",
+        url: `${BASE_URL.replace("/api", "")}${record.logo_path}`,
+      },
+    ]);
+  } else {
+    setFileList([]);
+  }
 
-    if (record.logo_path) {
-      setFileList([
-        {
-          uid: "-1",
-          name: "logo.png",
-          status: "done",
-          url: `${BASE_URL.replace("/api", "")}${record.logo_path}`,
-        },
-      ]);
-    } else {
-      setFileList([]);
-    }
+  setOpen(true);
+};
 
-    setOpen(true);
-  };
 
   // ✅ Delete company
   const handleDelete = async (id: number) => {
@@ -156,6 +196,13 @@ const CompanyMaster: React.FC = () => {
     { title: "Website", dataIndex: "website", key: "website" },
     { title: "GST No", dataIndex: "gst_no", key: "gst_no" },
     { title: "PAN No", dataIndex: "pan_no", key: "pan_no" },
+    {
+  title: "Members",
+  dataIndex: "member_details",
+  key: "member_details",
+  render: (text: string) => text || "N/A"
+},
+
     {
       title: "Logo",
       dataIndex: "logo_path",
@@ -301,6 +348,17 @@ const CompanyMaster: React.FC = () => {
         </Upload>
       </Form.Item>
     </div>
+
+    <div className="mt-6 col-span-4">
+  <Form.Item
+    name="member_details"
+    label="Member Details"
+    tooltip="Enter details of company members, separate by comma"
+  >
+    <Input.TextArea rows={3} placeholder="e.g., John Doe, Jane Smith" />
+  </Form.Item>
+</div>
+
 
     {/* BANK DETAILS */}
     <div className="mt-6">

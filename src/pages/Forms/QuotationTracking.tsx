@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import dayjs from "dayjs";
 
 import {
   Table,
@@ -123,7 +124,11 @@ const [pageSize, setPageSize] = useState(10);
         quotation_no: t.quotation_no ?? "-",
         quotation_date: t.quotation_date ?? "-",
         is_dispatched: t.is_dispatched ?? "No",
-        dispatched_date: t.dispatched_date ?? "-",
+        // sent_at: t.sent_at ? dayjs(t.sent_at).format("YYYY-MM-DD HH:mm:ss") : null,
+        // sent_at: t.sent_at ? dayjs(t.sent_at) : null,
+        sent_at: t.sent_at || t.dispatched_date ? dayjs(t.sent_at || t.dispatched_date, "DD-MM-YYYY").format("YYYY-MM-DD HH:mm:ss") : null,
+
+        
         dispatched_through: t.dispatched_through ?? "-",
         approved_by: t.approved_by ?? "-",
         approved_date: t.approved_date ?? "-",
@@ -198,11 +203,20 @@ const [pageSize, setPageSize] = useState(10);
     values[DispatchFormFields.DISPATCH_THROUGH]
   ).toLowerCase();
 
-  const payload: any = {
-    quotation_id: currentDispatchRow.id,
-    sent_by: loggedInUser.id,
-    method,
-  };
+   const dispatchDateValue = values[DispatchFormFields.DISPATCH_DATE];
+const sentAt = dispatchDateValue 
+  ? dayjs(dispatchDateValue).format("YYYY-MM-DD HH:mm:ss") 
+  : null;
+const payload: any = {
+  quotation_id: currentDispatchRow.id,
+  sent_by: loggedInUser.id,
+  method,
+  // sent_at: sentAt, // ✅ backend field
+  sent_at: sentAt,
+};
+
+
+
 
   if (method === "email") {
     if (!currentDispatchRow.customer_email) {
@@ -308,7 +322,16 @@ const [pageSize, setPageSize] = useState(10);
         return String(v ?? "-");
       },
     },
-    { title: "Dispatched Date", dataIndex: "dispatched_date", key: "dispatched_date" },
+    {
+  title: "Dispatched Date",
+  dataIndex: "sent_at",
+  key: "sent_at",
+  render: (v) => (v ? dayjs(v).format("DD-MM-YYYY HH:mm") : "-"),
+},
+
+
+
+
     { title: "Through", dataIndex: "dispatched_through", key: "dispatched_through" },
     {
       title: "Deal Finalised",
@@ -647,12 +670,19 @@ const [pageSize, setPageSize] = useState(10);
     </Form.Item>
 
     <Form.Item
-      label="Dispatch Date"
-      name={DispatchFormFields.DISPATCH_DATE}
-      rules={[{ required: true }]}
-    >
-      <DatePicker showTime style={{ width: "100%" }} />
-    </Form.Item>
+  label="Dispatch Date"
+  name={DispatchFormFields.DISPATCH_DATE}
+  rules={[{ required: true }]}
+>
+  <DatePicker
+    showTime
+    style={{ width: "100%" }}
+    disabledDate={(current) =>
+      current && current > dayjs().endOf("day")
+    }
+  />
+</Form.Item>
+
 
     {/* 🔒 LOCKED LOGGED-IN USER */}
     <Form.Item

@@ -25,6 +25,9 @@ const controller = new QuotationController();
 
 // ✅ FIRST: specific routes
 router.get("/get-by-number/:quotationNo", controller.getByNumber.bind(controller));
+// router.get("/default-members", (req, res) => quotationCtrl.getDefaultMemberDetails(req, res));
+router.get("/default-members", controller.getDefaultMemberDetails.bind(controller));
+
 
 // Standard CRUD routes
 router.get("/", controller.getAll.bind(controller));

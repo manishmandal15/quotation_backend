@@ -1621,6 +1621,23 @@
 const db = require("../config/db");
 
 class QuotationController {
+
+
+  // 🔹 0️⃣ Get default member_details from company_settings
+getDefaultMemberDetails(req, res) {
+  const query = `
+    SELECT member_details
+    FROM company_settings
+    ORDER BY id ASC
+    LIMIT 1
+  `;
+
+  db.query(query, (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ member_details: result[0]?.member_details || "" });
+  });
+}
+
   // 🔹 COMMON: Company Settings
   getCompanySettings(res, callback) {
     const query = `
@@ -1933,6 +1950,7 @@ class QuotationController {
     netAmount,
     createdBy,
     deal_handled_by,
+    member_details,
     products,
   } = req.body;
 
@@ -1942,8 +1960,8 @@ class QuotationController {
     INSERT INTO quotations
     (quotation_no, customer_id, currency_id, validity_date,
      payment_terms, delivery_terms, terms_conditions, reference_id, status,
-     total_amount, discount_amount, tax_amount, net_amount, created_by,deal_handled_by)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     total_amount, discount_amount, tax_amount, net_amount, created_by,deal_handled_by,member_details)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
@@ -1964,6 +1982,7 @@ class QuotationController {
       netAmount || 0,
       createdBy || 1,
       deal_handled_by || null,
+      member_details || "",
     ],
     (err, result) => {
       if (err) {
@@ -2028,6 +2047,7 @@ class QuotationController {
     taxAmount,
     netAmount,
      deal_handled_by,
+     member_details,
     products,
   } = req.body;
 
@@ -2044,6 +2064,7 @@ class QuotationController {
       terms_conditions = ?,
       reference_id = COALESCE(?, reference_id),
       deal_handled_by = COALESCE(?, deal_handled_by),
+      member_details = COALESCE(?, member_details),
       status = COALESCE(NULLIF(?, ''), status),
       total_amount = ?,
       discount_amount = ?,
@@ -2064,6 +2085,7 @@ class QuotationController {
       terms_conditions || "",
       reference_id || null, 
       deal_handled_by || null,  // 🔹 yahan save/update hoga
+      member_details || "",
       status,
       totalAmount || 0,
       discountAmount || 0,

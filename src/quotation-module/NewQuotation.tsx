@@ -1637,6 +1637,23 @@ const pageSize = 10;
   }
 };
 
+useEffect(() => {
+  if (isFormVisible && !editId) {
+    // sirf new form ke liye
+    const fetchDefaultMembers = async () => {
+      try {
+        const { data } = await QUOTATION_API.get("/default-members");
+        form.setFieldsValue({ member_details: data.member_details || "" });
+      } catch (err) {
+        console.error("Failed to fetch default member details", err);
+        message.error("Unable to load default member details");
+      }
+    };
+    fetchDefaultMembers();
+  }
+}, [isFormVisible]);
+
+
 
   useEffect(() => {
     const handleUpdate = () => fetchQuotations(); // tumhara existing fetch function
@@ -1882,6 +1899,8 @@ const pageSize = 10;
       status: values.status,
       // deal_handled_by: values.deal_handled_by,
       deal_handled_by: values.deal_handled_by?.value || null,
+      member_details: values.member_details,
+
 
       totalAmount: totals.total_amount,
       discountAmount: totals.discount_amount,
@@ -1942,6 +1961,7 @@ const pageSize = 10;
       cstate: record.cstate,
       district: record.district,
       address: record.address,
+       member_details: record.member_details,
       terms_conditions:
         record.terms_conditions || form.getFieldValue("terms_conditions"), // keep default if empty
     });
@@ -2539,6 +2559,20 @@ const pageSize = 10;
             >
               <Input.TextArea rows={6} placeholder="Enter terms & conditions" />
             </Form.Item>
+
+            <Col xs={24} sm={12} md={12}>
+  <Form.Item
+    label="Member Details"
+    name="member_details"
+    rules={[{ required: true, message: "Please enter member details" }]}
+  >
+    <Input.TextArea
+      rows={2}
+      placeholder="Enter member details"
+    />
+  </Form.Item>
+</Col>
+
 
             {/* <Form.Item label="Payment Terms" name="payment_terms">
               <Input.TextArea rows={2} placeholder="Enter payment terms" />

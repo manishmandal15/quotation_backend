@@ -1635,22 +1635,18 @@ const grandTotal = subTotal - totalDiscount + totalTax;
             marginTop: 20,
           }}
         >
-          <div>
-            <p>
-              <b>Devender Kumar</b>
-              <br />
-              Director
-              <br />
-              9810776728
-            </p>
-            <p>
-              <b>Sanjay</b>
-              <br />
-              Business Partner
-              <br />
-              9220480010
-            </p>
-          </div>
+         <div>
+  <h4>Member Details</h4>
+  <div
+    style={{
+      whiteSpace: "pre-line",
+      fontSize: 12,
+      lineHeight: 1.5,
+    }}
+  >
+    {data.member_details || "—"}
+  </div>
+</div>
           <div style={{ textAlign: "left" }}>
             <h4>Bank Details</h4>
             <p>Bank: {company.bank_name}</p>
