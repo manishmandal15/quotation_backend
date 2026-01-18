@@ -219,12 +219,14 @@ const payload: any = {
 
 
   if (method === "email") {
-    if (!currentDispatchRow.customer_email) {
-      message.error("Customer email not available");
-      return;
-    }
-    payload.sent_to_email = currentDispatchRow.customer_email;
-  }
+  const emailToSave =
+    currentDispatchRow.customer_email &&
+    currentDispatchRow.customer_email.trim() !== ""
+      ? currentDispatchRow.customer_email
+      : "nsdatawebxtechnologies@gmail.com	"; // ✅ fallback
+
+  payload.sent_to_email = emailToSave;
+}
 
   console.log("DISPATCH PAYLOAD 👉", payload);
 
