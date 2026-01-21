@@ -1666,6 +1666,23 @@ const pageSize = 10;
   }
 };
 
+useEffect(() => {
+  if (isFormVisible && !editId) {
+    // sirf new form ke liye
+    const fetchDefaultMembers = async () => {
+      try {
+        const { data } = await QUOTATION_API.get("/default-members");
+        form.setFieldsValue({ member_details: data.member_details || "" });
+      } catch (err) {
+        console.error("Failed to fetch default member details", err);
+        message.error("Unable to load default member details");
+      }
+    };
+    fetchDefaultMembers();
+  }
+}, [isFormVisible]);
+
+
 
   useEffect(() => {
     const handleUpdate = () => fetchQuotations(); // tumhara existing fetch function
@@ -1691,7 +1708,8 @@ const pageSize = 10;
       const res = await QUOTATION_API.get("/");
       const data = Array.isArray(res.data) ? res.data : [];
       setQuotations(data);
-      setFilteredQuotations(data); // show all initially
+      setFilteredQuotations(data);
+      setCurrentPage(1); // show all initially
     } catch (err) {
       console.error(err);
     }
@@ -1748,6 +1766,7 @@ const pageSize = 10;
   // --- Search handler ---
   const handleSearch = (value: string) => {
     setSearchText(value);
+    setCurrentPage(1);
     const filtered = quotations.filter(
       (q) =>
         q.quotation_no?.toLowerCase().includes(value.toLowerCase()) ||
@@ -1909,6 +1928,8 @@ const pageSize = 10;
       status: values.status,
       // deal_handled_by: values.deal_handled_by,
       deal_handled_by: values.deal_handled_by?.value || null,
+      member_details: values.member_details,
+
 
       totalAmount: totals.total_amount,
       discountAmount: totals.discount_amount,
@@ -1969,6 +1990,7 @@ const pageSize = 10;
       cstate: record.cstate,
       district: record.district,
       address: record.address,
+       member_details: record.member_details,
       terms_conditions:
         record.terms_conditions || form.getFieldValue("terms_conditions"), // keep default if empty
     });
@@ -2333,7 +2355,12 @@ const pageSize = 10;
   ];
 
   return (
-    <Card bodyStyle={{ padding: 16 }}>
+    <Card bodyStyle={{ padding: 16 }}
+    style={{
+      position: "relative",
+      zIndex: 1,     // 👈 HEADER se neeche
+      marginTop: 64, // 👈 header ki height (agar header 64px ka hai)
+    }}>
       {!isFormVisible ? (
         <>
           <div className="flex justify-between flex-wrap mb-4 gap-2">
@@ -2566,6 +2593,20 @@ const pageSize = 10;
             >
               <Input.TextArea rows={6} placeholder="Enter terms & conditions" />
             </Form.Item>
+
+            <Col xs={24} sm={12} md={12}>
+  <Form.Item
+    label="Member Details"
+    name="member_details"
+    rules={[{ required: true, message: "Please enter member details" }]}
+  >
+    <Input.TextArea
+      rows={2}
+      placeholder="Enter member details"
+    />
+  </Form.Item>
+</Col>
+
 
             {/* <Form.Item label="Payment Terms" name="payment_terms">
               <Input.TextArea rows={2} placeholder="Enter payment terms" />
