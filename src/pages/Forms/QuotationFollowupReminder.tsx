@@ -115,6 +115,38 @@ const [pageSize, setPageSize] = useState(8);
 
       const tracking = trackRes.data || [];
 
+//       const quotationsMap = new Map(
+//   (quotRes.data || []).map((q: any) => [
+//     q.quotation_no,
+//     q.deal_handled_by_name,
+//   ])
+// );
+
+// const quotationsMap = new Map(
+// (quotRes.data || []).map((q: any) => [
+//   q.quotaion_no,
+//   q.deal_handled_by_name,
+// ])
+// );
+
+// const quotationsMap = new Map(
+//   (quotRes.data || []).map((q: any) => [
+//     q.quotation_no,
+//     q.deal_handled_by_name,
+//   ])
+// );
+
+  const quotationsMap = new Map(
+  (quotRes.data || []).map((q: any) => [
+    q.quotation_no,
+    q.deal_handled_by_name,
+  ])
+);
+
+
+
+
+
       const merged = tracking.map((t: any) => ({ 
         id: t.id,
         quotation_id: t.id,
@@ -127,6 +159,8 @@ const [pageSize, setPageSize] = useState(8);
         approved_date: t.approved_date ?? "-",
         deal_status: t.deal_status ?? "Pending",
         followup_date: t.followup_date ?? t.follow_up_date ?? "-",
+        deal_handled_by_name:
+    quotationsMap.get(t.quotation_no) ?? "-",
         nextfollowup_date: t.nextfollowup_date ?? "-",
         dispatched_by: t.dispatched_by ?? null,
         has_followup: t.has_followup ?? false,
@@ -266,6 +300,11 @@ const [pageSize, setPageSize] = useState(8);
 
     { title: "Quotation No.", dataIndex: "quotation_no", key: "quotation_no" },
     { title: "Customer Name", dataIndex: "customer_name", key: "customer_name" },
+    {
+  title: "Deal Handled By",
+  dataIndex: "deal_handled_by_name",
+  render: (val: any) => val || "-"
+},
     {
       title: "Quotation Date",
       dataIndex: "quotation_date",

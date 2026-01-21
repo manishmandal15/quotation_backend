@@ -118,6 +118,13 @@ const [pageSize, setPageSize] = useState(10);
       }));
 
       const tracking = trackRes.data || [];
+
+      const quotationsMap = new Map(
+  (quotRes.data || []).map((q: any) => [
+    q.quotation_no,
+    q.deal_handled_by_name,
+  ])
+);
       const merged = tracking.map((t: any) => ({
         id: t.id,
         quotation_id: t.id,
@@ -127,7 +134,9 @@ const [pageSize, setPageSize] = useState(10);
         // sent_at: t.sent_at ? dayjs(t.sent_at).format("YYYY-MM-DD HH:mm:ss") : null,
         // sent_at: t.sent_at ? dayjs(t.sent_at) : null,
         sent_at: t.sent_at || t.dispatched_date ? dayjs(t.sent_at || t.dispatched_date, "DD-MM-YYYY").format("YYYY-MM-DD HH:mm:ss") : null,
-
+        // deal_handled_by_name: t.deal_handled_by_name ?? t.deal_handled_by ?? "-",
+        deal_handled_by_name:
+    quotationsMap.get(t.quotation_no) ?? "-",
         
         dispatched_through: t.dispatched_through ?? "-",
         approved_by: t.approved_by ?? "-",
@@ -311,6 +320,11 @@ const payload: any = {
 
     { title: "Quotation No", dataIndex: "quotation_no", key: "quotation_no" },
     { title: "Customer", dataIndex: "customer_name", key: "customer_name" },
+    {
+  title: "Deal Handled By",
+  dataIndex: "deal_handled_by_name",
+  render: (val: any) => val || "-"
+},
     { title: "Quotation Date", dataIndex: "quotation_date", key: "quotation_date" },
     { title: "Net Amount", dataIndex: "net_amount", key: "net_amount" },
     {

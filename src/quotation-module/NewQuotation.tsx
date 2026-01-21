@@ -2061,6 +2061,11 @@ useEffect(() => {
     { title: "Quotation No", dataIndex: "quotation_no" },
     { title: "Customer", dataIndex: "customer_name" },
     {
+  title: "Deal Handled By",
+  dataIndex: "deal_handled_by_name",
+  render: (val: any) => val || "-"
+},
+    {
       title: "Created At",
       dataIndex: "created_at",
       render: (v: string | null) => (v ? dayjs(v).format("DD-MM-YYYY ") : "-"),

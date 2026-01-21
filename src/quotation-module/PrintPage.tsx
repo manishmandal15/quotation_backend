@@ -1626,13 +1626,12 @@ const grandTotal = subTotal - totalDiscount + totalTax;
             {data.terms_conditions || "—"}
           </p>
         </div>
-
         {/* Footer */}
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
-            marginTop: 20,
+            marginTop: 2,
           }}
         >
          <div>

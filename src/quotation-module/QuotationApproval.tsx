@@ -699,6 +699,11 @@ const handleSave = async () => {
       key: "customer_name",
       render: (_: any, record: any) => customers.find(c => c.id === record.customer_id)?.name || "-"
     },
+    {
+  title: "Deal Handled By",
+  dataIndex: "deal_handled_by_name",
+  render: (val: any) => val || "-"
+},
     { title: "Created At", dataIndex: "created_at", key: "created_at",
       render: (v: string) => v ? dayjs(v).format("DD-MM-YYYY") : "-" },
     { title: "Net Amount (₹)", dataIndex: "net_amount", key: "net_amount",

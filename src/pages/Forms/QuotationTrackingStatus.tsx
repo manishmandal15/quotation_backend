@@ -899,6 +899,12 @@ const fetchQuotations = async () => {
     }));
 
     const tracking = trackRes.data || []; // array of rows from quotation-tracking endpoint
+    const quotationsMap = new Map(
+  (quotRes.data || []).map((q: any) => [
+    q.quotation_no,
+    q.deal_handled_by_name,
+  ])
+);
 
     // merge tracking data into quotations (if found)
    const merged = tracking.map((t: any) => ({
@@ -915,7 +921,8 @@ const fetchQuotations = async () => {
   approved_date: t.approved_date ?? "-",
   deal_status: t.deal_status ?? "Pending",
   followup_date: t.followup_date ?? t.follow_up_date ?? "-",
-
+   deal_handled_by_name:
+    quotationsMap.get(t.quotation_no) ?? "-",
   nextfollowup_date: t.nextfollowup_date ?? t.nextfollowup_date ?? "-",
   dispatched_by: t.dispatched_by ?? null,
   has_followup: t.has_followup ?? false,
@@ -1252,6 +1259,11 @@ const handleFollowupSave = async (values: any) => {
 
     { title: "Quotation No.", dataIndex: "quotation_no", key: "quotation_no" },
     { title: "Customer Name", dataIndex: "customer_name", key: "customer_name" },
+    {
+  title: "Deal Handled By",
+  dataIndex: "deal_handled_by_name",
+  render: (val: any) => val || "-"
+},
     {
       title: "Quotation Date",
       dataIndex: "quotation_date",
