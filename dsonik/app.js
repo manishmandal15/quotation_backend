@@ -12,7 +12,7 @@ const http = require("http");
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5003;
 const numCPUs = os.cpus().length;
 
 // -------------------------------------------------
@@ -31,7 +31,7 @@ app.use(
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "https://dsonikgroup.com",
     credentials: true,
   })
 );
