@@ -2608,13 +2608,13 @@ useEffect(() => {
 </Col>
 
 
-            {/* <Form.Item label="Payment Terms" name="payment_terms">
+            <Form.Item label="Payment Terms" name="payment_terms">
               <Input.TextArea rows={2} placeholder="Enter payment terms" />
             </Form.Item>
 
             <Form.Item label="Delivery Terms" name="delivery_terms">
               <Input.TextArea rows={2} placeholder="Enter delivery terms" />
-            </Form.Item> */}
+            </Form.Item>
 
             <Form.Item
               label="Reference"
