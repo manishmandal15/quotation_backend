@@ -1526,34 +1526,54 @@ const grandTotal = subTotal - totalDiscount + totalTax;
               <th style={th}>Discount %</th>
               <th style={th}>Tax %</th>
               <th style={th}>Total</th>
+              <th style={th}>Total(inc. tax)</th>
             </tr>
           </thead>
           <tbody>
-            {mappedItems.length ? (
-              mappedItems.map((item, i) => (
-                <tr key={i}>
-                  <td style={td}>{i + 1}</td>
-                  <td style={td}>{item.product_name}</td>
-                  {/* <td style={td}>{item.description}</td> */}
-                  <td style={{ ...td, whiteSpace: "pre-line" }}>
-  {item.description}
-</td>
+  {mappedItems.length ? (
+    mappedItems.map((item, i) => {
+      const qty = Number(item.quantity || 0);
+      const price = Number(item.unit_price || 0);
+      const discount = Number(item.discount || 0);
+      const taxRate = Number(item.tax_rate || 0);
 
-                  <td style={td}>{item.quantity}</td>
-                  <td style={td}>{item.unit_price?.toFixed(2)}</td>
-                  <td style={td}>{item.discount}</td>
-                  <td style={td}>{item.tax_rate}</td>
-                  <td style={td}>{item.line_total?.toFixed(2)}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={8} style={{ textAlign: "center", padding: 10 }}>
-                  No products found
-                </td>
-              </tr>
-            )}
-          </tbody>
+      const baseAmount = qty * price;
+      const discountAmt = (baseAmount * discount) / 100;
+      const taxableAmount = baseAmount - discountAmt;
+      const taxAmt = (taxableAmount * taxRate) / 100;
+      const total = taxableAmount + taxAmt;
+
+      return (
+        <tr key={i}>
+          <td style={td}>{i + 1}</td>
+          <td style={td}>{item.product_name}</td>
+
+          <td style={{ ...td, whiteSpace: "pre-line" }}>
+            {item.description}
+          </td>
+
+          <td style={td}>{qty}</td>
+          <td style={td}>{price.toFixed(2)}</td>
+          <td style={td}>{discount}</td>
+          <td style={td}>{taxRate}</td>
+
+          {/* 🔥 Amount Before Tax */}
+          <td style={td}>{taxableAmount.toFixed(2)}</td>
+
+          {/* 🔥 Final Total */}
+          <td style={td}>{total.toFixed(2)}</td>
+        </tr>
+      );
+    })
+  ) : (
+    <tr>
+      <td colSpan={9} style={{ textAlign: "center", padding: 10 }}>
+        No products found
+      </td>
+    </tr>
+  )}
+</tbody>
+
         </table>
 
         {/* Totals */}

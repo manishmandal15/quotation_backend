@@ -2305,8 +2305,17 @@ useEffect(() => {
             />
           ),
         },
+
         {
-          title: " Total",
+  title: "Total(after disc)",
+  render: (_: any, r: any) => {
+    const base = r.quantity * r.unit_price;
+    const afterDiscount = base - (r.discount / 100) * base;
+    return `₹ ${afterDiscount.toFixed(2)}`;
+  },
+},
+        {
+          title: " Total(incl. tax)",
           dataIndex: "line_total",
           width: 160, // 👈 yaha width set karo
       // align: "right",
