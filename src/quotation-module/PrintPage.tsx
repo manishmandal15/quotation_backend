@@ -1452,13 +1452,33 @@ const grandTotal = subTotal - totalDiscount + totalTax;
         >
           <div style={{ width: "48%" }}>
             <h2>{company.name}</h2>
-            <div style={{ fontSize: 12, whiteSpace: "pre-line" }}>
-              {company.address}
-            </div>
-            <div>Phone: {company.phone}</div>
-            <div>Email: {company.email}</div>
-            <div>Website: {company.website}</div>
-            <div>GSTIN: {company.gst_no}</div>
+
+<div style={{ fontSize: 12, whiteSpace: "pre-line" }}>
+  {company.address}
+</div>
+
+<div style={{ fontSize: 12, marginTop: 6 }}>
+  <div style={{ display: "flex" }}>
+    <span style={{ width: 50 }}>Phone</span>
+    <span>: {company.phone}</span>
+  </div>
+
+  <div style={{ display: "flex" }}>
+    <span style={{ width: 50 }}>Email</span>
+    <span>: {company.email}</span>
+  </div>
+
+  <div style={{ display: "flex" }}>
+    <span style={{ width: 50 }}>Website</span>
+    <span>: {company.website}</span>
+  </div>
+
+  <div style={{ display: "flex" }}>
+    <span style={{ width: 50 }}>GSTIN</span>
+    <span>: {company.gst_no}</span>
+  </div>
+</div>
+
             <h4
               style={{
                 marginTop: 16,
@@ -1470,46 +1490,69 @@ const grandTotal = subTotal - totalDiscount + totalTax;
               BILL TO :
             </h4>
             <div style={{ fontSize: 12, marginTop: 4 }}>
-              <p style={{ margin: 0 }}>
-                Customer Nmae: <b>{customer.name}</b>
-              </p>
-              <p style={{ margin: 0 }}>{customer.address}</p>
-              <p style={{ margin: 0 }}>
-                Contact Person: {customer.contact_person}
-              </p>
-              <p style={{ margin: 0 }}>Phone: {customer.phone}</p>
-              {customer.email && (
-                <p style={{ margin: 0 }}>Email: {customer.email}</p>
-              )}
-              {customer.gst_no && (
-                <p style={{ margin: 0 }}>GSTIN: {customer.gst_no}</p>
-              )}
+             <p style={{ margin: 0, display: "flex" }}>
+  <span style={{ width: 90 }}>Customer Name</span>
+  <span>: {customer.name}</span>
+</p>
+
+<p style={{ margin: 0, display: "flex" }}>
+  <span style={{ width: 90 }}>Phone</span>
+  <span>: {customer.phone}</span>
+</p>
+
+<p style={{ margin: 0, display: "flex" }}>
+  <span style={{ width: 90 }}>Email</span>
+  <span>: {customer.email}</span>
+</p>
+
+<p style={{ margin: 0, display: "flex" }}>
+  <span style={{ width: 90 }}>GSTIN</span>
+  <span>: {customer.gst_no}</span>
+</p>
+
             </div>
           </div>
-          <div style={{ width: "48%", textAlign: "left", paddingLeft: 60 }}>
-            <h4>Quotation Info</h4>
-            <p>
-              <b>No:</b> {data.quotation_no || quotationNo}
-            </p>
-            <p>
-              <b>Date:</b>{" "}
-              {data.created_at
-                ? dayjs(data.created_at).format("DD-MM-YYYY")
-                : "-"}
-            </p>
-            <p>
-              <b>Validity:</b>{" "}
-              {data.validity_date
-                ? dayjs(data.validity_date).format("DD-MM-YYYY")
-                : "-"}
-            </p>
-            <p>
-              <b>Payment:</b> {data.payment_terms || "50% Advance"}
-            </p>
-            <p>
-              <b>Delivery:</b> {data.delivery_terms || "As discussed"}
-            </p>
-          </div>
+         <div style={{ width: "48%", textAlign: "left", paddingLeft: 60 }}>
+  <h4>Quotation Info</h4>
+
+  <div style={{ fontSize: 12 }}>
+    <div style={{ display: "flex" }}>
+      <span style={{ width: 70, fontWeight: 200 }}>No.</span>
+      <span>: {data.quotation_no || quotationNo}</span>
+    </div>
+
+    <div style={{ display: "flex" }}>
+      <span style={{ width: 70, fontWeight: 200 }}>Date</span>
+      <span>
+        :{" "}
+        {data.created_at
+          ? dayjs(data.created_at).format("DD-MM-YYYY")
+          : "-"}
+      </span>
+    </div>
+
+    <div style={{ display: "flex" }}>
+      <span style={{ width: 70, fontWeight: 200 }}>Validity</span>
+      <span>
+        :{" "}
+        {data.validity_date
+          ? dayjs(data.validity_date).format("DD-MM-YYYY")
+          : "-"}
+      </span>
+    </div>
+
+    <div style={{ display: "flex" }}>
+      <span style={{ width: 70, fontWeight: 200 }}>Payment</span>
+      <span>: {data.payment_terms || "50% Advance"}</span>
+    </div>
+
+    <div style={{ display: "flex" }}>
+      <span style={{ width: 70, fontWeight: 200 }}>Delivery</span>
+      <span>: {data.delivery_terms || "As discussed"}</span>
+    </div>
+  </div>
+</div>
+
         </div>
 
         {/* Items Table */}
@@ -1553,15 +1596,15 @@ const grandTotal = subTotal - totalDiscount + totalTax;
           </td>
 
           <td style={td}>{qty}</td>
-          <td style={td}>{price.toFixed(2)}</td>
+          <td style={td}>₹ {price.toFixed(2)}</td>
           <td style={td}>{discount}</td>
           <td style={td}>{taxRate}</td>
 
           {/* 🔥 Amount Before Tax */}
-          <td style={td}>{taxableAmount.toFixed(2)}</td>
+          <td style={td}>₹ {taxableAmount.toFixed(2)}</td>
 
           {/* 🔥 Final Total */}
-          <td style={td}>{total.toFixed(2)}</td>
+          <td style={td}>₹ {total.toFixed(2)}</td>
         </tr>
       );
     })
@@ -1642,9 +1685,31 @@ const grandTotal = subTotal - totalDiscount + totalTax;
           >
             Terms & conditions :
           </h4>
-          <p style={{ whiteSpace: "pre-line" }}>
-            {data.terms_conditions || "—"}
-          </p>
+          <div style={{ padding: "6px 8px" }}>
+    {(data.terms_conditions || "")
+      .split("\n")
+      .map((line, index) => {
+        const parts = line.split(":");
+        return (
+          <div
+            key={index}
+            style={{
+              display: "flex",
+              lineHeight: "18px",
+            }}
+          >
+            {/* Number */}
+            {/* <span style={{ width: 18 }}>{index + 1}.</span> */}
+
+            {/* Label */}
+            <span style={{ width: 110 }}>{parts[0]}</span>
+
+            {/* Colon + Value */}
+            <span>: {parts.slice(1).join(":")}</span>
+          </div>
+        );
+      })}
+  </div> 
         </div>
         {/* Footer */}
         <div
@@ -1655,7 +1720,8 @@ const grandTotal = subTotal - totalDiscount + totalTax;
           }}
         >
          <div>
-  <h4>Member Details</h4>
+  {/* <h4>Member Details</h4> */}
+  <br />
   <div
     style={{
       whiteSpace: "pre-line",
@@ -1666,12 +1732,27 @@ const grandTotal = subTotal - totalDiscount + totalTax;
     {data.member_details || "—"}
   </div>
 </div>
-          <div style={{ textAlign: "left" }}>
-            <h4>Bank Details</h4>
-            <p>Bank: {company.bank_name}</p>
-            <p>Account No: {company.acc_no}</p>
-            <p>IFSC: {company.ifsc}</p>
-          </div>
+         <div style={{ textAlign: "left" }}>
+  <h4>Bank Details</h4>
+
+  <div style={{ fontSize: 12 }}>
+    <div style={{ display: "flex" }}>
+      <span style={{ width: 90, fontWeight: 200 }}>Bank</span>
+      <span>: {company.bank_name || "-"}</span>
+    </div>
+
+    <div style={{ display: "flex" }}>
+      <span style={{ width: 90, fontWeight: 200 }}>Account No</span>
+      <span>: {company.acc_no || "-"}</span>
+    </div>
+
+    <div style={{ display: "flex" }}>
+      <span style={{ width: 90, fontWeight: 200 }}>IFSC</span>
+      <span>: {company.ifsc || "-"}</span>
+    </div>
+  </div>
+</div>
+
         </div>
 
         <p className="print-footer"
