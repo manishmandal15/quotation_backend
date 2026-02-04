@@ -1961,10 +1961,14 @@ useEffect(() => {
       cstate: record.cstate,
       district: record.district,
       address: record.address,
+      payment_terms: record.payment_terms,
+  delivery_terms: record.delivery_terms,
        member_details: record.member_details,
       terms_conditions:
         record.terms_conditions || form.getFieldValue("terms_conditions"), // keep default if empty
     });
+
+    onCustomerChange(record.customer_id);
 
     try {
       const { data } = await QUOTATION_API.get(`/${record.id}`);
