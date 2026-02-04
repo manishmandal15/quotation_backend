@@ -1566,7 +1566,7 @@ const grandTotal = subTotal - totalDiscount + totalTax;
               <th style={th}>Description</th>
               <th style={th}>Qty</th>
               <th style={th}>Price</th>
-              <th style={th}>Discount %</th>
+              <th style={th}>Disc. %</th>
               <th style={th}>Tax %</th>
               <th style={th}>Total</th>
               <th style={th}>Total(inc. tax)</th>
@@ -1596,12 +1596,12 @@ const grandTotal = subTotal - totalDiscount + totalTax;
           </td>
 
           <td style={td}>{qty}</td>
-          <td style={td}>₹ {price.toFixed(2)}</td>
+          <td style={td}>₹ {price.toFixed(0)}</td>
           <td style={td}>{discount}</td>
           <td style={td}>{taxRate}</td>
 
           {/* 🔥 Amount Before Tax */}
-          <td style={td}>₹ {taxableAmount.toFixed(2)}</td>
+          <td style={td}>₹ {taxableAmount.toFixed(0)}</td>
 
           {/* 🔥 Final Total */}
           <td style={td}>₹ {total.toFixed(2)}</td>
@@ -1666,7 +1666,7 @@ const grandTotal = subTotal - totalDiscount + totalTax;
   <div>Tax Total: ₹{totalTax.toFixed(2)}</div>
   <div>Discount: ₹{totalDiscount.toFixed(2)}</div>
   {/* <div>Tax Total: ₹{totalTax.toFixed(2)}</div> */}
-  <h3>Grand Total: ₹{grandTotal.toFixed(2)}</h3>
+  <h4>Grand Total: ₹{grandTotal.toFixed(2)}</h4>
 
 </div>
 </div>
@@ -1674,7 +1674,7 @@ const grandTotal = subTotal - totalDiscount + totalTax;
 
 
         {/* Terms */}
-        <div style={{ marginTop: 16 }}>
+        <div style={{ marginTop: 8 }}>
           <h4
             style={{
               margin: 0,
@@ -1695,14 +1695,14 @@ const grandTotal = subTotal - totalDiscount + totalTax;
             key={index}
             style={{
               display: "flex",
-              lineHeight: "18px",
+              lineHeight: "17px",
             }}
           >
             {/* Number */}
             {/* <span style={{ width: 18 }}>{index + 1}.</span> */}
 
             {/* Label */}
-            <span style={{ width: 110 }}>{parts[0]}</span>
+            <span style={{ width: 135 }}>{parts[0]}</span>
 
             {/* Colon + Value */}
             <span>: {parts.slice(1).join(":")}</span>
