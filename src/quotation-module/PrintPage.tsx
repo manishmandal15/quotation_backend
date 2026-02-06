@@ -839,7 +839,7 @@
 //       </div>
 
 //       <div>
-        
+
 //       </div>
 //       <div
 //         ref={printRef}
@@ -1066,11 +1066,6 @@
 //   );
 // }
 
-
-
-
-
-
 import React, { useEffect, useRef, useState } from "react";
 import dayjs from "dayjs";
 import { getQuotationByNumber } from "./quotationApi";
@@ -1085,7 +1080,6 @@ const QUOTATION_API = axios.create({ baseURL: `${BASE_URL}/quotations` });
 const CUSTOMER_API = axios.create({ baseURL: `${BASE_URL}/customers` });
 const CURRENCY_API = axios.create({ baseURL: `${BASE_URL}/currencies` });
 const PRODUCT_API = axios.create({ baseURL: `${BASE_URL}/products` });
-
 
 type Item = {
   product_name?: string;
@@ -1116,8 +1110,7 @@ export default function PrintPage() {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
-const COMPANY_STATE = "uttar pradesh";
-
+  const COMPANY_STATE = "uttar pradesh";
 
   // useEffect(() => {
   //   const params = new URLSearchParams(window.location.search);
@@ -1129,20 +1122,17 @@ const COMPANY_STATE = "uttar pradesh";
   // }, []);
 
   useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(window.location.search);
 
-  const id = params.get("id");              // 👈 NEW
-  const auto = params.get("autoPrint") === "true";
+    const id = params.get("id"); // 👈 NEW
+    const auto = params.get("autoPrint") === "true";
 
-  setAutoPrint(auto);
+    setAutoPrint(auto);
 
-  if (id) {
-    loadQuotationById(id, auto);             // 👈 NEW
-  }
-}, []);
-
-
-  
+    if (id) {
+      loadQuotationById(id, auto); // 👈 NEW
+    }
+  }, []);
 
   const numberToWords = (num: number) => {
     if (!num || isNaN(num)) return "";
@@ -1230,22 +1220,21 @@ const COMPANY_STATE = "uttar pradesh";
   // };
 
   const loadQuotationById = async (id: string, shouldAutoPrint?: boolean) => {
-  setLoading(true);
-  setError(null);
-  try {
-    const res = await QUOTATION_API.get(`/${id}`); // 👈 ID based API
-    setData(res.data);
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await QUOTATION_API.get(`/${id}`); // 👈 ID based API
+      setData(res.data);
 
-    if (shouldAutoPrint) {
-      setTimeout(() => handlePrint(), 500);
+      if (shouldAutoPrint) {
+        setTimeout(() => handlePrint(), 500);
+      }
+    } catch (err) {
+      setError("Failed to load quotation");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    setError("Failed to load quotation");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   const handlePrint = () => {
     if (!printRef.current) return;
@@ -1311,16 +1300,12 @@ const COMPANY_STATE = "uttar pradesh";
     state: cust.state_name || "",
   };
 
-
-   const isSameState =
-    customer.state.trim().toLowerCase() ===
-    COMPANY_STATE.trim().toLowerCase();
+  const isSameState =
+    customer.state.trim().toLowerCase() === COMPANY_STATE.trim().toLowerCase();
 
   console.log("Customer Statessssssssssssssss:", cust.state_name);
   console.log("Same Statessssssssssssssssssss:", isSameState);
 
-  
-  
   const comp = data?.company || {};
   const company = {
     name: comp.company_name || "Company Name",
@@ -1349,52 +1334,48 @@ const COMPANY_STATE = "uttar pradesh";
       }))
     : [];
 
-let subTotal = 0;        // qty * price
-let totalDiscount = 0;  // discount amount
-let totalCGST = 0;
-let totalSGST = 0;
-let totalIGST = 0;
-let totalTax = 0;
+  let subTotal = 0; // qty * price
+  let totalDiscount = 0; // discount amount
+  let totalCGST = 0;
+  let totalSGST = 0;
+  let totalIGST = 0;
+  let totalTax = 0;
 
-mappedItems.forEach((item) => {
-  const qty = item.quantity || 0;
-  const price = item.unit_price || 0;
-  const discountPercent = item.discount || 0;
-  const gstPercent = item.tax_rate || 0;
+  mappedItems.forEach((item) => {
+    const qty = item.quantity || 0;
+    const price = item.unit_price || 0;
+    const discountPercent = item.discount || 0;
+    const gstPercent = item.tax_rate || 0;
 
-  const lineAmount = qty * price;
-  const discountAmount = (lineAmount * discountPercent) / 100;
-  const taxableValue = lineAmount - discountAmount;
-  const gstAmount = (taxableValue * gstPercent) / 100;
+    const lineAmount = qty * price;
+    const discountAmount = (lineAmount * discountPercent) / 100;
+    const taxableValue = lineAmount - discountAmount;
+    const gstAmount = (taxableValue * gstPercent) / 100;
 
-  subTotal += lineAmount;
-  totalDiscount += discountAmount;
+    subTotal += lineAmount;
+    totalDiscount += discountAmount;
 
-  if (isSameState) {
-    totalCGST += gstAmount / 2;
-    totalSGST += gstAmount / 2;
-  } else {
-    totalIGST += gstAmount;
-  }
+    if (isSameState) {
+      totalCGST += gstAmount / 2;
+      totalSGST += gstAmount / 2;
+    } else {
+      totalIGST += gstAmount;
+    }
 
-  totalTax += gstAmount;
-});
+    totalTax += gstAmount;
+  });
 
-const grandTotal = subTotal - totalDiscount + totalTax;
+  const grandTotal = subTotal - totalDiscount + totalTax;
 
-  
+  // const total = subtotal + taxAmount;
 
+  //   const total = subtotal - discount + tax;
 
-// const total = subtotal + taxAmount;
-
-//   const total = subtotal - discount + tax;
-
-//   const customerState: string = cust.state_name || "";
-//   console.log(customerState);
-//   const isSameState =
-//   customerState &&
-//   customerState.toLowerCase() === COMPANY_STATE.toLowerCase();
-
+  //   const customerState: string = cust.state_name || "";
+  //   console.log(customerState);
+  //   const isSameState =
+  //   customerState &&
+  //   customerState.toLowerCase() === COMPANY_STATE.toLowerCase();
 
   return (
     <div style={{ fontFamily: "Arial, sans-serif" }}>
@@ -1416,9 +1397,7 @@ const grandTotal = subTotal - totalDiscount + totalTax;
         </Button>
       </div>
 
-      <div>
-        
-      </div>
+      <div></div>
       <div
         ref={printRef}
         style={{
@@ -1453,31 +1432,31 @@ const grandTotal = subTotal - totalDiscount + totalTax;
           <div style={{ width: "48%" }}>
             <h2>{company.name}</h2>
 
-<div style={{ fontSize: 12, whiteSpace: "pre-line" }}>
-  {company.address}
-</div>
+            <div style={{ fontSize: 12, whiteSpace: "pre-line" }}>
+              {company.address}
+            </div>
 
-<div style={{ fontSize: 12, marginTop: 6 }}>
-  <div style={{ display: "flex" }}>
-    <span style={{ width: 50 }}>Phone</span>
-    <span>: {company.phone}</span>
-  </div>
+            <div style={{ fontSize: 12, marginTop: 6 }}>
+              <div style={{ display: "flex" }}>
+                <span style={{ width: 50 }}>Phone</span>
+                <span>: {company.phone}</span>
+              </div>
 
-  <div style={{ display: "flex" }}>
-    <span style={{ width: 50 }}>Email</span>
-    <span>: {company.email}</span>
-  </div>
+              <div style={{ display: "flex" }}>
+                <span style={{ width: 50 }}>Email</span>
+                <span>: {company.email}</span>
+              </div>
 
-  <div style={{ display: "flex" }}>
-    <span style={{ width: 50 }}>Website</span>
-    <span>: {company.website}</span>
-  </div>
+              <div style={{ display: "flex" }}>
+                <span style={{ width: 50 }}>Website</span>
+                <span>: {company.website}</span>
+              </div>
 
-  <div style={{ display: "flex" }}>
-    <span style={{ width: 50 }}>GSTIN</span>
-    <span>: {company.gst_no}</span>
-  </div>
-</div>
+              <div style={{ display: "flex" }}>
+                <span style={{ width: 50 }}>GSTIN</span>
+                <span>: {company.gst_no}</span>
+              </div>
+            </div>
 
             <h4
               style={{
@@ -1490,69 +1469,67 @@ const grandTotal = subTotal - totalDiscount + totalTax;
               BILL TO :
             </h4>
             <div style={{ fontSize: 12, marginTop: 4 }}>
-             <p style={{ margin: 0, display: "flex" }}>
-  <span style={{ width: 90 }}>Customer Name</span>
-  <span>: {customer.name}</span>
-</p>
+              <p style={{ margin: 0, display: "flex" }}>
+                <span style={{ width: 90 }}>Customer Name</span>
+                <span>: {customer.name}</span>
+              </p>
 
-<p style={{ margin: 0, display: "flex" }}>
-  <span style={{ width: 90 }}>Phone</span>
-  <span>: {customer.phone}</span>
-</p>
+              <p style={{ margin: 0, display: "flex" }}>
+                <span style={{ width: 90 }}>Phone</span>
+                <span>: {customer.phone}</span>
+              </p>
 
-<p style={{ margin: 0, display: "flex" }}>
-  <span style={{ width: 90 }}>Email</span>
-  <span>: {customer.email}</span>
-</p>
+              <p style={{ margin: 0, display: "flex" }}>
+                <span style={{ width: 90 }}>Email</span>
+                <span>: {customer.email}</span>
+              </p>
 
-<p style={{ margin: 0, display: "flex" }}>
-  <span style={{ width: 90 }}>GSTIN</span>
-  <span>: {customer.gst_no}</span>
-</p>
-
+              <p style={{ margin: 0, display: "flex" }}>
+                <span style={{ width: 90 }}>GSTIN</span>
+                <span>: {customer.gst_no}</span>
+              </p>
             </div>
           </div>
-         <div style={{ width: "48%", textAlign: "left", paddingLeft: 60 }}>
-  <h4>Quotation Info</h4>
+          <div style={{ width: "48%", textAlign: "left", paddingLeft: 60 }}>
+            <h4>Quotation Info</h4>
 
-  <div style={{ fontSize: 12 }}>
-    <div style={{ display: "flex" }}>
-      <span style={{ width: 70, fontWeight: 200 }}>No.</span>
-      <span>: {data.quotation_no || quotationNo}</span>
-    </div>
+            <div style={{ fontSize: 12 }}>
+              <div style={{ display: "flex" }}>
+                <span style={{ width: 70, fontWeight: 200 }}>No.</span>
+                <span>: {data.quotation_no || quotationNo}</span>
+              </div>
 
-    <div style={{ display: "flex" }}>
-      <span style={{ width: 70, fontWeight: 200 }}>Date</span>
-      <span>
-        :{" "}
-        {data.created_at
-          ? dayjs(data.created_at).format("DD-MM-YYYY")
-          : "-"}
-      </span>
-    </div>
+              <div style={{ display: "flex" }}>
+                <span style={{ width: 70, fontWeight: 200 }}>Date</span>
+                <span>
+                  :{" "}
+                  {data.created_at
+                    ? dayjs(data.created_at).format("DD-MM-YYYY")
+                    : "-"}
+                </span>
+              </div>
 
-    <div style={{ display: "flex" }}>
-      <span style={{ width: 70, fontWeight: 200 }}>Validity</span>
-      <span>
-        :{" "}
-        {data.validity_date
-          ? dayjs(data.validity_date).format("DD-MM-YYYY")
-          : "-"}
-      </span>
-    </div>
+              <div style={{ display: "flex" }}>
+                <span style={{ width: 70, fontWeight: 200 }}>Validity</span>
+                <span>
+                  :{" "}
+                  {data.validity_date
+                    ? dayjs(data.validity_date).format("DD-MM-YYYY")
+                    : "-"}
+                </span>
+              </div>
 
-    <div style={{ display: "flex" }}>
-      <span style={{ width: 70, fontWeight: 200 }}>Payment</span>
-      <span>: {data.payment_terms || "50% Advance"}</span>
-    </div>
+              <div style={{ display: "flex" }}>
+                <span style={{ width: 70, fontWeight: 200 }}>Payment</span>
+                <span>: {data.payment_terms || "50% Advance"}</span>
+              </div>
 
-    <div style={{ display: "flex" }}>
-      <span style={{ width: 70, fontWeight: 200 }}>Delivery</span>
-      <span>: {data.delivery_terms || "As discussed"}</span>
-    </div>
-  </div>
-</div>
-
+              <div style={{ display: "flex" }}>
+                <span style={{ width: 70, fontWeight: 200 }}>Delivery</span>
+                <span>: {data.delivery_terms || "As discussed"}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Items Table */}
@@ -1573,50 +1550,49 @@ const grandTotal = subTotal - totalDiscount + totalTax;
             </tr>
           </thead>
           <tbody>
-  {mappedItems.length ? (
-    mappedItems.map((item, i) => {
-      const qty = Number(item.quantity || 0);
-      const price = Number(item.unit_price || 0);
-      const discount = Number(item.discount || 0);
-      const taxRate = Number(item.tax_rate || 0);
+            {mappedItems.length ? (
+              mappedItems.map((item, i) => {
+                const qty = Number(item.quantity || 0);
+                const price = Number(item.unit_price || 0);
+                const discount = Number(item.discount || 0);
+                const taxRate = Number(item.tax_rate || 0);
 
-      const baseAmount = qty * price;
-      const discountAmt = (baseAmount * discount) / 100;
-      const taxableAmount = baseAmount - discountAmt;
-      const taxAmt = (taxableAmount * taxRate) / 100;
-      const total = taxableAmount + taxAmt;
+                const baseAmount = qty * price;
+                const discountAmt = (baseAmount * discount) / 100;
+                const taxableAmount = baseAmount - discountAmt;
+                const taxAmt = (taxableAmount * taxRate) / 100;
+                const total = taxableAmount + taxAmt;
 
-      return (
-        <tr key={i}>
-          <td style={td}>{i + 1}</td>
-          <td style={td}>{item.product_name}</td>
+                return (
+                  <tr key={i}>
+                    <td style={td}>{i + 1}</td>
+                    <td style={td}>{item.product_name}</td>
 
-          <td style={{ ...td, whiteSpace: "pre-line" }}>
-            {item.description}
-          </td>
+                    <td style={{ ...td, whiteSpace: "pre-line" }}>
+                      {item.description}
+                    </td>
 
-          <td style={td}>{qty}</td>
-          <td style={td}>₹ {price.toFixed(0)}</td>
-          <td style={td}>{discount}</td>
-          <td style={td}>{taxRate}</td>
+                    <td style={td}>{qty}</td>
+                    <td style={td}>₹ {price.toFixed(0)}</td>
+                    <td style={td}>{discount}</td>
+                    <td style={td}>{taxRate}</td>
 
-          {/* 🔥 Amount Before Tax */}
-          <td style={td}>₹ {taxableAmount.toFixed(0)}</td>
+                    {/* 🔥 Amount Before Tax */}
+                    <td style={td}>₹ {taxableAmount.toFixed(0)}</td>
 
-          {/* 🔥 Final Total */}
-          <td style={td}>₹ {total.toFixed(2)}</td>
-        </tr>
-      );
-    })
-  ) : (
-    <tr>
-      <td colSpan={9} style={{ textAlign: "center", padding: 10 }}>
-        No products found
-      </td>
-    </tr>
-  )}
-</tbody>
-
+                    {/* 🔥 Final Total */}
+                    <td style={td}>₹ {total.toFixed(2)}</td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan={9} style={{ textAlign: "center", padding: 10 }}>
+                  No products found
+                </td>
+              </tr>
+            )}
+          </tbody>
         </table>
 
         {/* Totals */}
@@ -1631,47 +1607,67 @@ const grandTotal = subTotal - totalDiscount + totalTax;
             <h3 style={{ margin: 0 }}>Amount in Words :</h3>
             <p style={{ margin: 0 }}>{numberToWords(grandTotal)}</p>
           </div>
-         <div
+          <div
   style={{
     width: "28%",
-    textAlign: "right",
     border: "1px solid #000",
     padding: 6,
+    fontSize: 12,
+    textAlign: "left",
   }}
 >
-  {/* <div>Sub Total: ₹{subTotal.toFixed(2)}</div>
-<div>Discount: ₹{totalDiscount.toFixed(2)}</div>
+  {[
+    ["Total Amount", subTotal],
+    ["CGST", isSameState ? totalCGST : 0],
+    ["SGST", isSameState ? totalSGST : 0],
+    ["IGST", !isSameState ? totalIGST : 0],
+    ["Tax Total", totalTax],
+    ["Discount", totalDiscount],
+  ].map(([label, value], i) => (
+    <div
+      key={i}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+      }}
+    >
+      <span style={{ width: 110 }}>{label}</span>
+      <span>:</span>
+      <span style={{ width: 120 }}>
+        ₹{" "}
+        {Number(value).toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}
+      </span>
+    </div>
+  ))}
 
-{isSameState ? (
-  <>
-    <div>CGST: ₹{totalCGST.toFixed(2)}</div>
-    <div>SGST: ₹{totalSGST.toFixed(2)}</div>
-     <div>IGST: ₹{totalIGST.toFixed(2)}</div>
-  </>
-) : (
-  <div>IGST: ₹{totalIGST.toFixed(2)}</div>
-)}
+  <hr style={{ margin: "6px 0" }} />
 
-<div>Tax Total: ₹{totalTax.toFixed(2)}</div>
-
-<h3>Grand Total: ₹{grandTotal.toFixed(2)}</h3> */}
-
-
-
- <div>Total Amount: ₹{subTotal.toFixed(2)}</div>
-  
-  <div>CGST: ₹{isSameState ? totalCGST.toFixed(2) : (0).toFixed(2)}</div>
-  <div>SGST: ₹{isSameState ? totalSGST.toFixed(2) : (0).toFixed(2)}</div>
-  <div>IGST: ₹{!isSameState ? totalIGST.toFixed(2) : (0).toFixed(2)}</div>
-  <div>Tax Total: ₹{totalTax.toFixed(2)}</div>
-  <div>Discount: ₹{totalDiscount.toFixed(2)}</div>
-  {/* <div>Tax Total: ₹{totalTax.toFixed(2)}</div> */}
-  <h4>Grand Total: ₹{grandTotal.toFixed(2)}</h4>
-
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      fontWeight: "bold",
+      fontSize: 14,
+    }}
+  >
+    <span style={{ width: 110 }}>Grand Total</span>
+    <span>:</span>
+    <span style={{ width: 120 }}>
+      ₹{" "}
+      {grandTotal.toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}
+    </span>
+  </div>
 </div>
-</div>
 
-
+        </div>
 
         {/* Terms */}
         <div style={{ marginTop: 8 }}>
@@ -1686,30 +1682,28 @@ const grandTotal = subTotal - totalDiscount + totalTax;
             Terms & conditions :
           </h4>
           <div style={{ padding: "6px 8px" }}>
-    {(data.terms_conditions || "")
-      .split("\n")
-      .map((line, index) => {
-        const parts = line.split(":");
-        return (
-          <div
-            key={index}
-            style={{
-              display: "flex",
-              lineHeight: "17px",
-            }}
-          >
-            {/* Number */}
-            {/* <span style={{ width: 18 }}>{index + 1}.</span> */}
+            {(data.terms_conditions || "").split("\n").map((line, index) => {
+              const parts = line.split(":");
+              return (
+                <div
+                  key={index}
+                  style={{
+                    display: "flex",
+                    lineHeight: "17px",
+                  }}
+                >
+                  {/* Number */}
+                  {/* <span style={{ width: 18 }}>{index + 1}.</span> */}
 
-            {/* Label */}
-            <span style={{ width: 135 }}>{parts[0]}</span>
+                  {/* Label */}
+                  <span style={{ width: 135 }}>{parts[0]}</span>
 
-            {/* Colon + Value */}
-            <span>: {parts.slice(1).join(":")}</span>
+                  {/* Colon + Value */}
+                  <span>: {parts.slice(1).join(":")}</span>
+                </div>
+              );
+            })}
           </div>
-        );
-      })}
-  </div> 
         </div>
         {/* Footer */}
         <div
@@ -1719,43 +1713,43 @@ const grandTotal = subTotal - totalDiscount + totalTax;
             marginTop: 2,
           }}
         >
-         <div>
-  {/* <h4>Member Details</h4> */}
-  <br />
-  <div
-    style={{
-      whiteSpace: "pre-line",
-      fontSize: 12,
-      lineHeight: 1.5,
-    }}
-  >
-    {data.member_details || "—"}
-  </div>
-</div>
-         <div style={{ textAlign: "left" }}>
-  <h4>Bank Details</h4>
+          <div>
+            {/* <h4>Member Details</h4> */}
+            <br />
+            <div
+              style={{
+                whiteSpace: "pre-line",
+                fontSize: 12,
+                lineHeight: 1.5,
+              }}
+            >
+              {data.member_details || "—"}
+            </div>
+          </div>
+          <div style={{ textAlign: "left" }}>
+            <h4>Bank Details</h4>
 
-  <div style={{ fontSize: 12 }}>
-    <div style={{ display: "flex" }}>
-      <span style={{ width: 90, fontWeight: 200 }}>Bank</span>
-      <span>: {company.bank_name || "-"}</span>
-    </div>
+            <div style={{ fontSize: 12 }}>
+              <div style={{ display: "flex" }}>
+                <span style={{ width: 90, fontWeight: 200 }}>Bank</span>
+                <span>: {company.bank_name || "-"}</span>
+              </div>
 
-    <div style={{ display: "flex" }}>
-      <span style={{ width: 90, fontWeight: 200 }}>Account No</span>
-      <span>: {company.acc_no || "-"}</span>
-    </div>
+              <div style={{ display: "flex" }}>
+                <span style={{ width: 90, fontWeight: 200 }}>Account No</span>
+                <span>: {company.acc_no || "-"}</span>
+              </div>
 
-    <div style={{ display: "flex" }}>
-      <span style={{ width: 90, fontWeight: 200 }}>IFSC</span>
-      <span>: {company.ifsc || "-"}</span>
-    </div>
-  </div>
-</div>
-
+              <div style={{ display: "flex" }}>
+                <span style={{ width: 90, fontWeight: 200 }}>IFSC</span>
+                <span>: {company.ifsc || "-"}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <p className="print-footer"
+        <p
+          className="print-footer"
           style={{
             textAlign: "right",
             // marginTop: 40,
