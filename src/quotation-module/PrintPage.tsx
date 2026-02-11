@@ -1468,66 +1468,83 @@ export default function PrintPage() {
             >
               BILL TO :
             </h4>
-            <div style={{ fontSize: 12, marginTop: 4 }}>
-              <p style={{ margin: 0, display: "flex" }}>
-                <span style={{ width: 90 }}>Customer Name</span>
-                <span>: {customer.name}</span>
-              </p>
 
-              <p style={{ margin: 0, display: "flex" }}>
-                <span style={{ width: 90 }}>Phone</span>
-                <span>: {customer.phone}</span>
-              </p>
+            <div style={{ fontSize: 12, marginTop: 6 }}>
+              {[
+                { label: "Customer Name", value: customer.name },
+                { label: "Address", value: customer.address },
+                { label: "Contact Person", value: customer.contact_person },
+                { label: "Phone", value: customer.phone },
+                { label: "Email", value: customer.email },
+                { label: "GSTIN", value: customer.gst_no },
+              ].map((item, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    marginBottom: 3,
+                  }}
+                >
+                  <span style={{ width: 110, fontWeight: 500 }}>
+                    {item.label}
+                  </span>
 
-              <p style={{ margin: 0, display: "flex" }}>
-                <span style={{ width: 90 }}>Email</span>
-                <span>: {customer.email}</span>
-              </p>
+                  <span style={{ width: 10 }}>:</span>
 
-              <p style={{ margin: 0, display: "flex" }}>
-                <span style={{ width: 90 }}>GSTIN</span>
-                <span>: {customer.gst_no}</span>
-              </p>
+                  <span style={{ flex: 1, wordBreak: "break-word" }}>
+                    {item.value || "-"}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
           <div style={{ width: "48%", textAlign: "left", paddingLeft: 60 }}>
             <h4>Quotation Info</h4>
 
             <div style={{ fontSize: 12 }}>
-              <div style={{ display: "flex" }}>
-                <span style={{ width: 70, fontWeight: 200 }}>No.</span>
-                <span>: {data.quotation_no || quotationNo}</span>
-              </div>
-
-              <div style={{ display: "flex" }}>
-                <span style={{ width: 70, fontWeight: 200 }}>Date</span>
-                <span>
-                  :{" "}
-                  {data.created_at
+              {[
+                { label: "No.", value: data.quotation_no || quotationNo },
+                {
+                  label: "Date",
+                  value: data.created_at
                     ? dayjs(data.created_at).format("DD-MM-YYYY")
-                    : "-"}
-                </span>
-              </div>
-
-              <div style={{ display: "flex" }}>
-                <span style={{ width: 70, fontWeight: 200 }}>Validity</span>
-                <span>
-                  :{" "}
-                  {data.validity_date
+                    : "-",
+                },
+                {
+                  label: "Validity",
+                  value: data.validity_date
                     ? dayjs(data.validity_date).format("DD-MM-YYYY")
-                    : "-"}
-                </span>
-              </div>
+                    : "-",
+                },
+                {
+                  label: "Payment",
+                  value: data.payment_terms || "50% Advance",
+                },
+                {
+                  label: "Delivery",
+                  value: data.delivery_terms || "As discussed",
+                },
+              ].map((item, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    marginBottom: 4,
+                  }}
+                >
+                  <span style={{ width: 80, fontWeight: 500 }}>
+                    {item.label}
+                  </span>
 
-              <div style={{ display: "flex" }}>
-                <span style={{ width: 70, fontWeight: 200 }}>Payment</span>
-                <span>: {data.payment_terms || "50% Advance"}</span>
-              </div>
+                  <span style={{ width: 10 }}>:</span>
 
-              <div style={{ display: "flex" }}>
-                <span style={{ width: 70, fontWeight: 200 }}>Delivery</span>
-                <span>: {data.delivery_terms || "As discussed"}</span>
-              </div>
+                  <span style={{ flex: 1, wordBreak: "break-word" }}>
+                    {item.value}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1608,65 +1625,64 @@ export default function PrintPage() {
             <p style={{ margin: 0 }}>{numberToWords(grandTotal)}</p>
           </div>
           <div
-  style={{
-    width: "28%",
-    border: "1px solid #000",
-    padding: 6,
-    fontSize: 12,
-    textAlign: "left",
-  }}
->
-  {[
-    ["Total Amount", subTotal],
-    ["CGST", isSameState ? totalCGST : 0],
-    ["SGST", isSameState ? totalSGST : 0],
-    ["IGST", !isSameState ? totalIGST : 0],
-    ["Tax Total", totalTax],
-    ["Discount", totalDiscount],
-  ].map(([label, value], i) => (
-    <div
-      key={i}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-      }}
-    >
-      <span style={{ width: 110 }}>{label}</span>
-      <span>:</span>
-      <span style={{ width: 120 }}>
-        ₹{" "}
-        {Number(value).toLocaleString("en-IN", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}
-      </span>
-    </div>
-  ))}
+            style={{
+              width: "28%",
+              border: "1px solid #000",
+              padding: 6,
+              fontSize: 12,
+              textAlign: "left",
+            }}
+          >
+            {[
+              ["Total Amount", subTotal],
+              ["CGST", isSameState ? totalCGST : 0],
+              ["SGST", isSameState ? totalSGST : 0],
+              ["IGST", !isSameState ? totalIGST : 0],
+              ["Tax Total", totalTax],
+              ["Discount", totalDiscount],
+            ].map(([label, value], i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <span style={{ width: 110 }}>{label}</span>
+                <span>:</span>
+                <span style={{ width: 120 }}>
+                  ₹{" "}
+                  {Number(value).toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
+            ))}
 
-  <hr style={{ margin: "6px 0" }} />
+            <hr style={{ margin: "6px 0" }} />
 
-  <div
-    style={{
-      display: "flex",
-      alignItems: "center",
-      gap: 6,
-      fontWeight: "bold",
-      fontSize: 14,
-    }}
-  >
-    <span style={{ width: 110 }}>Grand Total</span>
-    <span>:</span>
-    <span style={{ width: 120 }}>
-      ₹{" "}
-      {grandTotal.toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}
-    </span>
-  </div>
-</div>
-
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontWeight: "bold",
+                fontSize: 14,
+              }}
+            >
+              <span style={{ width: 110 }}>Grand Total</span>
+              <span>:</span>
+              <span style={{ width: 120 }}>
+                ₹{" "}
+                {grandTotal.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Terms */}
