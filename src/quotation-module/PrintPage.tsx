@@ -1084,6 +1084,7 @@ const PRODUCT_API = axios.create({ baseURL: `${BASE_URL}/products` });
 type Item = {
   product_name?: string;
   description?: string;
+  hsn_no?: string;
   quantity?: number;
   unit_price?: number;
   discount?: number;
@@ -1320,10 +1321,12 @@ export default function PrintPage() {
     ifsc: comp.ifsc || "",
   };
   const rawItems = data.items || data.products || [];
+  console.log("RAW ITEMS:", rawItems);
   const mappedItems: Item[] = Array.isArray(rawItems)
     ? rawItems.map((item: any) => ({
         product_name: item.product_name || item.name || "Unnamed Product",
         description: item.description || item.item_description || "-",
+        hsn_no: item.hsn_no || item.hsn || "-",
         quantity: Number(item.quantity || 0),
         unit_price: Number(item.unit_price || 0),
         discount: Number(item.discount || 0),
@@ -1558,6 +1561,7 @@ export default function PrintPage() {
               <th style={th}>S.No</th>
               <th style={th}>Product</th>
               <th style={th}>Description</th>
+              <th style={th}>HSN No.</th>
               <th style={th}>Qty</th>
               <th style={th}>Price</th>
               <th style={th}>Disc. %</th>
@@ -1588,7 +1592,7 @@ export default function PrintPage() {
                     <td style={{ ...td, whiteSpace: "pre-line" }}>
                       {item.description}
                     </td>
-
+                    <td style={td}>{item.hsn_no || "-"}</td>
                     <td style={td}>{qty}</td>
                     <td style={td}>₹ {price.toFixed(0)}</td>
                     <td style={td}>{discount}</td>
@@ -1604,7 +1608,7 @@ export default function PrintPage() {
               })
             ) : (
               <tr>
-                <td colSpan={9} style={{ textAlign: "center", padding: 10 }}>
+                <td colSpan={10} style={{ textAlign: "center", padding: 10 }}>
                   No products found
                 </td>
               </tr>

@@ -1805,15 +1805,15 @@ getDefaultMemberDetails(req, res) {
   `;
 
     const itemsQuery = `
-    SELECT 
-      qi.*,
-      p.name AS product_name,
-      p.description AS product_description
-    FROM quotation_items qi
-    LEFT JOIN products p ON p.id = qi.product_id
-    WHERE qi.quotation_id = ?
-    
-  `;
+  SELECT 
+    qi.*,
+    p.name AS product_name,
+    p.description AS product_description,
+    p.hsn_no AS hsn_no   -- 👈 YE ADD KARO
+  FROM quotation_items qi
+  LEFT JOIN products p ON p.id = qi.product_id
+  WHERE qi.quotation_id = ?
+`;
 
     db.query(quotationQuery, [id], (err, quotation) => {
       if (err) return res.status(500).json({ error: err.message });
@@ -1849,6 +1849,7 @@ getDefaultMemberDetails(req, res) {
           product_id: item.product_id,
           product_name: item.product_name || "Unnamed Product",
           description: item.description || item.product_description || "-",
+          hsn_no: item.hsn_no,
           quantity: Number(item.quantity || 0),
           unit_price: Number(item.unit_price || 0),
           discount: Number(item.discount || 0),
