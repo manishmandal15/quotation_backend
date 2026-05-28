@@ -111,9 +111,18 @@ const AppSidebar: React.FC = () => {
           { name: "New Quotation", path: "/forms/quotation-all" },
           { name: "Quotation Desk", path: "/forms/new-quotation" },
           { name: "Quotation Approval", path: "/forms/quotation-approval" },
-          { name: "Quotation Dispatch & Follow-up", path: "/quotation-tracking" },
-          { name: "Quotation Status Tracking", path: "/quotation-tracking-status" },
-          { name: "Quotation Follow-Up & Reminders", path: "/quotation-Followup-Reminder" },
+          {
+            name: "Quotation Dispatch & Follow-up",
+            path: "/quotation-tracking",
+          },
+          {
+            name: "Quotation Status Tracking",
+            path: "/quotation-tracking-status",
+          },
+          {
+            name: "Quotation Follow-Up & Reminders",
+            path: "/quotation-Followup-Reminder",
+          },
         ],
       },
 
@@ -121,14 +130,11 @@ const AppSidebar: React.FC = () => {
         name: "Inventory Mgmt.",
         icon: <ListIcon />,
         subItems: [
-         
           { name: "Prouct stock", path: "/product-stock" },
-          { name: "Product Issue List", path: "product-issue " },  
+          { name: "Product Issue List", path: "product-issue " },
           { name: "Row Material Stock", path: "/rmStockmaster" },
           { name: "Row Material Issue Stock", path: "/rmIssue " },
-          { name: "Row Material Issue Item Stock", path: "/rmIssueItem " },   
-          
-         
+          { name: "Row Material Issue Item Stock", path: "/rmIssueItem " },
         ],
       },
 
@@ -139,17 +145,14 @@ const AppSidebar: React.FC = () => {
           { name: "Company_setting", path: "/forms/company-master" },
           { name: "Roles", path: "/forms/role-master" },
           { name: "State", path: "/forms/state-master" },
-          { name: "District", path: "/forms/district-master" }, 
+          { name: "District", path: "/forms/district-master" },
           { name: "Currency", path: "/forms/currency" },
           { name: "User Master", path: "/forms/users" },
           { name: "Menu Master", path: "/forms/menu-master" },
           { name: "Role Menu Master", path: "/forms/Role-menu-master" },
-          { name: "Module Menu Master", path: "/forms/module-menu-master" }, 
-          
+          { name: "Module Menu Master", path: "/forms/module-menu-master" },
         ],
       },
-
-      
 
       {
         name: "Inventory Master",
@@ -159,11 +162,10 @@ const AppSidebar: React.FC = () => {
           { name: "RawMaterial Master", path: "/raw-material" },
           { name: "Customers", path: "/forms/customers" },
           { name: "Product Master", path: "/forms/products" },
-          { name: "GST Master", path: "/forms/gst-master" },  
-          { name: "Location/Warehouse", path: "/warehouse-locations" }, 
-          { name: "Reference Master", path: "/refference " } 
-          // { name: "Prouct stock Entry", path: "/product-stock-entry" },  
-         
+          { name: "GST Master", path: "/forms/gst-master" },
+          { name: "Location/Warehouse", path: "/warehouse-locations" },
+          { name: "Reference Master", path: "/refference " },
+          // { name: "Prouct stock Entry", path: "/product-stock-entry" },
         ],
       },
     ];
@@ -183,7 +185,7 @@ const AppSidebar: React.FC = () => {
   // ---------------------------
   const isActive = useCallback(
     (path: string) => location.pathname === path,
-    [location.pathname]
+    [location.pathname],
   );
 
   const [openSubmenu, setOpenSubmenu] = useState<{
@@ -195,7 +197,7 @@ const AppSidebar: React.FC = () => {
 
   const handleSubmenuToggle = (index: number, type: "main" | "others") => {
     setOpenSubmenu((prev) =>
-      prev?.index === index && prev?.type === type ? null : { type, index }
+      prev?.index === index && prev?.type === type ? null : { type, index },
     );
   };
 
@@ -217,8 +219,7 @@ const AppSidebar: React.FC = () => {
               )}
               <ChevronDownIcon
                 className={`ml-auto w-5 h-5 transition-transform ${
-                  openSubmenu?.index === index &&
-                  openSubmenu?.type === menuType
+                  openSubmenu?.index === index && openSubmenu?.type === menuType
                     ? "rotate-180 text-brand-500"
                     : ""
                 }`}
@@ -239,12 +240,13 @@ const AppSidebar: React.FC = () => {
           {/* Dropdown */}
           {nav.subItems && (
             <div
-              ref={(el) => (subMenuRefs.current[`${menuType}-${index}`] = el)}
+              ref={(el) => {
+                subMenuRefs.current[`${menuType}-${index}`] = el;
+              }}
               className="overflow-hidden transition-all duration-300"
               style={{
                 height:
-                  openSubmenu?.index === index &&
-                  openSubmenu?.type === menuType
+                  openSubmenu?.index === index && openSubmenu?.type === menuType
                     ? `${subMenuRefs.current[`${menuType}-${index}`]?.scrollHeight}px`
                     : "0px",
               }}
@@ -255,9 +257,7 @@ const AppSidebar: React.FC = () => {
                     <Link
                       to={sub.path}
                       className={`menu-dropdown-item ${
-                        isActive(sub.path)
-                          ? "menu-dropdown-item-active"
-                          : ""
+                        isActive(sub.path) ? "menu-dropdown-item-active" : ""
                       }`}
                     >
                       {sub.name}
