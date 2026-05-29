@@ -1077,9 +1077,9 @@ import axios from "axios";
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const QUOTATION_API = axios.create({ baseURL: `${BASE_URL}/quotations` });
-const CUSTOMER_API = axios.create({ baseURL: `${BASE_URL}/customers` });
-const CURRENCY_API = axios.create({ baseURL: `${BASE_URL}/currencies` });
-const PRODUCT_API = axios.create({ baseURL: `${BASE_URL}/products` });
+// const CUSTOMER_API = axios.create({ baseURL: `${BASE_URL}/customers` });
+// const CURRENCY_API = axios.create({ baseURL: `${BASE_URL}/currencies` });
+// const PRODUCT_API = axios.create({ baseURL: `${BASE_URL}/products` });
 
 type Item = {
   product_name?: string;
@@ -1106,8 +1106,9 @@ const td: React.CSSProperties = {
 
 export default function PrintPage() {
   const printRef = useRef<HTMLDivElement | null>(null);
-  const [quotationNo, setQuotationNo] = useState("");
-  const [autoPrint, setAutoPrint] = useState(false);
+  // const [quotationNo, setQuotationNo] = useState("");
+  const [quotationNo, _setQuotationNo] = useState("");
+  const [_autoPrint, setAutoPrint] = useState(false);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -1702,7 +1703,7 @@ export default function PrintPage() {
             Terms & conditions :
           </h4>
           <div style={{ padding: "6px 8px" }}>
-            {(data.terms_conditions || "").split("\n").map((line, index) => {
+            {(data.terms_conditions || "").split("\n").map((line:any, index:any) => {
               const parts = line.split(":");
               return (
                 <div
