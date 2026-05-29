@@ -4,13 +4,13 @@ import axios from "axios";
 
 // Icons
 import {
-  CalenderIcon,
+  
   ChevronDownIcon,
   GridIcon,
-  HorizontaLDots,
+ 
   ListIcon,
-  PlugInIcon,
-  UserCircleIcon,
+  
+  
 } from "../icons";
 
 import { useSidebar } from "../context/SidebarContext";

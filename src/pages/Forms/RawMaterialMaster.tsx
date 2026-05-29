@@ -224,10 +224,10 @@ const RawMaterialMaster = () => {
       placeholder="Select Material Type"
       optionFilterProp="children"
       filterOption={(input, option) =>
-        option?.children
-          ?.toLowerCase()
-          .includes(input.toLowerCase())
-      }
+  String(option?.label)
+    .toLowerCase()
+    .includes(input.toLowerCase())
+}
     >
       <Option value="metal">Metal</Option>
       <Option value="plastic">Plastic</Option>
@@ -247,9 +247,11 @@ const RawMaterialMaster = () => {
       showSearch
       placeholder="Select Unit"
       optionFilterProp="children"
-      filterOption={(input, option) =>
-        option?.children?.toLowerCase().includes(input.toLowerCase())
-      }
+     filterOption={(input, option) =>
+  String(option?.label)
+    .toLowerCase()
+    .includes(input.toLowerCase())
+}
     >
       <Option value="kg">Kg</Option>
       <Option value="meter">Meter</Option>

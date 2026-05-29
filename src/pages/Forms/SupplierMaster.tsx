@@ -168,7 +168,7 @@ import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import axios from "axios";
 import dayjs from "dayjs";
 
-const { Option } = Select;
+// const { Option } = Select;
 
 interface Supplier {
   supplier_id?: number;

@@ -91,7 +91,7 @@ const StateMaster: React.FC = () => {
     {
       title: "Sno",
       key: "sno",
-      render: (_text, _record, index) => index + 1,
+      render: (_text:any, _record:any, index:any) => index + 1,
       width: 60,
     },
     // { title: "ID", dataIndex: "id", key: "id", width: 60 },

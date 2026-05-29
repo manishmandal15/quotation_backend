@@ -2028,62 +2028,62 @@ useEffect(() => {
     }
   };
 
-  const onView = async (record: any) => {
-    try {
-      const { data: quotationData } = await QUOTATION_API.get(`/${record.id}`);
+  // const onView = async (record: any) => {
+  //   try {
+  //     const { data: quotationData } = await QUOTATION_API.get(`/${record.id}`);
 
-      const productsMapped = (quotationData.products ?? []).map((item: any) => {
-        const prod = products.find((p) => p.id === item.product_id);
-        return {
-          ...item,
-          product_name: prod?.name || "Unnamed Product",
-          description: item.description || prod?.description || "",
-          unit_price: item.unit_price || prod?.price || 0,
-        };
-      });
+  //     const productsMapped = (quotationData.products ?? []).map((item: any) => {
+  //       const prod = products.find((p) => p.id === item.product_id);
+  //       return {
+  //         ...item,
+  //         product_name: prod?.name || "Unnamed Product",
+  //         description: item.description || prod?.description || "",
+  //         unit_price: item.unit_price || prod?.price || 0,
+  //       };
+  //     });
 
-      const customerObj = customers.find(
-        (c) => c.id === quotationData.customer_id
-      ) || {
-        name: quotationData.customer_name || "N/A",
-        phone: quotationData.phone || "",
-        gst_no: quotationData.gst_no || "",
-        address: quotationData.address || "",
-        cstate: quotationData.cstate || "",
-        district: quotationData.district || "",
-      };
+  //     const customerObj = customers.find(
+  //       (c) => c.id === quotationData.customer_id
+  //     ) || {
+  //       name: quotationData.customer_name || "N/A",
+  //       phone: quotationData.phone || "",
+  //       gst_no: quotationData.gst_no || "",
+  //       address: quotationData.address || "",
+  //       cstate: quotationData.cstate || "",
+  //       district: quotationData.district || "",
+  //     };
 
-      const calculationSummary = {
-        total: totals.total_amount,
-        discount: totals.discount_amount,
-        tax: totals.tax_amount,
-        cgst: taxBreakup.cgst,
-        sgst: taxBreakup.sgst,
-        igst: taxBreakup.igst,
-        netAmount: totals.total_amount,
-      };
+  //     const calculationSummary = {
+  //       total: totals.total_amount,
+  //       discount: totals.discount_amount,
+  //       tax: totals.tax_amount,
+  //       cgst: taxBreakup.cgst,
+  //       sgst: taxBreakup.sgst,
+  //       igst: taxBreakup.igst,
+  //       netAmount: totals.total_amount,
+  //     };
 
-      setSelectedPreview({
-        ...quotationData,
-        products: productsMapped,
-        customer: customerObj,
-        calculationSummary,
-        terms_conditions: quotationData.terms_conditions || "",
-      });
+  //     setSelectedPreview({
+  //       ...quotationData,
+  //       products: productsMapped,
+  //       customer: customerObj,
+  //       calculationSummary,
+  //       terms_conditions: quotationData.terms_conditions || "",
+  //     });
 
-      setPreviewVisible(true);
-    } catch (err) {
-      console.error("Failed to load quotation preview:", err);
-      message.error("Unable to load quotation preview");
-    }
-  };
+  //     setPreviewVisible(true);
+  //   } catch (err) {
+  //     console.error("Failed to load quotation preview:", err);
+  //     message.error("Unable to load quotation preview");
+  //   }
+  // };
 
   const listColumns = [
     {
   title: "Sno",
   key: "sno",
   width: 60,
-  render: (_t, _r, index) =>
+  render: (_t:any, _r:any, index:any) =>
     (currentPage - 1) * pageSize + index + 1,
 },
 

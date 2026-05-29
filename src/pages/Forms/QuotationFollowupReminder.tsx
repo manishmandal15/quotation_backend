@@ -8,12 +8,10 @@ import {
   DatePicker,
   Select,
   message,
-  Popconfirm,
   Space,
   Tooltip
 } from "antd";
 import {
-  SendOutlined,
   ClockCircleOutlined,
   EyeOutlined,
   PlusOutlined,
@@ -25,9 +23,9 @@ import type { ColumnsType } from "antd/es/table";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const API = axios.create({
-  baseURL: `${BASE_URL}/quotation-tracking`,
-});
+// const API = axios.create({
+//   baseURL: `${BASE_URL}/quotation-tracking`,
+// });
 
 const Api = axios.create({
   baseURL: BASE_URL,
@@ -108,10 +106,10 @@ const [pageSize, setPageSize] = useState(8);
         axios.get(`${BASE_URL}/quotation-tracking`),
       ]);
 
-      const quotations = (quotRes.data || []).map((q: any) => ({
-        ...q,
-        id: q.id ?? q.quotation_id ?? q.sno,
-      }));
+      // const quotations = (quotRes.data || []).map((q: any) => ({
+      //   ...q,
+      //   id: q.id ?? q.quotation_id ?? q.sno,
+      // }));
 
       const tracking = trackRes.data || [];
 
@@ -193,18 +191,18 @@ const [pageSize, setPageSize] = useState(8);
     fetchUsers();
   }, []);
 
-  const openDispatchModal = (row: Quotation) => {
-    setCurrentDispatchRow(row);
-    setIsDispatchOpen(true);
-    dispatchForm.resetFields();
+  // const openDispatchModal = (row: Quotation) => {
+  //   setCurrentDispatchRow(row);
+  //   setIsDispatchOpen(true);
+  //   dispatchForm.resetFields();
 
-    setTimeout(() => {
-      dispatchForm.setFieldsValue({
-        dispatched_by: loggedInUser,
-        dispatched_through: "Email",
-      });
-    }, 0);
-  };
+  //   setTimeout(() => {
+  //     dispatchForm.setFieldsValue({
+  //       dispatched_by: loggedInUser,
+  //       dispatched_through: "Email",
+  //     });
+  //   }, 0);
+  // };
 
   const handleDispatchSave = async (values: any) => {
     if (!currentDispatchRow) return;
@@ -220,7 +218,7 @@ const [pageSize, setPageSize] = useState(8);
         sent_by: Number(values.dispatched_by),
         method: String(values.dispatched_through).toLowerCase(),
         sent_at: dispatchedDate || new Date().toISOString().slice(0, 19).replace("T", " "),
-        sent_to_email: currentDispatchRow.customer_email ?? "customer@example.com",
+        sent_to_email: "customer@example.com",
       };
 
       await Api.post("/quotation-dispatches", payload);
@@ -285,10 +283,10 @@ const [pageSize, setPageSize] = useState(8);
     }
   };
 
-  const openViewModal = (row: Quotation) => {
-    setViewRow(row);
-    setIsViewOpen(true);
-  };
+  // const openViewModal = (row: Quotation) => {
+  //   setViewRow(row);
+  //   setIsViewOpen(true);
+  // };
 
   const columns: ColumnsType<Quotation> = [
     {

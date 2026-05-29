@@ -118,7 +118,7 @@ const QuotationPreview: React.FC<Props> = ({ visible, onClose, previewData }) =>
     ? dayjs(previewData.validity_date).format("DD-MM-YYYY")
     : previewData?.validity || "-";
 
-  const currency = previewData?.currency_code || "INR";
+  // const currency = previewData?.currency_code || "INR";
 
   // ✅ Products fix
   const items = Array.isArray(previewData?.products)

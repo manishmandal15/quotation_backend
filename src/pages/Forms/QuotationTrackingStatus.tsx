@@ -763,16 +763,7 @@ import {
   DatePicker,
   Select,
   message,
-  Popconfirm,
-  Space,
-  Tooltip
 } from "antd";
-import {
-  SendOutlined,
-  ClockCircleOutlined,
-  EyeOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
 import axios from "axios";
 import type { ColumnsType } from "antd/es/table";
 
@@ -780,9 +771,9 @@ import type { ColumnsType } from "antd/es/table";
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // ✅ Centralized API instances
-const API = axios.create({
-  baseURL: `${BASE_URL}/quotation-tracking`,
-});
+// const API = axios.create({
+//   baseURL: `${BASE_URL}/quotation-tracking`,
+// });
 
 const Api = axios.create({
   baseURL: BASE_URL,
@@ -892,11 +883,11 @@ const fetchQuotations = async () => {
         axios.get(`${BASE_URL}/quotation-tracking`),
     ]);
 
-    const quotations = (quotRes.data || []).map((q: any) => ({
-      ...q,
-      // ensure canonical id exists (use DB id)
-      id: q.id ?? q.quotation_id ?? q.sno,
-    }));
+    // const quotations = (quotRes.data || []).map((q: any) => ({
+    //   ...q,
+    //   // ensure canonical id exists (use DB id)
+    //   id: q.id ?? q.quotation_id ?? q.sno,
+    // }));
 
     const tracking = trackRes.data || []; // array of rows from quotation-tracking endpoint
     const quotationsMap = new Map(
@@ -962,19 +953,19 @@ const fetchQuotations = async () => {
   }, []);
 
   // Open dispatch modal
-  const openDispatchModal = (row: Quotation) => {
-     console.log("🧩 Record clicked for Dispatch:", row);
-  setCurrentDispatchRow(row);
-  setIsDispatchOpen(true);
-  dispatchForm.resetFields();
+//   const openDispatchModal = (row: Quotation) => {
+//      console.log("🧩 Record clicked for Dispatch:", row);
+//   setCurrentDispatchRow(row);
+//   setIsDispatchOpen(true);
+//   dispatchForm.resetFields();
 
-  setTimeout(() => {
-    dispatchForm.setFieldsValue({
-      [DispatchFormFields.DISPATCHED_BY]: loggedInUser,
-      [DispatchFormFields.DISPATCH_THROUGH]: "Email",
-    });
-  }, 0);
-};
+//   setTimeout(() => {
+//     dispatchForm.setFieldsValue({
+//       [DispatchFormFields.DISPATCHED_BY]: loggedInUser,
+//       [DispatchFormFields.DISPATCH_THROUGH]: "Email",
+//     });
+//   }, 0);
+// };
 
   // Handle dispatch save
   // const handleDispatchSave = async (values: any) => {
@@ -1066,7 +1057,7 @@ const handleDispatchSave = async (values: any) => {
       sent_by: Number(values[DispatchFormFields.DISPATCHED_BY]), // ensure numeric user id
       method: String(values[DispatchFormFields.DISPATCH_THROUGH]).toLowerCase(), // normalize
       sent_at: dispatchedDate || new Date().toISOString().slice(0, 19).replace("T", " "),
-      sent_to_email: currentDispatchRow.customer_email ?? "customer@example.com",
+      sent_to_email: "customer@example.com",
     };
 
     console.log("📤 Dispatch Payload:", payload);
@@ -1100,11 +1091,11 @@ const handleDispatchSave = async (values: any) => {
   //   });
   // };
 
-  const openFollowupModal = (row: Quotation) => {
-  setCurrentFollowupRow(row);
-  setIsFollowupOpen(true);
-  followupForm.resetFields();
-};
+//   const openFollowupModal = (row: Quotation) => {
+//   setCurrentFollowupRow(row);
+//   setIsFollowupOpen(true);
+//   followupForm.resetFields();
+// };
 
   // Handle followup save
   // const handleFollowupSave = async (values: any) => {

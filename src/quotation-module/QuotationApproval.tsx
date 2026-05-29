@@ -513,7 +513,7 @@ import dayjs from "dayjs";
 import QuotationPreview from "./QuotationPreview";
 import { EyeOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
 
-const { Option } = Select;
+// const { Option } = Select;
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const loggedInUser = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -521,7 +521,7 @@ const QuotationsApproval: React.FC = () => {
   const [quotations, setQuotations] = useState<any[]>([]);
   const [filteredQuotations, setFilteredQuotations] = useState<any[]>([]); // for search
   const [approvals, setApprovals] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
+  const [_users, setUsers] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -646,32 +646,32 @@ const handleSave = async () => {
 };
 
 
-  const handlePreview = async (quotation: any) => {
-    try {
-      const { data } = await axios.get(`${BASE_URL}/quotations/${quotation.id}`);
-      const productsMapped = (data.products ?? []).map((item: any) => {
-        const product = products.find(p => p.id === item.product_id);
-        return {
-          ...item,
-          product_name: product?.name || "Unnamed Product",
-          description: item.description || product?.description || "",
-          unit_price: item.unit_price || product?.price || 0,
-        };
-      });
-      const customer = customers.find(c => c.id === data.customer_id) || {};
+  // const handlePreview = async (quotation: any) => {
+  //   try {
+  //     const { data } = await axios.get(`${BASE_URL}/quotations/${quotation.id}`);
+  //     const productsMapped = (data.products ?? []).map((item: any) => {
+  //       const product = products.find(p => p.id === item.product_id);
+  //       return {
+  //         ...item,
+  //         product_name: product?.name || "Unnamed Product",
+  //         description: item.description || product?.description || "",
+  //         unit_price: item.unit_price || product?.price || 0,
+  //       };
+  //     });
+  //     const customer = customers.find(c => c.id === data.customer_id) || {};
 
-      setSelectedQuotation({
-        ...data,
-        products: productsMapped,
-        customer,
-        terms_conditions: data.terms_conditions || "",
-      });
-      setPreviewVisible(true);
-    } catch (err) {
-      console.error("Failed to load quotation preview:", err);
-      message.error("Unable to load quotation preview");
-    }
-  };
+  //     setSelectedQuotation({
+  //       ...data,
+  //       products: productsMapped,
+  //       customer,
+  //       terms_conditions: data.terms_conditions || "",
+  //     });
+  //     setPreviewVisible(true);
+  //   } catch (err) {
+  //     console.error("Failed to load quotation preview:", err);
+  //     message.error("Unable to load quotation preview");
+  //   }
+  // };
 
   // --- Search handler ---
   const handleSearch = (value: string) => {

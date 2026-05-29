@@ -1,5 +1,5 @@
 // src/quotation-module/LinkGenerator.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button, Input, message } from "antd";
 
 export default function LinkGenerator() {

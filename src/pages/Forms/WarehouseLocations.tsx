@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Table, Button, Modal, Form, Input, Popconfirm, message,Row, Col } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
@@ -101,7 +101,7 @@ export default function WarehouseLocations() {
     {
       title: "Sno",
       key: "sno",
-      render: (_text, _record, index) => index + 1,
+      render: (_text:any, _record:any, index:any) => index + 1,
       width: 60,
     },
     {

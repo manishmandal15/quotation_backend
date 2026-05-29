@@ -1823,24 +1823,24 @@ const RmIssueMaster = () => {
   };
 
   // 🔥 FETCH ISSUE ITEMS (EDIT MODE)
-  const fetchIssueItems = async (issueId: number) => {
-    const res = await axios.get(
-      `${BASE_URL}/rm-issue-items/${issueId}`
-    );
+  // const fetchIssueItems = async (issueId: number) => {
+  //   const res = await axios.get(
+  //     `${BASE_URL}/rm-issue-items/${issueId}`
+  //   );
 
-    const mapped = res.data.map((it: any) => ({
-      key: Date.now() + Math.random(),
-      material_id: it.material_id,
-      name: it.name,
-      unit: it.unit,
-      batch_no: it.batch_no,
-      available_qty: it.available_qty,
-      issue_qty: it.issue_qty,
-      remark: it.remark,
-    }));
+  //   const mapped = res.data.map((it: any) => ({
+  //     key: Date.now() + Math.random(),
+  //     material_id: it.material_id,
+  //     name: it.name,
+  //     unit: it.unit,
+  //     batch_no: it.batch_no,
+  //     available_qty: it.available_qty,
+  //     issue_qty: it.issue_qty,
+  //     remark: it.remark,
+  //   }));
 
-    setItems(mapped);
-  };
+  //   setItems(mapped);
+  // };
 
   useEffect(() => {
     fetchIssues();

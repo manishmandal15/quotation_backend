@@ -216,9 +216,9 @@ const RmStockMaster = () => {
                 <Select
                   placeholder="Select material"
                   showSearch
-                  optionFilterProp="children"
+                  optionFilterProp="label"
                   filterOption={(input, option) =>
-                    (option?.children as string)
+                    String(option?.label)
                       .toLowerCase()
                       .includes(input.toLowerCase())
                   }
@@ -238,7 +238,7 @@ const RmStockMaster = () => {
               </Form.Item>
             </Col>
 
-           <Col span={12}>
+            <Col span={12}>
               <Form.Item name="quantity_on_hand" label="Quantity In Hand">
                 <InputNumber style={{ width: "100%" }} />
               </Form.Item>

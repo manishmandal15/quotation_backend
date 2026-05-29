@@ -26,9 +26,9 @@ import type { ColumnsType } from "antd/es/table";
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 // ✅ Centralized API instances
-const API = axios.create({
-  baseURL: `${BASE_URL}/quotation-tracking`,
-});
+// const API = axios.create({
+//   baseURL: `${BASE_URL}/quotation-tracking`,
+// });
 
 const Api = axios.create({
   baseURL: BASE_URL,
@@ -71,15 +71,15 @@ const DispatchFormFields = {
   DISPATCHED_BY: "dispatched_by",
 };
 
-const FollowupFormFields = {
-  PLANNED_FOLLOWUP_DATE: "planned_followup_date",
-  ACTUAL_FOLLOWUP_DATE: "actual_followup_date",
-  IS_DEAL_FINALISED: "is_deal_finalised",
-  INVOICE_NO: "invoice_no",
-  CUSTOMER_WANTS_TIME: "customer_wants_time",
-  NEXT_FOLLOWUP_DATE: "next_followup_date",
-  FOLLOWUP_BY: "followup_by",
-};
+// const FollowupFormFields = {
+//   PLANNED_FOLLOWUP_DATE: "planned_followup_date",
+//   ACTUAL_FOLLOWUP_DATE: "actual_followup_date",
+//   IS_DEAL_FINALISED: "is_deal_finalised",
+//   INVOICE_NO: "invoice_no",
+//   CUSTOMER_WANTS_TIME: "customer_wants_time",
+//   NEXT_FOLLOWUP_DATE: "next_followup_date",
+//   FOLLOWUP_BY: "followup_by",
+// };
 
 const QuotationTracking: React.FC = () => {
   const [quotations, setQuotations] = useState<Quotation[]>([]);
@@ -100,8 +100,8 @@ const QuotationTracking: React.FC = () => {
 const [pageSize, setPageSize] = useState(10);
 
 
-  const [isViewOpen, setIsViewOpen] = useState(false);
-  const [viewRow, setViewRow] = useState<Quotation | null>(null);
+  // const [isViewOpen, setIsViewOpen] = useState(false);
+  // const [viewRow, setViewRow] = useState<Quotation | null>(null);
 
   const fetchQuotations = async () => {
     setLoading(true);
@@ -112,10 +112,10 @@ const [pageSize, setPageSize] = useState(10);
         
       ]);
 
-      const quotationsFromMaster = (quotRes.data || []).map((q: any) => ({
-        ...q,
-        id: q.id ?? q.quotation_id ?? q.sno,
-      }));
+      // const quotationsFromMaster = (quotRes.data || []).map((q: any) => ({
+      //   ...q,
+      //   id: q.id ?? q.quotation_id ?? q.sno,
+      // }));
 
       const tracking = trackRes.data || [];
 
@@ -304,10 +304,10 @@ const payload: any = {
     }
   };
 
-  const openViewModal = (row: Quotation) => {
-    setViewRow(row);
-    setIsViewOpen(true);
-  };
+  // const openViewModal = (row: Quotation) => {
+  //   setViewRow(row);
+  //   setIsViewOpen(true);
+  // };
 
   const columns: ColumnsType<Quotation> = [
     {

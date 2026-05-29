@@ -115,20 +115,20 @@ const ModuleMenuMaster: React.FC = () => {
   };
 
   // Copy URL to clipboard
-  const handleCopy = async () => {
-  try {
-    await navigator.clipboard.writeText(url);
-    message.success("URL copied!");
-  } catch (err) {
-    console.error("Copy failed", err);
-    message.error("Failed to copy URL");
-  }
-};
+//   const handleCopy = async () => {
+//   try {
+//     await navigator.clipboard.writeText(url);
+//     message.success("URL copied!");
+//   } catch (err) {
+//     console.error("Copy failed", err);
+//     message.error("Failed to copy URL");
+//   }
+// };
 
 
   // Table columns
   const columns = [
-    { title: "Sno", key: "sno", render: (_t, _r, index) => index + 1, width: 60 },
+    { title: "Sno", key: "sno", render: (_t:any, _r:any, index:any) => index + 1, width: 60 },
     { title: "Module Name", dataIndex: "module_menu_name", key: "module_menu_name" },
     { title: "URL", dataIndex: "url", key: "url" },
     {
